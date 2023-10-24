@@ -30,15 +30,20 @@ func (a *appStatusRenderer) readServices() error {
 
 	for _, entry := range typed.Sorted(a.app.Status.AppSpec.Services) {
 		serviceName, serviceDef := entry.Key, entry.Value
+		hash, err := configHash(serviceDef)
+		if err != nil {
+			return err
+		}
+
 		s := v1.ServiceStatus{
 			CommonStatus: v1.CommonStatus{
 				LinkOverride: ports.LinkService(a.app, serviceName),
+				ConfigHash:   hash,
 			},
 			ExpressionErrors:           existingStatus[serviceName].ExpressionErrors,
 			MissingConsumerPermissions: existingStatus[serviceName].MissingConsumerPermissions,
 		}
 
-		var err error
 		s.Ready, s.Defined, err = a.isServiceReady(serviceName)
 		if err != nil {
 			return err
@@ -50,7 +55,7 @@ func (a *appStatusRenderer) readServices() error {
 			err := a.c.Get(a.ctx, router.Key(a.app.Namespace, name2.SafeHashConcatName(a.app.Name, serviceName)), serviceAcorn)
 			if apierrors.IsNotFound(err) || err == nil {
 				s.ServiceAcornName = publicname.Get(serviceAcorn)
-				s.ServiceAcornReady = serviceAcorn.Status.Ready
+				s.ServiceAcornReady = serviceAcorn.Status.Ready && serviceAcorn.Annotations[labels.AcornConfigHashAnnotation] == hash
 			} else {
 				return err
 			}
@@ -75,7 +80,7 @@ func (a *appStatusRenderer) readServices() error {
 			s.Defined = s.Defined || !service.Status.HasService
 			s.UpToDate = service.Namespace != a.app.Status.Namespace ||
 				service.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
-			s.UpToDate = s.Defined && s.UpToDate
+			s.UpToDate = s.Defined && s.UpToDate && (s.ServiceAcornReady || s.LinkOverride != "" || service.Annotations[labels.AcornConfigHashAnnotation] == hash)
 			s.Ready = (s.Ready || !service.Status.HasService) && s.UpToDate
 			if s.ServiceAcornName != "" {
 				s.Ready = s.Ready && s.ServiceAcornReady
@@ -131,6 +136,13 @@ func (a *appStatusRenderer) readServices() error {
 			return err
 		}
 
+		a.app.Status.AppStatus.Services[serviceName] = s
+	}
+	return nil
+}
+
+func setServiceMessages(app *v1.AppInstance) {
+	for serviceName, s := range app.Status.AppStatus.Services {
 		addExpressionErrors(&s.CommonStatus, s.ExpressionErrors)
 
 		// Not ready if we have any error messages
@@ -163,9 +175,8 @@ func (a *appStatusRenderer) readServices() error {
 			}
 		}
 
-		a.app.Status.AppStatus.Services[serviceName] = s
+		app.Status.AppStatus.Services[serviceName] = s
 	}
-	return nil
 }
 
 func (a *appStatusRenderer) isServiceReady(svc string) (ready bool, found bool, err error) {
@@ -179,11 +190,9 @@ func (a *appStatusRenderer) isServiceReadyByNamespace(seen []client.ObjectKey, n
 	seen = append(seen, router.Key(namespace, svc))
 
 	var svcDep corev1.Service
-	err = a.c.Get(a.ctx, router.Key(namespace, svc), &svcDep)
-	if apierrors.IsNotFound(err) {
+	if err = a.c.Get(a.ctx, router.Key(namespace, svc), &svcDep); apierrors.IsNotFound(err) {
 		return false, false, nil
-	}
-	if err != nil {
+	} else if err != nil {
 		// if err just return it as not ready
 		return false, true, err
 	}

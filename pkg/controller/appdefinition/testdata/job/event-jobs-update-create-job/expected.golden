@@ -3,6 +3,7 @@ kind: ServiceAccount
 metadata:
   annotations:
     acorn.io/app-generation: "2"
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -20,6 +21,7 @@ kind: Job
 metadata:
   annotations:
     acorn.io/app-generation: "2"
+    acorn.io/config-hash: ""
     apply.acorn.io/prune: "false"
     apply.acorn.io/update: "true"
   creationTimestamp: null
@@ -38,6 +40,7 @@ spec:
     metadata:
       annotations:
         acorn.io/app-generation: "2"
+        acorn.io/config-hash: ""
         acorn.io/container-spec: '{"events":["create","update"],"image":"only-image","metrics":{},"probes":null}'
       creationTimestamp: null
       labels:

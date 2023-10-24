@@ -12,7 +12,6 @@ import (
 	adminv1 "github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	internaladminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/awspermissions"
 	"github.com/acorn-io/runtime/pkg/client"
@@ -289,7 +288,7 @@ func TestImageRoleAuthorizations(t *testing.T) {
 	require.True(t, granted, "should have granted permissions, but have missing: %#v\nr: %#v\ng:%#v", missing, details.Permissions, ra)
 
 	app = createWaitLoop(ctx, blueprint.DeepCopy())
-	require.Equal(t, 0, len(app.Status.Staged.ImagePermissionsDenied), "should have 1 denied permissions: %#v", app.Status.Staged.ImagePermissionsDenied)
+	require.Equal(t, 0, len(app.Status.Staged.ImagePermissionsDenied), "should have 0 denied permissions: %#v", app.Status.Staged.ImagePermissionsDenied)
 
 	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
 		return obj.Status.AppStatus.Containers["rootapp"].Ready
@@ -533,35 +532,30 @@ func TestImageRoleAuthorizationConsumerPerms(t *testing.T) {
 			Rules: []internalv1.PolicyRule{
 				{
 					PolicyRule: rbacv1.PolicyRule{
-						Verbs:           []string{"get"},
-						APIGroups:       []string{""},
-						Resources:       []string{"secrets"},
-						ResourceNames:   []string{"foo"},
-						NonResourceURLs: []string(nil),
-					}, Scopes: []string(nil),
+						Verbs:         []string{"get"},
+						APIGroups:     []string{""},
+						Resources:     []string{"secrets"},
+						ResourceNames: []string{"foo"},
+					},
 				},
 			},
-			ZZ_ClusterRules: []v1.PolicyRule(nil),
 		},
 		{
 			ServiceName: "test",
 			Rules: []internalv1.PolicyRule{
 				{
 					PolicyRule: rbacv1.PolicyRule{
-						Verbs:           []string{"get"},
-						APIGroups:       []string{""},
-						Resources:       []string{"secrets"},
-						ResourceNames:   []string{"foo"},
-						NonResourceURLs: []string(nil),
+						Verbs:         []string{"get"},
+						APIGroups:     []string{""},
+						Resources:     []string{"secrets"},
+						ResourceNames: []string{"foo"},
 					},
-					Scopes: []string(nil),
 				},
 			},
-			ZZ_ClusterRules: []v1.PolicyRule(nil),
 		},
 	}
 
-	require.Equal(t, expectedPerms, app.Status.DeniedConsumerPermissions)
+	require.ElementsMatch(t, expectedPerms, app.Status.DeniedConsumerPermissions)
 	require.Empty(t, app.Status.Staged.ImagePermissionsDenied)
 	require.True(t, app.Status.Condition("consumer-permissions").Error)
 	require.Contains(t, app.Status.Condition("consumer-permissions").Message, "cannot run current image due to unauthorized permissions given to it by consumed services: rules needed:")

@@ -17,11 +17,17 @@ func (a *appStatusRenderer) readAcorns() error {
 	// reset state
 	a.app.Status.AppStatus.Acorns = map[string]v1.AcornStatus{}
 
-	for acornName := range a.app.Status.AppSpec.Acorns {
+	for acornName, acornDef := range a.app.Status.AppSpec.Acorns {
+		hash, err := configHash(acornDef)
+		if err != nil {
+			return err
+		}
+
 		s := v1.AcornStatus{
 			CommonStatus: v1.CommonStatus{
 				Defined:      ports.IsLinked(a.app, acornName),
 				LinkOverride: ports.LinkService(a.app, acornName),
+				ConfigHash:   hash,
 			},
 		}
 
@@ -37,7 +43,7 @@ func (a *appStatusRenderer) readAcorns() error {
 		}
 
 		acorn := &v1.AppInstance{}
-		err := a.c.Get(a.ctx, router.Key(a.app.Namespace, name2.SafeHashConcatName(a.app.Name, acornName)), acorn)
+		err = a.c.Get(a.ctx, router.Key(a.app.Namespace, name2.SafeHashConcatName(a.app.Name, acornName)), acorn)
 		if apierrors.IsNotFound(err) {
 			a.app.Status.AppStatus.Acorns[acornName] = s
 			continue
@@ -46,7 +52,7 @@ func (a *appStatusRenderer) readAcorns() error {
 		}
 
 		s.Defined = true
-		s.UpToDate = acorn.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
+		s.UpToDate = acorn.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) && acorn.Annotations[labels.AcornConfigHashAnnotation] == hash
 		s.Ready = s.UpToDate && acorn.Status.Ready
 		s.AcornName = publicname.Get(acorn)
 
@@ -60,6 +66,14 @@ func (a *appStatusRenderer) readAcorns() error {
 			}
 		}
 
+		a.app.Status.AppStatus.Acorns[acornName] = s
+	}
+
+	return nil
+}
+
+func setAcornMessages(app *v1.AppInstance) {
+	for acornName, s := range app.Status.AppStatus.Acorns {
 		if s.Ready {
 			s.State = "ready"
 		} else if s.UpToDate {
@@ -82,8 +96,6 @@ func (a *appStatusRenderer) readAcorns() error {
 			}
 		}
 
-		a.app.Status.AppStatus.Acorns[acornName] = s
+		app.Status.AppStatus.Acorns[acornName] = s
 	}
-
-	return nil
 }

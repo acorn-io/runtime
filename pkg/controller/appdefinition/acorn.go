@@ -57,14 +57,14 @@ func toAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *Pull
 		if ports.IsLinked(appInstance, acornName) {
 			continue
 		}
-		result = append(result, toAcorn(appInstance, tag, pullSecrets, acornName, acorn))
+		result = append(result, toAcorn(appInstance, tag, pullSecrets, acornName, appInstance.Status.AppStatus.Acorns[acornName].ConfigHash, acorn))
 	}
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Services) {
 		serviceName, service := entry.Key, entry.Value
 		if ports.IsLinked(appInstance, serviceName) || service.Image == "" {
 			continue
 		}
-		result = append(result, toAcorn(appInstance, tag, pullSecrets, serviceName, v1.Acorn{
+		result = append(result, toAcorn(appInstance, tag, pullSecrets, serviceName, appInstance.Status.AppStatus.Services[serviceName].ConfigHash, v1.Acorn{
 			Labels:              service.Labels,
 			Annotations:         service.Annotations,
 			Image:               service.Image,
@@ -152,7 +152,7 @@ func scopeLinks(app *v1.AppInstance, bindings v1.ServiceBindings) (result v1.Ser
 	return
 }
 
-func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, acornName string, acorn v1.Acorn) *v1.AppInstance {
+func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, acornName, configHash string, acorn v1.Acorn) *v1.AppInstance {
 	var image string
 	pattern, isPattern := autoupgrade.AutoUpgradePattern(acorn.Image)
 	if isPattern {
@@ -162,9 +162,10 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 		// the registry is all that really matters for the pull secret so this is safe to do
 		pullSecrets.ForAcorn(acornName, strings.TrimSuffix(image, ":"+pattern))
 	} else {
-		image = images.ResolveTag(tag, acorn.Image)
 		if strings.HasPrefix(acorn.Image, "sha256:") {
 			image = strings.TrimPrefix(acorn.Image, "sha256:")
+		} else {
+			image = images.ResolveTag(tag, acorn.Image)
 		}
 
 		pullSecrets.ForAcorn(acornName, image)
@@ -187,7 +188,9 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			Namespace: appInstance.Namespace,
 			Labels:    labelMap,
 			Annotations: labels.Merge(appInstanceScoped(acornName, appInstance.Status.AppSpec.Annotations, appInstance.Spec.Annotations, acorn.Annotations),
-				map[string]string{labels.AcornAppGeneration: strconv.FormatInt(appInstance.Generation, 10)}),
+				map[string]string{labels.AcornAppGeneration: strconv.FormatInt(appInstance.Generation, 10),
+					labels.AcornConfigHashAnnotation: configHash,
+				}),
 		},
 		Spec: v1.AppInstanceSpec{
 			Region:              appInstance.GetRegion(),

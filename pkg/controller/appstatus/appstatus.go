@@ -2,6 +2,8 @@ package appstatus
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -22,15 +24,16 @@ type appStatusRenderer struct {
 }
 
 // resetHandlerControlledFields will set fields to empty values because it is expected that handlers will append values
-// to them.  If the field is not reset it will grow indefinitely in a tight loop. This behavior does not
+// to them. If the field is not reset it will grow indefinitely in a tight loop. This behavior does not
 // apply to most status field built in AppStatus as they are fully calculated and reset on each run. But these
 // fields are specifically fields with aggregated values.
 // Additionally, some corner cases are handled in this code where fields need to be initialized in a special way
 func resetHandlerControlledFields(app *v1.AppInstance) {
+	appUpdated := app.Generation == app.Status.ObservedGeneration && app.Status.AppImage.Digest == app.Status.Staged.AppImage.Digest
 	for name, status := range app.Status.AppStatus.Containers {
 		// If the app is being updated, then set the containers to not ready so that the controller will run them again and the
 		// dependency status will be set correctly.
-		status.Ready = status.Ready && app.Generation == app.Status.ObservedGeneration
+		status.Ready = status.Ready && appUpdated
 		status.ExpressionErrors = nil
 		status.Dependencies = nil
 		app.Status.AppStatus.Containers[name] = status
@@ -39,7 +42,7 @@ func resetHandlerControlledFields(app *v1.AppInstance) {
 	for name, status := range app.Status.AppStatus.Jobs {
 		status.ExpressionErrors = nil
 		status.Dependencies = nil
-		if app.Generation != app.Status.ObservedGeneration && jobs.ShouldRun(name, app) {
+		if !appUpdated && jobs.ShouldRun(name, app) {
 			// If a job is going to run again, then set its status to not ready so that the controller will run it again and the
 			// dependency status will be set correctly.
 			status.Ready = false
@@ -97,12 +100,22 @@ func PrepareStatus(req router.Request, _ router.Response) error {
 	return nil
 }
 
-func SetStatus(req router.Request, _ router.Response) error {
+func GetStatus(req router.Request, _ router.Response) error {
 	app := req.Object.(*v1.AppInstance)
 	status, err := Get(req.Ctx, req.Client, app)
 	if err != nil {
 		return err
 	}
+
+	app.Status.AppStatus = status
+	return nil
+}
+
+func SetStatus(req router.Request, _ router.Response) error {
+	app := req.Object.(*v1.AppInstance)
+	setMessages(app)
+
+	status := app.Status.AppStatus
 
 	setCondition(app, v1.AppInstanceConditionContainers, status.Containers)
 	setCondition(app, v1.AppInstanceConditionJobs, status.Jobs)
@@ -113,8 +126,6 @@ func SetStatus(req router.Request, _ router.Response) error {
 	setCondition(app, v1.AppInstanceConditionRouters, status.Routers)
 
 	setPermissionCondition(app)
-
-	app.Status.AppStatus = status
 	return nil
 }
 
@@ -189,6 +200,16 @@ func setCondition[T commonStatusGetter](obj kclient.Object, conditionName string
 	}
 }
 
+func setMessages(app *v1.AppInstance) {
+	setContainerMessages(app)
+	setJobMessages(app)
+	setVolumeMessages(app)
+	setServiceMessages(app)
+	setSecretMessages(app)
+	setAcornMessages(app)
+	setRouterMessages(app)
+}
+
 func Get(ctx context.Context, c kclient.Client, app *v1.AppInstance) (v1.AppStatus, error) {
 	render := appStatusRenderer{
 		ctx: ctx,
@@ -229,4 +250,12 @@ func Get(ctx context.Context, c kclient.Client, app *v1.AppInstance) (v1.AppStat
 	}
 
 	return render.app.Status.AppStatus, nil
+}
+
+func configHash(c any) (string, error) {
+	b, err := json.Marshal(c)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", sha256.Sum256(b)), nil
 }

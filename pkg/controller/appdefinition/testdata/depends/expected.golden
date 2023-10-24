@@ -1,6 +1,8 @@
 `apiVersion: v1
 kind: ServiceAccount
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -16,6 +18,8 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -64,6 +68,8 @@ status: {}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -93,6 +99,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
+    acorn.io/config-hash: ""
     apply.acorn.io/create: "false"
     apply.acorn.io/update: "false"
   creationTimestamp: null
@@ -111,6 +118,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
+    acorn.io/config-hash: ""
     apply.acorn.io/create: "false"
     apply.acorn.io/update: "false"
   creationTimestamp: null
@@ -162,6 +170,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   annotations:
+    acorn.io/config-hash: ""
     apply.acorn.io/create: "false"
     apply.acorn.io/update: "false"
   creationTimestamp: null
@@ -294,6 +303,9 @@ status:
         dependencies:
           container-name:
             serviceType: container
+        state: waiting
+        transitioningMessages:
+        - waiting for container to be ready [container-name]
   columns: {}
   conditions:
     reason: Success

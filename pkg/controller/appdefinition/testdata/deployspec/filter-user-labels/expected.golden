@@ -2,6 +2,7 @@
 kind: ServiceAccount
 metadata:
   annotations:
+    acorn.io/config-hash: ""
     admit-scoped.io: test-container
     admit.io: test-admit-app-spec-ann
     allowed-container.io: test-allowed-container-ann
@@ -28,6 +29,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
+    acorn.io/config-hash: ""
     admit-scoped.io: test-container
     admit.io: test-admit-app-spec-ann
     allowed-container.io: test-allowed-container-ann
@@ -106,6 +108,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   annotations:
+    acorn.io/config-hash: ""
     admit-scoped.io: test-container
     admit.io: test-admit-app-spec-ann
     allowed-container.io: test-allowed-container-ann
@@ -146,6 +149,7 @@ kind: ServiceAccount
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
     admit-job.io: test-admit-job-ann
     admit.io: test-admit-app-spec-ann
     allowed-global.io: test-global
@@ -171,6 +175,7 @@ kind: Job
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
     admit-job.io: test-admit-job-ann
     admit.io: test-admit-app-spec-ann
     allowed-global.io: test-global
@@ -196,6 +201,7 @@ spec:
   template:
     metadata:
       annotations:
+        acorn.io/config-hash: ""
         acorn.io/container-spec: '{"annotations":{"admit-job.io":"test-admit-job-ann"},"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","labels":{"allowed-job.io":"test-allowed-job-label"},"metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
         admit-job.io: test-admit-job-ann
         admit.io: test-admit-app-spec-ann
@@ -260,6 +266,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   annotations:
+    acorn.io/config-hash: ""
     admit-scoped.io: test-volume
     admit.io: test-admit-app-spec-ann
     allowed-global.io: test-global

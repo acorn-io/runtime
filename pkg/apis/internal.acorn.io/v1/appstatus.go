@@ -79,6 +79,7 @@ type CommonStatus struct {
 	Messages              []string `json:"messages,omitempty"`
 	TransitioningMessages []string `json:"transitioningMessages,omitempty"`
 	ErrorMessages         []string `json:"errorMessages,omitempty"`
+	ConfigHash            string   `json:"configHash,omitempty"`
 }
 
 type AcornStatus struct {

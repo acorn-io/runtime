@@ -140,8 +140,10 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 				Name:      vol,
 				Namespace: appInstance.Status.Namespace,
 				Labels:    volumeLabels(appInstance, vol, volumeRequest),
-				Annotations: labels.GatherScoped(vol, v1.LabelTypeVolume, appInstance.Status.AppSpec.Annotations,
-					volumeRequest.Annotations, appInstance.Spec.Annotations),
+				Annotations: typed.Concat(
+					labels.GatherScoped(vol, v1.LabelTypeVolume, appInstance.Status.AppSpec.Annotations, volumeRequest.Annotations, appInstance.Spec.Annotations),
+					map[string]string{labels.AcornConfigHashAnnotation: appInstance.Status.AppStatus.Volumes[vol].ConfigHash},
+				),
 			},
 			Spec: corev1.PersistentVolumeClaimSpec{
 				AccessModes: translateAccessModes(volumeRequest.AccessModes),

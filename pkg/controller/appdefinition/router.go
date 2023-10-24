@@ -62,7 +62,7 @@ func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router) 
 			Name:        routerName,
 			Namespace:   appInstance.Status.Namespace,
 			Labels:      deploymentLabels,
-			Annotations: deploymentAnnotations,
+			Annotations: typed.Concat(deploymentAnnotations, map[string]string{labels.AcornConfigHashAnnotation: appInstance.Status.AppStatus.Routers[routerName].ConfigHash}),
 		},
 		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{

@@ -1,0 +1,26 @@
+containers: {
+	one: {
+		image: "ghcr.io/acorn-io/images-mirror/nginx:latest"
+		dependsOn: ["job1", "job2"]
+	}
+	two: {
+		image: "ghcr.io/acorn-io/images-mirror/nginx:latest"
+		dependsOn: "one"
+	}
+	three: {
+		image: "ghcr.io/acorn-io/images-mirror/nginx:latest"
+		dependsOn: "two"
+	}
+}
+
+jobs: {
+	job1: {
+		image:"ghcr.io/acorn-io/images-mirror/busybox:latest"
+		command: "sleep 1"
+		dependsOn: "job2"
+	}
+	job2: {
+		image:"ghcr.io/acorn-io/images-mirror/busybox:latest"
+		command: "sleep 1"
+	}
+}

@@ -130,6 +130,9 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 
 	baseAnnotations := labels.Merge(secretAnnotations, labels.GatherScoped(name, v1.LabelTypeJob,
 		appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations))
+
+	baseAnnotations[labels.AcornConfigHashAnnotation] = appInstance.Status.AppStatus.Jobs[name].ConfigHash
+
 	if appInstance.Generation > 0 {
 		baseAnnotations[labels.AcornAppGeneration] = strconv.FormatInt(appInstance.Generation, 10)
 	}

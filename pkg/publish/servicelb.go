@@ -6,6 +6,7 @@ import (
 
 	"github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/labels"
@@ -68,7 +69,9 @@ func ServiceLoadBalancer(req router.Request, svc *v1.ServiceInstance) (result []
 			Labels: labels.Merge(svc.Spec.Labels, map[string]string{
 				labels.AcornServicePublish: "true",
 			}),
-			Annotations: svc.Spec.Annotations,
+			Annotations: typed.Concat(svc.Spec.Annotations, map[string]string{
+				labels.AcornConfigHashAnnotation: svc.Annotations[labels.AcornConfigHashAnnotation],
+			}),
 		},
 		Spec: corev1.ServiceSpec{
 			Ports:    servicePorts,

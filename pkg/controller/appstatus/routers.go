@@ -9,8 +9,8 @@ import (
 	"github.com/acorn-io/runtime/pkg/ports"
 )
 
-func (a *appStatusRenderer) readRouters() error {
-	oldState := a.app.Status.AppStatus.Routers
+func (a *appStatusRenderer) readRouters() (err error) {
+	existingStatus := a.app.Status.AppStatus.Routers
 	// reset state
 	a.app.Status.AppStatus.Routers = map[string]v1.RouterStatus{}
 
@@ -19,11 +19,11 @@ func (a *appStatusRenderer) readRouters() error {
 			CommonStatus: v1.CommonStatus{
 				Defined:      ports.IsLinked(a.app, routerName),
 				LinkOverride: ports.LinkService(a.app, routerName),
+				ConfigHash:   existingStatus[routerName].ConfigHash,
 			},
-			MissingTargets: oldState[routerName].MissingTargets,
+			MissingTargets: existingStatus[routerName].MissingTargets,
 		}
 
-		var err error
 		s.Ready, s.Defined, err = a.isServiceReady(routerName)
 		if err != nil {
 			return err
@@ -39,6 +39,14 @@ func (a *appStatusRenderer) readRouters() error {
 			s.Ready = true
 		}
 
+		a.app.Status.AppStatus.Routers[routerName] = s
+	}
+
+	return nil
+}
+
+func setRouterMessages(app *v1.AppInstance) {
+	for routerName, s := range app.Status.AppStatus.Routers {
 		// Not ready if we have any error messages
 		if len(s.ErrorMessages) > 0 {
 			s.Ready = false
@@ -66,8 +74,6 @@ func (a *appStatusRenderer) readRouters() error {
 			}
 		}
 
-		a.app.Status.AppStatus.Routers[routerName] = s
+		app.Status.AppStatus.Routers[routerName] = s
 	}
-
-	return nil
 }

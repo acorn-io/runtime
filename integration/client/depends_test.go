@@ -10,6 +10,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/acorn-io/runtime/pkg/labels"
+	"github.com/acorn-io/z"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
@@ -56,6 +57,100 @@ func TestDependsOn(t *testing.T) {
 	app = helper.WaitForObject(t, helper.Watcher(t, c), &v1.AppList{}, app, func(app *v1.App) bool {
 		return app.Status.Namespace != ""
 	})
+
+	eg := errgroup.Group{}
+
+	eg.Go(func() error {
+		helper.Wait(t, k8sclient.Watch, &batchv1.JobList{}, func(job *batchv1.Job) bool {
+			if job.Namespace != app.Status.Namespace {
+				return false
+			}
+			name := job.Labels[labels.AcornJobName]
+			if _, ok := jobs[name]; !ok {
+				jobs[name] = toRevision(t, job)
+				if len(jobs) == 2 {
+					return true
+				}
+			}
+			return false
+		})
+		return nil
+	})
+
+	eg.Go(func() error {
+		helper.Wait(t, k8sclient.Watch, &appsv1.DeploymentList{}, func(dep *appsv1.Deployment) bool {
+			if dep.Namespace != app.Status.Namespace {
+				return false
+			}
+			name := dep.Labels[labels.AcornContainerName]
+			if _, ok := deployments[name]; !ok {
+				deployments[name] = toRevision(t, dep)
+				if len(deployments) == 3 {
+					return true
+				}
+			}
+			return false
+		})
+		return nil
+	})
+
+	_ = eg.Wait()
+
+	assert.Less(t, jobs["job2"], jobs["job1"])
+	assert.Less(t, jobs["job1"], deployments["one"])
+	assert.Less(t, jobs["job2"], deployments["one"])
+	assert.Less(t, deployments["one"], deployments["two"])
+	assert.Less(t, deployments["two"], deployments["three"])
+}
+
+func TestDependsOnAutoUpgrade(t *testing.T) {
+	imageTag := "depends-test-image"
+	ctx := context.Background()
+	c, _ := helper.ClientAndProject(t)
+	k8sclient := helper.MustReturn(k8sclient.Default)
+	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/dependson/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/dependson",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err = c.ImageTag(helper.GetCTX(t), image.ID, imageTag); err != nil {
+		t.Fatal(err)
+	}
+
+	app, err := c.AppRun(ctx, imageTag, &client.AppRunOptions{AutoUpgrade: z.Pointer(true)})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &v1.AppList{}, app, func(app *v1.App) bool {
+		return app.Status.Ready
+	})
+
+	previousImage := app.Status.AppImage.ID
+
+	image, err = c.AcornImageBuild(helper.GetCTX(t), "./testdata/dependson/Acornfile2", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/dependson",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err = c.ImageTag(helper.GetCTX(t), image.ID, imageTag); err != nil {
+		t.Fatal(err)
+	}
+
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &v1.AppList{}, app, func(app *v1.App) bool {
+		return app.Status.AppImage.ID != previousImage
+	})
+
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &v1.AppList{}, app, func(app *v1.App) bool {
+		return app.Status.Ready
+	})
+
+	jobs := map[string]int{}
+	deployments := map[string]int{}
 
 	eg := errgroup.Group{}
 

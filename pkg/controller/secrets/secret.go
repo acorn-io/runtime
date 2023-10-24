@@ -100,6 +100,7 @@ func CreateSecrets(req router.Request, resp router.Response) (err error) {
 			entry.secret.Annotations, appInstance.Spec.Annotations)
 
 		annotations[labels.AcornAppGeneration] = strconv.FormatInt(appInstance.Generation, 10)
+		annotations[labels.AcornConfigHashAnnotation] = appInstance.Status.AppStatus.Secrets[secretName].ConfigHash
 
 		resp.Objects(&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{

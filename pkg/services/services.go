@@ -25,10 +25,12 @@ import (
 func toContainerLabelsService(service *v1.ServiceInstance) (result []kclient.Object) {
 	newService := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        service.Name,
-			Namespace:   service.Namespace,
-			Labels:      service.Spec.Labels,
-			Annotations: service.Spec.Annotations,
+			Name:      service.Name,
+			Namespace: service.Namespace,
+			Labels:    service.Spec.Labels,
+			Annotations: typed.Concat(service.Spec.Annotations, map[string]string{
+				labels.AcornConfigHashAnnotation: service.Annotations[labels.AcornConfigHashAnnotation],
+			}),
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: ports.ToServicePorts(service.Spec.Ports),
@@ -44,10 +46,12 @@ func toContainerLabelsService(service *v1.ServiceInstance) (result []kclient.Obj
 func toContainerService(service *v1.ServiceInstance) (result []kclient.Object) {
 	newService := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        service.Name,
-			Namespace:   service.Namespace,
-			Labels:      service.Spec.Labels,
-			Annotations: service.Spec.Annotations,
+			Name:      service.Name,
+			Namespace: service.Namespace,
+			Labels:    service.Spec.Labels,
+			Annotations: typed.Concat(service.Spec.Annotations, map[string]string{
+				labels.AcornConfigHashAnnotation: service.Annotations[labels.AcornConfigHashAnnotation],
+			}),
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: ports.ToServicePorts(service.Spec.Ports),
@@ -63,10 +67,12 @@ func toContainerService(service *v1.ServiceInstance) (result []kclient.Object) {
 func toAddressService(service *v1.ServiceInstance) (result []kclient.Object) {
 	newService := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        service.Name,
-			Namespace:   service.Namespace,
-			Labels:      service.Spec.Labels,
-			Annotations: service.Spec.Annotations,
+			Name:      service.Name,
+			Namespace: service.Namespace,
+			Labels:    service.Spec.Labels,
+			Annotations: typed.Concat(service.Spec.Annotations, map[string]string{
+				labels.AcornConfigHashAnnotation: service.Annotations[labels.AcornConfigHashAnnotation],
+			}),
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: ports.ToServicePorts(service.Spec.Ports),
@@ -164,10 +170,12 @@ func toRefService(ctx context.Context, c kclient.Client, cfg *apiv1.Config, serv
 
 	newService := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        service.Name,
-			Namespace:   service.Namespace,
-			Labels:      service.Spec.Labels,
-			Annotations: service.Spec.Annotations,
+			Name:      service.Name,
+			Namespace: service.Namespace,
+			Labels:    service.Spec.Labels,
+			Annotations: typed.Concat(service.Spec.Annotations, map[string]string{
+				labels.AcornConfigHashAnnotation: service.Annotations[labels.AcornConfigHashAnnotation],
+			}),
 		},
 		Spec: corev1.ServiceSpec{
 			Type:         serviceType,

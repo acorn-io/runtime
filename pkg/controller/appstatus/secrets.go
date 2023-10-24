@@ -28,19 +28,23 @@ func linkedSecret(app *v1.AppInstance, name string) string {
 	return ""
 }
 
-func (a *appStatusRenderer) readSecrets() (err error) {
-	var (
-		existingStatus = a.app.Status.AppStatus.Secrets
-	)
+func (a *appStatusRenderer) readSecrets() error {
+	existingStatus := a.app.Status.AppStatus.Secrets
 	// reset state
 	a.app.Status.AppStatus.Secrets = map[string]v1.SecretStatus{}
 
 	for secretName, secretDef := range a.app.Status.AppSpec.Secrets {
+		hash, err := configHash(secretDef)
+		if err != nil {
+			return err
+		}
+
 		s := v1.SecretStatus{
 			CommonStatus: v1.CommonStatus{
 				LinkOverride:          linkedSecret(a.app, secretName),
 				ErrorMessages:         existingStatus[secretName].LookupErrors,
 				TransitioningMessages: existingStatus[secretName].LookupTransitioning,
+				ConfigHash:            hash,
 			},
 		}
 
@@ -52,7 +56,7 @@ func (a *appStatusRenderer) readSecrets() (err error) {
 			return err
 		}
 
-		s.UpToDate = secret.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
+		s.UpToDate = secret.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) && secret.Annotations[labels.AcornConfigHashAnnotation] == hash
 		s.Defined = true
 		s.Ready = true
 
@@ -78,6 +82,17 @@ func (a *appStatusRenderer) readSecrets() (err error) {
 
 		s.Ready = s.Ready && s.JobReady
 		s.DataKeys = typed.SortedKeys(sourceSecret.Data)
+
+		a.app.Status.AppStatus.Secrets[secretName] = s
+	}
+
+	return nil
+}
+
+func setSecretMessages(app *v1.AppInstance) {
+	for secretName, s := range app.Status.AppStatus.Secrets {
+		s.ErrorMessages = s.LookupErrors
+		s.TransitioningMessages = s.LookupTransitioning
 
 		// Not ready if we have any error messages
 		if len(s.ErrorMessages) > 0 {
@@ -106,8 +121,6 @@ func (a *appStatusRenderer) readSecrets() (err error) {
 			}
 		}
 
-		a.app.Status.AppStatus.Secrets[secretName] = s
+		app.Status.AppStatus.Secrets[secretName] = s
 	}
-
-	return nil
 }

@@ -1,6 +1,8 @@
 `apiVersion: v1
 kind: ServiceAccount
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-with-metrics
@@ -16,6 +18,8 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-with-metrics
@@ -73,6 +77,8 @@ status: {}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-with-metrics
@@ -103,6 +109,7 @@ kind: ServiceInstance
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-with-metrics

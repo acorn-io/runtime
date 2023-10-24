@@ -23,6 +23,11 @@ func (a *appStatusRenderer) readVolumes() error {
 	a.app.Status.AppStatus.Volumes = make(map[string]v1.VolumeStatus, len(a.app.Status.AppSpec.Volumes))
 
 	for volumeName, vol := range a.app.Status.AppSpec.Volumes {
+		hash, err := configHash(vol)
+		if err != nil {
+			return err
+		}
+
 		isEphemeral := vol.Class == v1.VolumeRequestTypeEphemeral
 		a.app.Status.AppStatus.Volumes[volumeName] = v1.VolumeStatus{
 			CommonStatus: v1.CommonStatus{
@@ -30,6 +35,7 @@ func (a *appStatusRenderer) readVolumes() error {
 				Defined:      isEphemeral,
 				UpToDate:     isEphemeral,
 				Ready:        isEphemeral,
+				ConfigHash:   hash,
 			},
 			Bound:             isEphemeral,
 			StorageClassFound: isEphemeral,
@@ -66,7 +72,7 @@ func (a *appStatusRenderer) readVolumes() error {
 
 		v := a.app.Status.AppStatus.Volumes[volumeName]
 		v.Defined = true
-		v.UpToDate = pvc.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
+		v.UpToDate = pvc.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) && pvc.Annotations[labels.AcornConfigHashAnnotation] == a.app.Status.AppStatus.Volumes[volumeName].ConfigHash
 
 		if pvc.Spec.VolumeName != "" {
 			pv := &corev1.PersistentVolume{}
@@ -98,6 +104,14 @@ func (a *appStatusRenderer) readVolumes() error {
 			}
 		}
 
+		a.app.Status.AppStatus.Volumes[volumeName] = v
+	}
+
+	return nil
+}
+
+func setVolumeMessages(app *v1.AppInstance) {
+	for volumeName, v := range app.Status.AppStatus.Volumes {
 		// Not ready if we have any error messages
 		if len(v.ErrorMessages) > 0 {
 			v.Ready = false
@@ -129,10 +143,8 @@ func (a *appStatusRenderer) readVolumes() error {
 			}
 		}
 
-		a.app.Status.AppStatus.Volumes[volumeName] = v
+		app.Status.AppStatus.Volumes[volumeName] = v
 	}
-
-	return nil
 }
 
 func linkedVolume(app *v1.AppInstance, name string) string {

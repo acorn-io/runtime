@@ -6,6 +6,7 @@ import (
 
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/jobs"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/ports"
 	"github.com/acorn-io/z"
@@ -16,9 +17,7 @@ import (
 )
 
 func (a *appStatusRenderer) readJobs() error {
-	var (
-		existingStatus = a.app.Status.AppStatus.Jobs
-	)
+	existingStatus := a.app.Status.AppStatus.Jobs
 
 	// reset state
 	a.app.Status.AppStatus.Jobs = make(map[string]v1.JobStatus, len(a.app.Status.AppSpec.Jobs))
@@ -28,12 +27,20 @@ func (a *appStatusRenderer) readJobs() error {
 		return err
 	}
 
-	for jobName := range a.app.Status.AppSpec.Jobs {
+	for jobName, jobDef := range a.app.Status.AppSpec.Jobs {
+		hash, err := configHash(jobDef)
+		if err != nil {
+			return err
+		}
+
 		c := v1.JobStatus{
 			CreateEventSucceeded: existingStatus[jobName].CreateEventSucceeded,
-			Skipped:              existingStatus[jobName].Skipped,
+			Skipped:              !jobs.ShouldRun(jobName, a.app),
 			ExpressionErrors:     existingStatus[jobName].ExpressionErrors,
 			Dependencies:         existingStatus[jobName].Dependencies,
+			CommonStatus: v1.CommonStatus{
+				ConfigHash: hash,
+			},
 		}
 		summary := summary[jobName]
 
@@ -59,7 +66,7 @@ func (a *appStatusRenderer) readJobs() error {
 		}
 
 		var job batchv1.Job
-		err := a.c.Get(a.ctx, router.Key(a.app.Status.Namespace, jobName), &job)
+		err = a.c.Get(a.ctx, router.Key(a.app.Status.Namespace, jobName), &job)
 		if apierror.IsNotFound(err) {
 			var cronJob batchv1.CronJob
 			err := a.c.Get(a.ctx, router.Key(a.app.Status.Namespace, jobName), &cronJob)
@@ -73,7 +80,7 @@ func (a *appStatusRenderer) readJobs() error {
 				c.CompletionTime = cronJob.Status.LastSuccessfulTime
 				c.Schedule = cronJob.Spec.Schedule
 				c.Defined = true
-				c.UpToDate = cronJob.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
+				c.UpToDate = cronJob.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) && cronJob.Annotations[labels.AcornConfigHashAnnotation] == hash
 				for _, nj := range cronJob.Status.Active {
 					nestedJob := &batchv1.Job{}
 					err := a.c.Get(a.ctx, router.Key(nj.Namespace, nj.Name), nestedJob)
@@ -102,7 +109,7 @@ func (a *appStatusRenderer) readJobs() error {
 			c.CompletionTime = job.Status.CompletionTime
 			c.LastRun = job.Status.StartTime
 			c.Defined = true
-			c.UpToDate = job.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
+			c.UpToDate = job.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) && (c.Skipped || job.Annotations[labels.AcornConfigHashAnnotation] == hash)
 			if job.Status.Succeeded > 0 {
 				c.CreateEventSucceeded = true
 				c.Ready = c.UpToDate
@@ -111,20 +118,6 @@ func (a *appStatusRenderer) readJobs() error {
 			} else if job.Status.Active > 0 && c.RunningCount == 0 {
 				c.RunningCount = int(job.Status.Active)
 			}
-		}
-
-		if c.RunningCount > 0 {
-			c.TransitioningMessages = append(c.TransitioningMessages, "job running")
-			// Move error to transitioning to make it look better
-			c.TransitioningMessages = append(c.TransitioningMessages, c.ErrorMessages...)
-			c.ErrorMessages = nil
-		} else if c.ErrorCount > 0 && c.ErrorCount < 3 {
-			c.TransitioningMessages = append(c.TransitioningMessages, fmt.Sprintf("restarting job, previous %d attempts failed to complete", c.ErrorCount))
-			// Move error to transitioning to make it look better
-			c.TransitioningMessages = append(c.TransitioningMessages, c.ErrorMessages...)
-			c.ErrorMessages = nil
-		} else if c.ErrorCount > 0 {
-			c.ErrorMessages = append(c.ErrorMessages, fmt.Sprintf("%d failed attempts", c.ErrorCount))
 		}
 
 		if c.LinkOverride != "" {
@@ -137,6 +130,28 @@ func (a *appStatusRenderer) readJobs() error {
 			if c.Ready {
 				c.CreateEventSucceeded = true
 			}
+		}
+
+		a.app.Status.AppStatus.Jobs[jobName] = c
+	}
+
+	return nil
+}
+
+func setJobMessages(app *v1.AppInstance) {
+	for jobName, c := range app.Status.AppStatus.Jobs {
+		if c.RunningCount > 0 {
+			c.TransitioningMessages = append(c.TransitioningMessages, "job running")
+			// Move error to transitioning to make it look better
+			c.TransitioningMessages = append(c.TransitioningMessages, c.ErrorMessages...)
+			c.ErrorMessages = nil
+		} else if c.ErrorCount > 0 && c.ErrorCount < 3 {
+			c.TransitioningMessages = append(c.TransitioningMessages, fmt.Sprintf("restarting job, previous %d attempts failed to complete", c.ErrorCount))
+			// Move error to transitioning to make it look better
+			c.TransitioningMessages = append(c.TransitioningMessages, c.ErrorMessages...)
+			c.ErrorMessages = nil
+		} else if c.ErrorCount > 0 {
+			c.ErrorMessages = append(c.ErrorMessages, fmt.Sprintf("%d failed attempts", c.ErrorCount))
 		}
 
 		addExpressionErrors(&c.CommonStatus, c.ExpressionErrors)
@@ -170,18 +185,8 @@ func (a *appStatusRenderer) readJobs() error {
 			}
 		}
 
-		if !c.Ready {
-			msg, blocked := isBlocked(c.Dependencies, c.ExpressionErrors)
-			if blocked {
-				c.State = "waiting"
-			}
-			c.TransitioningMessages = append(c.TransitioningMessages, msg...)
-		}
-
-		a.app.Status.AppStatus.Jobs[jobName] = c
+		app.Status.AppStatus.Jobs[jobName] = c
 	}
-
-	return nil
 }
 
 func addExpressionErrors(status *v1.CommonStatus, expressionErrors []v1.ExpressionError) {
