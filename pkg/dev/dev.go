@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -22,6 +23,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc/grpclog"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/util/retry"
@@ -571,6 +573,10 @@ func setAppNameAndGetHash(ctx context.Context, c client.Client, opts *Options) (
 }
 
 func Dev(ctx context.Context, client client.Client, opts *Options) error {
+	// Silence spammy GRPC logs like `grpc: addrConn.createTransport failed to connect to {Addr: "", ServerName: "", }`
+	// caused by dropped GRPC connection pings when we switch to a new image revision during the dev session.
+	grpclog.SetLoggerV2(grpclog.NewLoggerV2(io.Discard, io.Discard, os.Stderr))
+
 	hash, opts, err := setAppNameAndGetHash(ctx, client, opts)
 	if err != nil {
 		return err
