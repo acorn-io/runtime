@@ -23,6 +23,7 @@ func getSecretsToRemove(arg string, client client.Client, cmd *cobra.Command) ([
 	}
 
 	for _, secret := range secrets {
+		// We only want to delete secrets for the given app and not nested apps
 		if after, found := strings.CutPrefix(secret.Name, arg+"."); found && !strings.ContainsRune(after, '.') {
 			result = append(result, secret.Name)
 		}
