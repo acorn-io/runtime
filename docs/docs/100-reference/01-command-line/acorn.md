@@ -32,6 +32,7 @@ acorn [flags]
 * [acorn container](acorn_container.md)	 - Manage containers
 * [acorn copy](acorn_copy.md)	 - Copy Acorn images between registries
 * [acorn credential](acorn_credential.md)	 - Manage registry credentials
+* [acorn dashboard](acorn_dashboard.md)	 - Open the web dashboard for the project
 * [acorn dev](acorn_dev.md)	 - Run an app from an image or Acornfile in dev mode or attach a dev session to a currently running app
 * [acorn events](acorn_events.md)	 - List events about Acorn resources
 * [acorn exec](acorn_exec.md)	 - Run a command in a container

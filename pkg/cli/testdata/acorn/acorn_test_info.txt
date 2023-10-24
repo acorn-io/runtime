@@ -11,6 +11,7 @@ Available Commands:
   container    Manage containers
   copy         Copy Acorn images between registries
   credential   Manage registry credentials
+  dashboard    Open the web dashboard for the project
   dev          Run an app from an image or Acornfile in dev mode or attach a dev session to a currently running app
   events       List events about Acorn resources
   exec         Run a command in a container
