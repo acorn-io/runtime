@@ -50,7 +50,7 @@ type Dev struct {
 	Clone                bool   `usage:"Clone the vcs repository and infer the build context for the given app allowing for local development"`
 	CloneDir             string `usage:"Provide a directory to clone the repository into, use in conjunction with clone flag" default:"." hidden:"true"`
 	SessionTimeout       string `usage:"Timeout in seconds for the dev session" default:"360s"`
-	SessionReleaseOnExit bool   `usage:"Release the session when the dev command exits" default:"true"`
+	SessionReleaseOnExit *bool  `usage:"Release the session when the dev command exits (default: true)"`
 	out                  io.Writer
 	client               ClientFactory
 }
