@@ -62,7 +62,7 @@ require (
 	golang.org/x/crypto v0.14.0
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	golang.org/x/sync v0.4.0
-	google.golang.org/grpc v1.57.0
+	google.golang.org/grpc v1.57.1
 	inet.af/tcpproxy v0.0.0-20221017015627-91f861402626
 	k8s.io/api v0.27.3
 	k8s.io/apiextensions-apiserver v0.27.3
