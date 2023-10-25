@@ -33,9 +33,14 @@ func (v *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 	}
 
 	if devSession.Spec.Region != app.GetRegion() {
-		result = append(result, field.Invalid(field.NewPath("spec", "region"), devSession.Spec.Region,
-			fmt.Sprintf("Region on devSession [%s] and app [%s] must match", devSession.Spec.Region, app.GetRegion())))
-		return
+		if devSession.Spec.Region != "" {
+			result = append(result, field.Invalid(field.NewPath("spec", "region"), devSession.Spec.Region,
+				fmt.Sprintf("Region on devSession [%s] and app [%s] must match", devSession.Spec.Region, app.GetRegion())))
+			return
+		}
+
+		// If the dev session's region is blank, then set it to the app's region.
+		devSession.Spec.Region = app.GetRegion()
 	}
 
 	if devSession.Spec.SpecOverride == nil {
