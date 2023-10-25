@@ -86,12 +86,12 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	appMeetsPreconditions.Middleware(appdefinition.ImagePulled).HandlerFunc(permissions.ConsumerPermissions)
 	appMeetsPreconditions.Middleware(appdefinition.ImagePulled).HandlerFunc(appdefinition.DeploySpec)
 	appMeetsPreconditions.Middleware(appdefinition.ImagePulled).HandlerFunc(secrets.CreateSecrets)
-	appMeetsPreconditions.HandlerFunc(appstatus.SetStatus)
-	appMeetsPreconditions.HandlerFunc(appstatus.ReadyStatus)
 	appMeetsPreconditions.HandlerFunc(networkpolicy.ForApp)
 	appMeetsPreconditions.HandlerFunc(appdefinition.AddAcornProjectLabel)
 	appMeetsPreconditions.HandlerFunc(appdefinition.UpdateObservedFields)
 
+	appRouter.HandlerFunc(appstatus.SetStatus)
+	appRouter.HandlerFunc(appstatus.ReadyStatus)
 	appRouter.HandlerFunc(appstatus.CLIStatus)
 
 	projectRouter := router.Type(&v1.ProjectInstance{})
