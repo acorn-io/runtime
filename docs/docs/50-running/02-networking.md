@@ -34,6 +34,7 @@ Publishing ports makes the services available outside of the cluster. HTTP ports
 | `-p app:80`                 | Publish container `app` port 80 in the Acorn to 80 on cluster with its protocol.         |
 | `-p app:80/tcp`             | Publish container `app` port 80/tcp in the Acorn to 80 as a cluster service.             |
 | `-p app:80/http`            | Publish container `app` port 80/http in the Acorn to 80 with a random hostname.          |
+| `-p example.com:80`         | Publish 80/http in the Acorn to external name `example.com`.                             |
 | `-p app.example.com:app`    | Publish container `app` protocol HTTP from the Acorn to external name `app.example.com`. |
 | `-p app.example.com:app:80` | Publish container `app` port 80 from the Acorn to external name `app.example.com`.       |
 
