@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/acorn-io/aml/pkg/value"
+	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/shlex"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
@@ -310,7 +311,9 @@ func impliedSecretsForContainer(app *AppSpec, container Container) {
 }
 
 func impliedVolumesForContainer(app *AppSpec, containerName, sideCarName string, container Container) error {
-	for path, mount := range container.Dirs {
+	for _, entry := range typed.Sorted(container.Dirs) {
+		path, mount := entry.Key, entry.Value
+
 		if mount.ContextDir != "" || mount.Secret.Name != "" {
 			continue
 		}
@@ -325,8 +328,16 @@ func impliedVolumesForContainer(app *AppSpec, containerName, sideCarName string,
 			if existing, ok := app.Volumes[mount.Volume]; ok {
 				existingSize, err := resource.ParseQuantity((string)(existing.Size))
 				if err != nil {
-					// ignore error
-					continue
+					// If the existing.Size is empty, then the volume is handing off the defaulting logic
+					// to the the calling layer. If a volume is already defined and in this situation,
+					// then we should ignore the error and let any incoming volume mounts override it by
+					// setting the existingSize variable to 0.
+					if existing.Size == "" {
+						existingSize = *resource.NewQuantity(0, resource.BinarySI)
+					} else {
+						// ignore error
+						continue
+					}
 				}
 				if v.Size != "" {
 					vSize, err := resource.ParseQuantity((string)(v.Size))
