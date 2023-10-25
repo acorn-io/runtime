@@ -6,10 +6,12 @@ import (
 	"strings"
 	"time"
 
+	v1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/prompt"
 	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/client-go/util/retry"
 
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/spf13/cobra"
@@ -123,7 +125,11 @@ func deleteOthers(ctx context.Context, c client.Client, arg string) (bool, error
 }
 
 func removeAcorn(ctx context.Context, c client.Client, arg string, ignoreCleanup, wait bool) error {
-	app, err := c.AppDelete(ctx, arg)
+	var app *v1.App
+	err := retry.RetryOnConflict(retry.DefaultRetry, func() (err error) {
+		app, err = c.AppDelete(ctx, arg)
+		return
+	})
 	if err != nil {
 		return fmt.Errorf("deleting app %s: %w", arg, err)
 	}
