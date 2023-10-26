@@ -7,6 +7,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/scheme"
 	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/admin/computeclass"
 	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/admin/imageroleauthorizations"
+	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/admin/quotarequest"
 	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/admin/volumeclass"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -24,6 +25,7 @@ func Stores(c kclient.WithWatch) (map[string]rest.Storage, error) {
 		"projectvolumeclasses":           volumeclass.NewProjectStorage(c),
 		"imageroleauthorizations":        imageroleauthorizations.NewStorage(c),
 		"clusterimageroleauthorizations": imageroleauthorizations.NewClusterStorage(c),
+		"quotarequests":                  quotarequest.NewStorage(c),
 	}, nil
 }
 
