@@ -74,7 +74,7 @@ func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router) 
 					Annotations: deploymentAnnotations,
 				},
 				Spec: corev1.PodSpec{
-					TerminationGracePeriodSeconds: z.Pointer[int64](5),
+					TerminationGracePeriodSeconds: z.Pointer[int64](10),
 					EnableServiceLinks:            new(bool),
 					Containers: []corev1.Container{
 						{
@@ -106,6 +106,17 @@ func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router) 
 									TCPSocket: &corev1.TCPSocketAction{
 										Port: intstr.IntOrString{
 											IntVal: 8080,
+										},
+									},
+								},
+							},
+							Lifecycle: &corev1.Lifecycle{
+								PreStop: &corev1.LifecycleHandler{
+									Exec: &corev1.ExecAction{
+										Command: []string{
+											"/bin/sh",
+											"-c",
+											"sleep 5 && /usr/sbin/nginx -s quit",
 										},
 									},
 								},

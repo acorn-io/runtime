@@ -37,6 +37,13 @@ spec:
         command:
         - /docker-entrypoint.sh
         image: ghcr.io/acorn-io/runtime:main
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - sleep 5 && /usr/sbin/nginx -s quit
         name: nginx
         ports:
         - containerPort: 8080
@@ -53,7 +60,7 @@ spec:
           subPath: config
       enableServiceLinks: false
       serviceAccountName: router-name
-      terminationGracePeriodSeconds: 5
+      terminationGracePeriodSeconds: 10
       tolerations:
       - key: taints.acorn.io/workload
         operator: Exists

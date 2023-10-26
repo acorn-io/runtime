@@ -1,5 +1,6 @@
+GO_TAGS ?= netgo
 build:
-	CGO_ENABLED=0 go build -o bin/acorn -tags netgo -ldflags "-s -w" .
+	CGO_ENABLED=0 go build -o bin/acorn -tags "${GO_TAGS}" -ldflags "-s -w" .
 
 tidy:
 	go mod tidy

@@ -1,0 +1,236 @@
+`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/container-name: container-name
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: container-name
+  namespace: app-created-namespace
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/container-name: container-name
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: container-name
+  namespace: app-created-namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      acorn.io/app-name: app-name
+      acorn.io/app-namespace: app-namespace
+      acorn.io/container-name: container-name
+      acorn.io/managed: "true"
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        acorn.io/container-spec: '{"dirs":{"/var/tmp":{"secret":{},"volume":"foo"}},"image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
+        karpenter.sh/do-not-evict: "true"
+      creationTimestamp: null
+      labels:
+        acorn.io/app-name: app-name
+        acorn.io/app-namespace: app-namespace
+        acorn.io/app-public-name: app-name
+        acorn.io/container-name: container-name
+        acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
+    spec:
+      containers:
+      - image: image-name
+        name: container-name
+        ports:
+        - containerPort: 81
+          protocol: TCP
+        readinessProbe:
+          tcpSocket:
+            port: 81
+        resources: {}
+        volumeMounts:
+        - mountPath: /var/tmp
+          name: foo
+      enableServiceLinks: false
+      hostname: container-name
+      imagePullSecrets:
+      - name: container-name-pull-1234567890ab
+      serviceAccountName: container-name
+      terminationGracePeriodSeconds: 10
+      volumes:
+      - name: foo
+        persistentVolumeClaim:
+          claimName: foo
+status: {}
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  annotations:
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/container-name: container-name
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: container-name
+  namespace: app-created-namespace
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      acorn.io/app-name: app-name
+      acorn.io/app-namespace: app-namespace
+      acorn.io/container-name: container-name
+      acorn.io/managed: "true"
+status:
+  currentHealthy: 0
+  desiredHealthy: 0
+  disruptionsAllowed: 0
+  expectedPods: 0
+
+---
+apiVersion: internal.acorn.io/v1
+kind: ServiceInstance
+metadata:
+  annotations:
+    acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: container-name
+    acorn.io/managed: "true"
+    acorn.io/public-name: app-name.container-name
+  name: container-name
+  namespace: app-created-namespace
+spec:
+  appName: app-name
+  appNamespace: app-namespace
+  container: container-name
+  default: true
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: container-name
+    acorn.io/managed: "true"
+  ports:
+  - port: 80
+    protocol: http
+    targetPort: 81
+status: {}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/public-name: app-name.foo
+    acorn.io/volume-class: test-custom-class
+    acorn.io/volume-name: foo
+  name: foo
+  namespace: app-created-namespace
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+  storageClassName: custom-class
+status: {}
+
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+  name: container-name-pull-1234567890ab
+  namespace: app-created-namespace
+type: kubernetes.io/dockerconfigjson
+
+---
+apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  creationTimestamp: null
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+status:
+  appImage:
+    buildContext: {}
+    id: test
+    imageData: {}
+    vcs: {}
+  appSpec:
+    containers:
+      container-name:
+        dirs:
+          /var/tmp:
+            secret: {}
+            volume: foo
+        image: image-name
+        metrics: {}
+        ports:
+        - port: 80
+          protocol: http
+          targetPort: 81
+        probes: null
+    volumes:
+      foo: {}
+  appStatus: {}
+  columns: {}
+  conditions:
+    reason: Success
+    status: "True"
+    success: true
+    type: defined
+  defaults:
+    volumes:
+      foo:
+        accessModes:
+        - readWriteOnce
+        class: test-custom-class
+        size: 3Gi
+  namespace: app-created-namespace
+  staged:
+    appImage:
+      buildContext: {}
+      imageData: {}
+      vcs: {}
+  summary: {}
+`

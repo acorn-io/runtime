@@ -97,7 +97,7 @@ spec:
       imagePullSecrets:
       - name: con1-pull-1234567890ab
       serviceAccountName: con1
-      terminationGracePeriodSeconds: 5
+      terminationGracePeriodSeconds: 10
 status: {}
 
 ---

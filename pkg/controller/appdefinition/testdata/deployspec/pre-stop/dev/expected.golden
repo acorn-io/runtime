@@ -1,0 +1,338 @@
+`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/container-name: buildimage
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: buildimage
+  namespace: app-created-namespace
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/container-name: buildimage
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: buildimage
+  namespace: app-created-namespace
+spec:
+  selector:
+    matchLabels:
+      acorn.io/app-name: app-name
+      acorn.io/app-namespace: app-namespace
+      acorn.io/container-name: buildimage
+      acorn.io/managed: "true"
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image","metrics":{},"probes":null}'
+        karpenter.sh/do-not-evict: "true"
+      creationTimestamp: null
+      labels:
+        acorn.io/app-name: app-name
+        acorn.io/app-namespace: app-namespace
+        acorn.io/app-public-name: app-name
+        acorn.io/container-name: buildimage
+        acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
+    spec:
+      containers:
+      - image: sha256:build-image
+        name: buildimage
+        resources: {}
+      enableServiceLinks: false
+      hostname: buildimage
+      imagePullSecrets:
+      - name: buildimage-pull-1234567890ab
+      serviceAccountName: buildimage
+      terminationGracePeriodSeconds: 10
+status: {}
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  annotations:
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/container-name: buildimage
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: buildimage
+  namespace: app-created-namespace
+spec:
+  maxUnavailable: 25%
+  selector:
+    matchLabels:
+      acorn.io/app-name: app-name
+      acorn.io/app-namespace: app-namespace
+      acorn.io/container-name: buildimage
+      acorn.io/managed: "true"
+status:
+  currentHealthy: 0
+  desiredHealthy: 0
+  disruptionsAllowed: 0
+  expectedPods: 0
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: oneimage
+  namespace: app-created-namespace
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: oneimage
+  namespace: app-created-namespace
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      acorn.io/app-name: app-name
+      acorn.io/app-namespace: app-namespace
+      acorn.io/container-name: oneimage
+      acorn.io/managed: "true"
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null,"scale":3,"sidecars":{"left":{"image":"foo","metrics":{},"ports":[{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}}}'
+      creationTimestamp: null
+      labels:
+        acorn.io/app-name: app-name
+        acorn.io/app-namespace: app-namespace
+        acorn.io/app-public-name: app-name
+        acorn.io/container-name: oneimage
+        acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
+    spec:
+      containers:
+      - image: image-name
+        name: oneimage
+        ports:
+        - containerPort: 81
+          protocol: TCP
+        readinessProbe:
+          tcpSocket:
+            port: 81
+        resources: {}
+      - image: foo
+        name: left
+        ports:
+        - containerPort: 91
+          protocol: TCP
+        readinessProbe:
+          tcpSocket:
+            port: 91
+        resources: {}
+      enableServiceLinks: false
+      imagePullSecrets:
+      - name: oneimage-pull-1234567890ab
+      serviceAccountName: oneimage
+      terminationGracePeriodSeconds: 10
+status: {}
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  annotations:
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: oneimage
+  namespace: app-created-namespace
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      acorn.io/app-name: app-name
+      acorn.io/app-namespace: app-namespace
+      acorn.io/container-name: oneimage
+      acorn.io/managed: "true"
+status:
+  currentHealthy: 0
+  desiredHealthy: 0
+  disruptionsAllowed: 0
+  expectedPods: 0
+
+---
+apiVersion: internal.acorn.io/v1
+kind: ServiceInstance
+metadata:
+  annotations:
+    acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+    acorn.io/public-name: app-name.oneimage
+  name: oneimage
+  namespace: app-created-namespace
+spec:
+  appName: app-name
+  appNamespace: app-namespace
+  container: oneimage
+  default: true
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  ports:
+  - port: 80
+    protocol: http
+    targetPort: 81
+  - port: 90
+    protocol: tcp
+    targetPort: 91
+status: {}
+
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+  name: buildimage-pull-1234567890ab
+  namespace: app-created-namespace
+type: kubernetes.io/dockerconfigjson
+
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+  name: oneimage-pull-1234567890ab
+  namespace: app-created-namespace
+type: kubernetes.io/dockerconfigjson
+
+---
+apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  creationTimestamp: null
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+status:
+  appImage:
+    buildContext: {}
+    id: test
+    imageData: {}
+    vcs: {}
+  appSpec:
+    containers:
+      buildimage:
+        build:
+          context: .
+          dockerfile: custom-dockerfile
+        image: sha256:build-image
+        metrics: {}
+        probes: null
+      oneimage:
+        build:
+          context: .
+          dockerfile: Dockerfile
+        image: image-name
+        metrics: {}
+        ports:
+        - port: 80
+          protocol: http
+          targetPort: 81
+        probes: null
+        scale: 3
+        sidecars:
+          left:
+            image: foo
+            metrics: {}
+            ports:
+            - port: 90
+              protocol: tcp
+              targetPort: 91
+            probes: null
+  appStatus: {}
+  columns: {}
+  conditions:
+    reason: Success
+    status: "True"
+    success: true
+    type: defined
+  defaults: {}
+  devSession:
+    client:
+      imageSource: {}
+    sessionRenewTime: null
+    sessionStartTime: null
+    sessionTimeoutSeconds: 60
+  namespace: app-created-namespace
+  staged:
+    appImage:
+      buildContext: {}
+      imageData: {}
+      vcs: {}
+  summary: {}
+`

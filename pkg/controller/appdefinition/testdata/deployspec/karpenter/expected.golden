@@ -61,7 +61,7 @@ spec:
       imagePullSecrets:
       - name: scalenil-pull-1234567890ab
       serviceAccountName: scalenil
-      terminationGracePeriodSeconds: 5
+      terminationGracePeriodSeconds: 10
 status: {}
 
 ---
@@ -159,7 +159,7 @@ spec:
       imagePullSecrets:
       - name: scaleone-pull-1234567890ab
       serviceAccountName: scaleone
-      terminationGracePeriodSeconds: 5
+      terminationGracePeriodSeconds: 10
 status: {}
 
 ---
@@ -255,7 +255,7 @@ spec:
       imagePullSecrets:
       - name: scaleotwo-pull-1234567890ab
       serviceAccountName: scaleotwo
-      terminationGracePeriodSeconds: 5
+      terminationGracePeriodSeconds: 10
 status: {}
 
 ---
