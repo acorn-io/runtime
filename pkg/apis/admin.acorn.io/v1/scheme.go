@@ -32,6 +32,8 @@ func AddToSchemeWithGV(scheme *runtime.Scheme, schemeGroupVersion schema.GroupVe
 		&ImageRoleAuthorizationList{},
 		&ClusterImageRoleAuthorization{},
 		&ClusterImageRoleAuthorizationList{},
+		&QuotaRequest{},
+		&QuotaRequestList{},
 	)
 
 	// Add common types
