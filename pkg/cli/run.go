@@ -17,6 +17,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/imagerules"
 	"github.com/acorn-io/runtime/pkg/imagesource"
 	"github.com/acorn-io/runtime/pkg/rulerequest"
+	"github.com/acorn-io/runtime/pkg/services"
 	"github.com/acorn-io/runtime/pkg/wait"
 	"github.com/acorn-io/z"
 	"github.com/sirupsen/logrus"
@@ -310,6 +311,10 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 
 	app, err = rulerequest.PromptRun(cmd.Context(), c, s.Dangerous, image, opts)
 	if err != nil {
+		return err
+	}
+
+	if _, err := services.ValidateTargetServiceName(opts.Publish, app.Status.AppSpec.Containers); err != nil {
 		return err
 	}
 	fmt.Println(app.Name)

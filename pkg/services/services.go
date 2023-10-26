@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"reflect"
 	"strings"
 
 	"github.com/acorn-io/baaah/pkg/apply"
@@ -254,4 +255,47 @@ func ToK8sService(req router.Request, service *v1.ServiceInstance) (result []kcl
 		return toContainerLabelsService(service), nil, nil
 	}
 	return
+}
+
+func ValidateTargetServiceName(publish []v1.PortBinding, workloads interface{}) (string, error) {
+	switch t := workloads.(type) {
+	case map[string]v1.Container:
+		for _, p := range publish {
+			if p.TargetServiceName != "" && len(t) > 0 {
+				if _, ok := t[p.TargetServiceName]; !ok {
+					return p.TargetServiceName, fmt.Errorf("valid container name(s) are [%s] received [%q]", containerNames(t), p.TargetServiceName)
+				}
+				continue
+			}
+		}
+	case map[string]v1.ContainerData:
+		for _, p := range publish {
+			if p.TargetServiceName != "" && len(t) > 0 {
+				if _, ok := t[p.TargetServiceName]; !ok {
+					return p.TargetServiceName, fmt.Errorf("valid container name(s) are [%s] received [%q]", containerNames(t), p.TargetServiceName)
+				}
+				continue
+			}
+		}
+	}
+	return "", nil
+}
+
+func containerNames(workloads interface{}) string {
+	switch t := workloads.(type) {
+	case map[string]v1.Container:
+		return joinKeys(t)
+	case map[string]v1.ContainerData:
+		return joinKeys(t)
+	}
+	return ""
+}
+
+func joinKeys(m interface{}) string {
+	v := reflect.ValueOf(m)
+	keys := make([]string, v.Len())
+	for i, key := range v.MapKeys() {
+		keys[i] = fmt.Sprintf(`"%s"`, key.String())
+	}
+	return strings.Join(keys, ", ")
 }

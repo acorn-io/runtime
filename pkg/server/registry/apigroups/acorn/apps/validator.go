@@ -26,6 +26,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/imagesystem"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/pullsecret"
+	"github.com/acorn-io/runtime/pkg/services"
 	"github.com/acorn-io/runtime/pkg/tags"
 	"github.com/acorn-io/runtime/pkg/volume"
 	"github.com/acorn-io/z"
@@ -110,6 +111,10 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 	if err := s.validateName(app); err != nil {
 		result = append(result, field.Invalid(field.NewPath("metadata", "name"), app.Name, err.Error()))
 		return
+	}
+
+	if invalidName, err := services.ValidateTargetServiceName(app.Spec.Publish, app.Status.AppSpec.Containers); err != nil {
+		result = append(result, field.Invalid(field.NewPath("spec", "publish"), invalidName, err.Error()))
 	}
 
 	project := new(v1.ProjectInstance)

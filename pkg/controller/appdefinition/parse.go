@@ -1,19 +1,28 @@
 package appdefinition
 
 import (
+	"fmt"
+
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/appdefinition"
 	"github.com/acorn-io/runtime/pkg/condition"
 	"github.com/acorn-io/runtime/pkg/controller/permissions"
+	"github.com/acorn-io/runtime/pkg/services"
 )
 
 func ParseAppImage(req router.Request, resp router.Response) error {
 	appInstance := req.Object.(*v1.AppInstance)
 	status := condition.Setter(appInstance, resp, v1.AppInstanceConditionParsed)
 	appImage := appInstance.Status.AppImage
+	containers := appImage.ImageData.Containers
 
 	if appImage.Acornfile == "" {
+		return nil
+	}
+
+	if _, err := services.ValidateTargetServiceName(appInstance.Spec.Publish, containers); err != nil {
+		status.Error(fmt.Errorf("invalid container name for publish: %s", err.Error()))
 		return nil
 	}
 
