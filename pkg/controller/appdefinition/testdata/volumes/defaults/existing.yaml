@@ -1,13 +1,16 @@
 ---
-kind: ClusterVolumeClassInstance
+kind: ProjectVolumeClassInstance
 apiVersion: internal.admin.acorn.io/v1
 metadata:
+  namespace: acorn
   name: test-custom-class
 description: Just a simple test volume class
 default: true
-storageClassName: custom-class
+storageClassName: local-path
 size:
   min: 1Gi
+  default: 2Gi
   max: 10Gi
-  default: 3Gi
 allowedAccessModes: ["readWriteOnce"]
+supportedRegions:
+- local

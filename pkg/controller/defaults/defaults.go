@@ -30,13 +30,6 @@ func Calculate(req router.Request, resp router.Response) (err error) {
 		}
 	}()
 
-	// Only set the default volume size if it hasn't been set yet.
-	if appInstance.Status.Defaults.Volumes == nil {
-		if err := addDefaultVolumeSize(req.Ctx, req.Client, appInstance); err != nil {
-			return err
-		}
-	}
-
 	if appInstance.Generation != appInstance.Status.ObservedGeneration {
 		if err = calculate(req, appInstance); err != nil {
 			return err

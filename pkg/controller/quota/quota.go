@@ -205,12 +205,8 @@ func addStorage(req router.Request, appInstance *v1.AppInstance, quotaRequest *a
 // defaultVolumeSize determines the default size of the specified volume. If the volume has a default size set
 // on the status.Defaults.Volumes, it uses that. Otherwise, it uses the default size set on the status.Defaults.VolumeSize.
 func defaultVolumeSize(appInstance *v1.AppInstance, name string) resource.Quantity {
-	// Figure out what the default volume size should be. If the status has a default volume size set, use that. Otherwise,
-	// use the default size set in the v1 package.
+	// Use the v1.DefaultSize if the appInstance doesn't have a default size set on the status.
 	result := *v1.DefaultSize // Safe to dereference because it is statically set in the v1 package.
-	if appInstance.Status.Defaults.VolumeSize != nil {
-		result = *appInstance.Status.Defaults.VolumeSize
-	}
 
 	// If the volume has a default size set on status.Defaults.Volumes, use that.
 	if defaultVolume, set := appInstance.Status.Defaults.Volumes[name]; set {

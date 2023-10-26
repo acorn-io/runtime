@@ -13,6 +13,10 @@ func TestCalculateSameGeneration(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/volumeclass/volume-class-defaults-same-gen", Calculate)
 }
 
+func TestVolumeClassDefaultsSet(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/volumeclass/volume-class-defaults-set", Calculate)
+}
+
 func TestFillVolumeClassDefaults(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/volumeclass/volume-class-fill-defaults", Calculate)
 }
