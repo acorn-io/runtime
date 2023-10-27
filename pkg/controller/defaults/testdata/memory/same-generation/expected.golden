@@ -49,7 +49,6 @@ status:
       "": 0
       left: 0
       oneimage: 0
-    volumeSize: 10G
   namespace: app-created-namespace
   staged:
     appImage:

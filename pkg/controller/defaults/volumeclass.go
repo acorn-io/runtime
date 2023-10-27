@@ -78,11 +78,6 @@ func addVolumeClassDefaults(ctx context.Context, c kclient.Client, app *v1.AppIn
 }
 
 func getDefaultVolumeSize(ctx context.Context, c kclient.Client, appInstance *v1.AppInstance) (v1.Quantity, error) {
-	// If the Status.Defaults.VolumeSize has been set, use that.
-	if appInstance.Status.Defaults.VolumeSize != nil {
-		return v1.Quantity(appInstance.Status.Defaults.VolumeSize.String()), nil
-	}
-
 	cfg, err := config.Get(ctx, c)
 	if err != nil {
 		return "", err

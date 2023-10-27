@@ -39,7 +39,6 @@ status:
       "": 0
       container-name: 0
     region: local
-    volumeSize: 10G
     volumes:
       foo:
         class: test-volume-class

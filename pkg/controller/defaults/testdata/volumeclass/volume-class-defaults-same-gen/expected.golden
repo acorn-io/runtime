@@ -35,8 +35,7 @@ status:
     status: "True"
     success: true
     type: defaults
-  defaults:
-    volumeSize: 10G
+  defaults: {}
   namespace: app-created-namespace
   observedGeneration: 1
   staged:

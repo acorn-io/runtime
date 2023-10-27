@@ -40,4 +40,6 @@ status:
         accessModes:
         - readWriteOnce
   defaults:
-    volumeSize: 1Gi
+    volumes:
+      volume-name:
+        size: 1Gi
