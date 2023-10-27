@@ -65,7 +65,7 @@ func JobCleanup(req router.Request, resp router.Response) error {
 			}
 
 			logrus.Infof("Purging failed job %s/%s", pod.Namespace, pod.Name)
-			if err := req.Client.Delete(req.Ctx, &pod); err != nil {
+			if err = req.Client.Delete(req.Ctx, &pod); err != nil && !apierror.IsNotFound(err) {
 				return err
 			}
 		}
