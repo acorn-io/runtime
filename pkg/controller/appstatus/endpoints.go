@@ -50,12 +50,24 @@ func serviceEndpoints(ctx context.Context, c kclient.Client, app *v1.AppInstance
 
 			for _, ingress := range service.Status.LoadBalancer.Ingress {
 				if ingress.Hostname != "" {
-					endpoints = append(endpoints, v1.Endpoint{
-						Target:     containerName,
-						TargetPort: port.TargetPort.IntVal,
-						Address:    fmt.Sprintf("%s:%d", ingress.Hostname, port.Port),
-						Protocol:   protocol,
-					})
+					portNum := port.Port
+					if len(ingress.Ports) > 0 {
+						for _, ingressPort := range ingress.Ports {
+							endpoints = append(endpoints, v1.Endpoint{
+								Target:     containerName,
+								TargetPort: port.TargetPort.IntVal,
+								Address:    fmt.Sprintf("%s:%d", ingress.Hostname, ingressPort.Port),
+								Protocol:   protocol,
+							})
+						}
+					} else {
+						endpoints = append(endpoints, v1.Endpoint{
+							Target:     containerName,
+							TargetPort: port.TargetPort.IntVal,
+							Address:    fmt.Sprintf("%s:%d", ingress.Hostname, portNum),
+							Protocol:   protocol,
+						})
+					}
 				} else if ingress.IP != "" {
 					endpoints = append(endpoints, v1.Endpoint{
 						Target:     containerName,
