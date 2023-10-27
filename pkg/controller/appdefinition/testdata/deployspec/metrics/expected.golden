@@ -70,7 +70,7 @@ spec:
       imagePullSecrets:
       - name: nginx-pull-abcdef123456
       serviceAccountName: nginx
-      terminationGracePeriodSeconds: 5
+      terminationGracePeriodSeconds: 10
 status: {}
 
 ---

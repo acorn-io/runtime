@@ -76,7 +76,7 @@ spec:
       imagePullSecrets:
       - name: twoimage-pull-1234567890ab
       serviceAccountName: twoimage
-      terminationGracePeriodSeconds: 5
+      terminationGracePeriodSeconds: 10
 status: {}
 
 ---

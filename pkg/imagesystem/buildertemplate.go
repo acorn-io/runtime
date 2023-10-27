@@ -46,9 +46,10 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 					Labels: labels.ManagedByApp(namespace, name, "app", name),
 				},
 				Spec: corev1.PodSpec{
-					PriorityClassName:  system.AcornPriorityClass,
-					ServiceAccountName: "acorn-builder",
-					EnableServiceLinks: new(bool),
+					PriorityClassName:             system.AcornPriorityClass,
+					ServiceAccountName:            "acorn-builder",
+					EnableServiceLinks:            new(bool),
+					TerminationGracePeriodSeconds: z.Pointer[int64](10),
 					Containers: []corev1.Container{
 						{
 							Name:    "buildkitd",
@@ -164,6 +165,13 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 							},
 							Args: []string{
 								"build-server",
+							},
+							Lifecycle: &corev1.Lifecycle{
+								PreStop: &corev1.LifecycleHandler{
+									Exec: &corev1.ExecAction{
+										Command: []string{"sh", "-c", "sleep 5"},
+									},
+								},
 							},
 							Resources: system.ResourceRequirementsFor(*cfg.BuildkitdServiceMemory, *cfg.BuildkitdServiceCPU),
 							ReadinessProbe: &corev1.Probe{

@@ -2,6 +2,7 @@ package appdefinition
 
 import (
 	"crypto/sha256"
+	_ "embed"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -118,6 +119,29 @@ func addDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Re
 	if err != nil {
 		return err
 	}
+
+outer:
+	for _, obj := range deps {
+		if dep, ok := obj.(*appsv1.Deployment); ok {
+			for _, v := range dep.Spec.Template.Spec.Volumes {
+				if v.Name == string(appInstance.UID) {
+					deps = append(deps, &corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      string(appInstance.UID),
+							Namespace: appInstance.Status.Namespace,
+							Labels: map[string]string{
+								labels.AcornManaged: "true",
+							},
+						},
+						BinaryData: map[string][]byte{
+							string(appInstance.UID): acornSleepBinary,
+						},
+					})
+					break outer
+				}
+			}
+		}
+	}
 	resp.Objects(deps...)
 	return nil
 }
@@ -205,7 +229,7 @@ func hasContextDir(container v1.Container) bool {
 	return false
 }
 
-func toContainers(app *v1.AppInstance, tag name.Reference, name string, container v1.Container, interpolator *secrets.Interpolator) ([]corev1.Container, []corev1.Container) {
+func toContainers(app *v1.AppInstance, tag name.Reference, name string, container v1.Container, interpolator *secrets.Interpolator, addWait bool) ([]corev1.Container, []corev1.Container) {
 	var (
 		containers     []corev1.Container
 		initContainers []corev1.Container
@@ -226,10 +250,10 @@ func toContainers(app *v1.AppInstance, tag name.Reference, name string, containe
 		})
 	}
 
-	newContainer := toContainer(app, tag, name, container, interpolator)
+	newContainer := toContainer(app, tag, name, container, interpolator, addWait && len(container.Ports) > 0)
 	containers = append(containers, newContainer)
 	for _, entry := range typed.Sorted(container.Sidecars) {
-		newContainer = toContainer(app, tag, entry.Key, entry.Value, interpolator)
+		newContainer = toContainer(app, tag, entry.Key, entry.Value, interpolator, addWait && len(entry.Value.Ports) > 0)
 
 		if entry.Value.Init {
 			initContainers = append(initContainers, newContainer)
@@ -254,7 +278,7 @@ func sanitizeVolumeName(name string) string {
 	return name
 }
 
-func toMounts(app *v1.AppInstance, container v1.Container, interpolation *secrets.Interpolator) (result []corev1.VolumeMount) {
+func toMounts(app *v1.AppInstance, container v1.Container, interpolation *secrets.Interpolator, addWait bool) (result []corev1.VolumeMount) {
 	for _, entry := range typed.Sorted(container.Files) {
 		suffix := ""
 		if volume.NormalizeMode(entry.Value.Mode) != "" {
@@ -296,6 +320,13 @@ func toMounts(app *v1.AppInstance, container v1.Container, interpolation *secret
 				MountPath: path.Join("/", mountPath),
 			})
 		}
+	}
+
+	if addWait {
+		result = append(result, corev1.VolumeMount{
+			Name:      string(app.UID),
+			MountPath: AcornHelperSleepPath,
+		})
 	}
 	return
 }
@@ -420,7 +451,7 @@ func toProbe(container v1.Container, probeType v1.ProbeType) *corev1.Probe {
 	return nil
 }
 
-func toContainer(app *v1.AppInstance, tag name.Reference, containerName string, container v1.Container, interpolator *secrets.Interpolator) corev1.Container {
+func toContainer(app *v1.AppInstance, tag name.Reference, containerName string, container v1.Container, interpolator *secrets.Interpolator, addWait bool) corev1.Container {
 	containerObject := corev1.Container{
 		Name:           containerName,
 		Image:          images.ResolveTag(tag, container.Image),
@@ -432,11 +463,24 @@ func toContainer(app *v1.AppInstance, tag name.Reference, containerName string, 
 		TTY:            container.Interactive,
 		Stdin:          container.Interactive,
 		Ports:          toPorts(container),
-		VolumeMounts:   toMounts(app, container, interpolator),
+		VolumeMounts:   toMounts(app, container, interpolator, addWait),
 		LivenessProbe:  toProbe(container, v1.LivenessProbeType),
 		StartupProbe:   toProbe(container, v1.StartupProbeType),
 		ReadinessProbe: toProbe(container, v1.ReadinessProbeType),
 		Resources:      app.Status.Scheduling[containerName].Requirements,
+	}
+
+	if addWait {
+		// If a container exposes a port, then add a pre-stop lifecycle hook that sleeps for 5 seconds. This should allow the
+		// endpoints controller to remove the pods IP on termination and stop sending traffic to the container.
+		// Note that this requires the acorn-sleep binary to be in the container, via the volume mount.
+		containerObject.Lifecycle = &corev1.Lifecycle{
+			PreStop: &corev1.LifecycleHandler{
+				Exec: &corev1.ExecAction{
+					Command: []string{fmt.Sprintf("%s/%s", AcornHelperSleepPath, app.UID)},
+				},
+			},
+		}
 	}
 
 	return containerObject
@@ -636,18 +680,19 @@ func getSecretAnnotations(req router.Request, appInstance *v1.AppInstance, conta
 func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Reference, name string, container v1.Container, pullSecrets *PullSecrets, interpolator *secrets.Interpolator) (*appsv1.Deployment, error) {
 	var (
 		stateful = isStateful(appInstance, container)
+		addWait  = !stateful && len(acornSleepBinary) > 0 && z.Dereference(container.Scale) > 1 && !appInstance.Status.GetDevMode()
 	)
 
 	interpolator = interpolator.ForContainer(name)
 
-	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator)
+	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator, addWait)
 
 	secretAnnotations, err := getSecretAnnotations(req, appInstance, container, interpolator)
 	if err != nil {
 		return nil, err
 	}
 
-	volumes, err := toVolumes(appInstance, container, interpolator)
+	volumes, err := toVolumes(appInstance, container, interpolator, addWait)
 	if err != nil {
 		return nil, err
 	}
@@ -685,7 +730,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 					Affinity:                      appInstance.Status.Scheduling[name].Affinity,
 					Tolerations:                   appInstance.Status.Scheduling[name].Tolerations,
 					PriorityClassName:             appInstance.Status.Scheduling[name].PriorityClassName,
-					TerminationGracePeriodSeconds: z.Pointer[int64](5),
+					TerminationGracePeriodSeconds: z.Pointer[int64](10),
 					ImagePullSecrets:              pullSecrets.ForContainer(name, append(containers, initContainers...)),
 					EnableServiceLinks:            new(bool),
 					Containers:                    containers,
@@ -733,6 +778,7 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 		if err != nil {
 			return nil, err
 		}
+
 		perms := v1.FindPermission(containerName, appInstance.Status.Permissions)
 		sa, err := toServiceAccount(req, dep.GetName(), dep.GetLabels(), dep.GetAnnotations(), appInstance, perms)
 		if err != nil {

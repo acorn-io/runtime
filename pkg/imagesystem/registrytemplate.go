@@ -68,8 +68,9 @@ func registryDeployment(namespace, serviceAccountName, registryImage string, req
 					},
 				},
 				Spec: corev1.PodSpec{
-					PriorityClassName:  system.AcornPriorityClass,
-					EnableServiceLinks: new(bool),
+					TerminationGracePeriodSeconds: z.Pointer[int64](10),
+					PriorityClassName:             system.AcornPriorityClass,
+					EnableServiceLinks:            new(bool),
 					Containers: []corev1.Container{
 						{
 							Name: "registry",
@@ -120,6 +121,17 @@ func registryDeployment(namespace, serviceAccountName, registryImage string, req
 								{
 									Name:      "registry",
 									MountPath: "/var/lib/registry",
+								},
+							},
+							Lifecycle: &corev1.Lifecycle{
+								PreStop: &corev1.LifecycleHandler{
+									Exec: &corev1.ExecAction{
+										Command: []string{
+											"/bin/sh",
+											"-c",
+											"sleep 5",
+										},
+									},
 								},
 							},
 						},

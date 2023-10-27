@@ -67,7 +67,7 @@ spec:
       imagePullSecrets:
       - name: app1-pull-1234567890ab
       serviceAccountName: app1
-      terminationGracePeriodSeconds: 5
+      terminationGracePeriodSeconds: 10
 status: {}
 
 ---
@@ -170,7 +170,7 @@ spec:
       imagePullSecrets:
       - name: app2-pull-1234567890ab
       serviceAccountName: app2
-      terminationGracePeriodSeconds: 5
+      terminationGracePeriodSeconds: 10
 status: {}
 
 ---

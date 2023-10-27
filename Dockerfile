@@ -4,6 +4,7 @@ FROM ghcr.io/acorn-io/images-mirror/tonistiigi/binfmt:qemu-v6.2.0 AS binfmt
 FROM ghcr.io/acorn-io/images-mirror/moby/buildkit:v0.11.6 AS buildkit
 FROM ghcr.io/acorn-io/images-mirror/registry:2.8.1 AS registry
 FROM ghcr.io/acorn-io/images-mirror/rancher/klipper-lb:v0.3.5 AS klipper-lb
+FROM ghcr.io/acorn-io/sleep:latest AS sleep
 
 FROM ghcr.io/acorn-io/images-mirror/golang:1.21-alpine AS helper
 WORKDIR /usr/src
@@ -20,7 +21,8 @@ RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-
 FROM ghcr.io/acorn-io/images-mirror/golang:1.21 AS build
 COPY / /src
 WORKDIR /src
-RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-build make build
+COPY --from=sleep /sleep /src/pkg/controller/appdefinition/embed/acorn-sleep
+RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-build GO_TAGS=netgo,image make build
 
 FROM ghcr.io/acorn-io/images-mirror/nginx:1.23.2-alpine AS base
 RUN apk add --no-cache ca-certificates iptables ip6tables fuse3 git openssh pigz xz \

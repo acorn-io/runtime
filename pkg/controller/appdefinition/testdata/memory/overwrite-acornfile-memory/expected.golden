@@ -80,7 +80,7 @@ spec:
       imagePullSecrets:
       - name: oneimage-pull-1234567890ab
       serviceAccountName: oneimage
-      terminationGracePeriodSeconds: 5
+      terminationGracePeriodSeconds: 10
 status: {}
 
 ---

@@ -71,7 +71,7 @@ spec:
       imagePullSecrets:
       - name: oneimage-pull-1234567890ab
       serviceAccountName: oneimage
-      terminationGracePeriodSeconds: 5
+      terminationGracePeriodSeconds: 10
       volumes:
       - name: secrets-1234567890ab
         secret:

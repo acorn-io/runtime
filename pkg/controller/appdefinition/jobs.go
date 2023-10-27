@@ -109,7 +109,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 		return nil, nil
 	}
 
-	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator)
+	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator, false)
 
 	containers = append(containers, corev1.Container{
 		Name:            jobs.Helper,
@@ -123,7 +123,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 		return nil, err
 	}
 
-	volumes, err := toVolumes(appInstance, container, interpolator)
+	volumes, err := toVolumes(appInstance, container, interpolator, false)
 	if err != nil {
 		return nil, err
 	}

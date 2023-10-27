@@ -15,6 +15,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/acorn-io/runtime/pkg/secrets"
 	"github.com/acorn-io/runtime/pkg/volume"
+	"github.com/acorn-io/z"
 	name2 "github.com/rancher/wrangler/pkg/name"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -25,8 +26,9 @@ import (
 )
 
 const (
-	AcornHelper     = " /acorn-helper"
-	AcornHelperPath = "/.acorn"
+	AcornHelper          = " /acorn-helper"
+	AcornHelperPath      = "/.acorn"
+	AcornHelperSleepPath = "/.acorn/sleep"
 )
 
 func addPVCs(req router.Request, appInstance *v1.AppInstance, resp router.Response) error {
@@ -407,11 +409,13 @@ func secretPodVolName(secretName string) string {
 	return strings.ReplaceAll(name.SafeConcatName("secret-", secretName), ".", "-")
 }
 
-func toVolumes(appInstance *v1.AppInstance, container v1.Container, interpolator *secrets.Interpolator) (result []corev1.Volume, _ error) {
+func toVolumes(appInstance *v1.AppInstance, container v1.Container, interpolator *secrets.Interpolator, addWaitVolume bool) (result []corev1.Volume, _ error) {
+	hasPorts := len(container.Ports) > 0
 	volumeReferences := map[volumeReference]bool{}
 	addVolumeReferencesForContainer(appInstance, volumeReferences, container)
 	for _, entry := range typed.Sorted(container.Sidecars) {
 		addVolumeReferencesForContainer(appInstance, volumeReferences, entry.Value)
+		hasPorts = hasPorts || len(entry.Value.Ports) > 0
 	}
 
 	for volume := range volumeReferences {
@@ -452,6 +456,20 @@ func toVolumes(appInstance *v1.AppInstance, container v1.Container, interpolator
 				},
 			})
 		}
+	}
+
+	if addWaitVolume && hasPorts {
+		result = append(result, corev1.Volume{
+			Name: string(appInstance.UID),
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					DefaultMode: z.Pointer[int32](0744),
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: string(appInstance.UID),
+					},
+				},
+			},
+		})
 	}
 
 	fileModes := map[string]bool{}
