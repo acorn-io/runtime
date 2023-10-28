@@ -80,7 +80,7 @@ func (a *appStatusRenderer) readServices() error {
 			s.Defined = s.Defined || !service.Status.HasService
 			s.UpToDate = service.Namespace != a.app.Status.Namespace ||
 				service.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
-			s.UpToDate = s.Defined && s.UpToDate && (s.ServiceAcornReady || s.LinkOverride != "" || service.Annotations[labels.AcornConfigHashAnnotation] == hash)
+			s.UpToDate = s.Defined && s.UpToDate && (s.ServiceAcornReady || s.LinkOverride != "" || serviceDef.External != "" || service.Annotations[labels.AcornConfigHashAnnotation] == hash)
 			s.Ready = (s.Ready || !service.Status.HasService) && s.UpToDate
 			if s.ServiceAcornName != "" {
 				s.Ready = s.Ready && s.ServiceAcornReady
