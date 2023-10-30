@@ -41,13 +41,17 @@ func IsLinked(app *v1.AppInstance, name string) bool {
 	return false
 }
 
-func ByProtocol(ports []v1.PortDef, protocols ...v1.Protocol) (result []v1.PortDef) {
+func ByProtocol(ports []v1.PortDef, include bool, protocols ...v1.Protocol) (result []v1.PortDef) {
 	for _, port := range ports {
+		matched := false
 		for _, proto := range protocols {
 			if port.Complete().Protocol == proto {
-				result = append(result, port)
+				matched = true
 				break
 			}
+		}
+		if (matched && include) || (!matched && !include) {
+			result = append(result, port)
 		}
 	}
 	return result

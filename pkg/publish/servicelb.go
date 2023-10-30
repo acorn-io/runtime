@@ -22,7 +22,7 @@ func ServiceLoadBalancer(req router.Request, svc *v1.ServiceInstance) (result []
 	}
 
 	bindings := ports.ApplyBindings(svc.Spec.PublishMode, svc.Spec.Publish,
-		ports.ByProtocol(svc.Spec.Ports, v1.ProtocolTCP, v1.ProtocolUDP))
+		ports.ByProtocol(svc.Spec.Ports, true, v1.ProtocolTCP, v1.ProtocolUDP))
 
 	if len(bindings) == 0 {
 		return nil, nil

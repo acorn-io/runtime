@@ -62,9 +62,10 @@ func (in Build) BaseBuild() Build {
 type Protocol string
 
 var (
-	ProtocolTCP  = Protocol("tcp")
-	ProtocolUDP  = Protocol("udp")
-	ProtocolHTTP = Protocol("http")
+	ProtocolTCP   = Protocol("tcp")
+	ProtocolUDP   = Protocol("udp")
+	ProtocolHTTP  = Protocol("http")
+	ProtocolHTTP2 = Protocol("http2")
 )
 
 type PublishProtocol string
@@ -74,6 +75,7 @@ var (
 	PublishProtocolUDP   = PublishProtocol("udp")
 	PublishProtocolHTTP  = PublishProtocol("http")
 	PublishProtocolHTTPS = PublishProtocol("https")
+	PublishProtocolHTTP2 = PublishProtocol("http2")
 )
 
 type PortBindings []PortBinding

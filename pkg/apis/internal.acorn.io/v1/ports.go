@@ -19,6 +19,8 @@ func validProto(p string) (Protocol, bool) {
 	case ProtocolUDP:
 		fallthrough
 	case ProtocolHTTP:
+		fallthrough
+	case ProtocolHTTP2:
 		return ret, true
 	case "":
 		return ret, true
