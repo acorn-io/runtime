@@ -22,15 +22,6 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func addJobs(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, interpolator *secrets.Interpolator, resp router.Response) error {
-	jobs, err := toJobs(req, appInstance, pullSecrets, tag, interpolator)
-	if err != nil {
-		return err
-	}
-	resp.Objects(jobs...)
-	return nil
-}
-
 func stripPruneAndUpdate(annotations map[string]string) map[string]string {
 	result := map[string]string{}
 	for k, v := range annotations {

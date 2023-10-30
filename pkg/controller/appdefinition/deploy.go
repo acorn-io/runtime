@@ -25,6 +25,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/acorn-io/runtime/pkg/ref"
 	"github.com/acorn-io/runtime/pkg/secrets"
+	"github.com/acorn-io/runtime/pkg/services"
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/acorn-io/runtime/pkg/volume"
 	"github.com/acorn-io/z"
@@ -61,6 +62,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 	appInstance := req.Object.(*v1.AppInstance)
 	status := condition.Setter(appInstance, resp, v1.AppInstanceConditionDefined)
 	interpolator := secrets.NewInterpolator(req.Ctx, req.Client, appInstance)
+	var result []kclient.Object
 
 	defer func() {
 		if err == nil {
@@ -90,60 +92,42 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 		return err
 	}
 
-	if err := addDeployments(req, appInstance, tag, pullSecrets, interpolator, resp); err != nil {
+	if objs, err := ToDeployments(req, appInstance, tag, pullSecrets, interpolator); err != nil {
 		return err
+	} else if len(objs) > 0 {
+		result = append(result, objs...)
 	}
-	if err := addRouters(appInstance, resp); err != nil {
+	if objs, err := toRouters(appInstance); err != nil {
 		return err
+	} else {
+		result = append(result, objs...)
 	}
-	if err := addJobs(req, appInstance, tag, pullSecrets, interpolator, resp); err != nil {
+	if objs, err := toJobs(req, appInstance, pullSecrets, tag, interpolator); err != nil {
 		return err
+	} else {
+		result = append(result, objs...)
 	}
-	if err := addServices(req, appInstance, interpolator, resp); err != nil {
+	if objs, err := services.ToAcornServices(req.Ctx, req.Client, interpolator, appInstance); err != nil {
 		return err
+	} else {
+		result = append(result, objs...)
 	}
-	if err := addPVCs(req, appInstance, resp); err != nil {
+	if objs, err := toPVCs(req, appInstance); err != nil {
 		return err
+	} else {
+		result = append(result, objs...)
 	}
-	if err := addAcorns(req, appInstance, tag, pullSecrets, resp); err != nil {
+	if objs, err := toAcorns(req, appInstance, tag, pullSecrets); err != nil {
 		return err
+	} else {
+		result = append(result, objs...)
 	}
 
+	// Secrets go in first so that they are created/updated before things that depend on them.
 	resp.Objects(pullSecrets.Objects()...)
 	resp.Objects(interpolator.Objects()...)
+	resp.Objects(result...)
 	return pullSecrets.Err()
-}
-
-func addDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, secrets *secrets.Interpolator, resp router.Response) error {
-	deps, err := ToDeployments(req, appInstance, tag, pullSecrets, secrets)
-	if err != nil {
-		return err
-	}
-
-outer:
-	for _, obj := range deps {
-		if dep, ok := obj.(*appsv1.Deployment); ok {
-			for _, v := range dep.Spec.Template.Spec.Volumes {
-				if v.Name == string(appInstance.UID) {
-					deps = append(deps, &corev1.ConfigMap{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      string(appInstance.UID),
-							Namespace: appInstance.Status.Namespace,
-							Labels: map[string]string{
-								labels.AcornManaged: "true",
-							},
-						},
-						BinaryData: map[string][]byte{
-							string(appInstance.UID): acornSleepBinary,
-						},
-					})
-					break outer
-				}
-			}
-		}
-	}
-	resp.Objects(deps...)
-	return nil
 }
 
 func toEnvFrom(envs []v1.EnvVar) (result []corev1.EnvFromSource) {
@@ -765,6 +749,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 }
 
 func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, secrets *secrets.Interpolator) (result []kclient.Object, _ error) {
+	var configMapInitialized bool
 	for _, containerName := range typed.SortedKeys(appInstance.Status.AppSpec.Containers) {
 		containerDef := appInstance.Status.AppSpec.Containers[containerName]
 		if ports.IsLinked(appInstance, containerName) {
@@ -777,6 +762,28 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 		dep, err := toDeployment(req, appInstance, tag, containerName, containerDef, pullSecrets, secrets)
 		if err != nil {
 			return nil, err
+		}
+
+		if !configMapInitialized {
+			// This configmap only needs to be created once for the whole app instance.
+			for _, v := range dep.Spec.Template.Spec.Volumes {
+				if v.Name == string(appInstance.UID) {
+					configMapInitialized = true
+					result = append(result, &corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      string(appInstance.UID),
+							Namespace: appInstance.Status.Namespace,
+							Labels: map[string]string{
+								labels.AcornManaged: "true",
+							},
+						},
+						BinaryData: map[string][]byte{
+							string(appInstance.UID): acornSleepBinary,
+						},
+					})
+					break
+				}
+			}
 		}
 
 		perms := v1.FindPermission(containerName, appInstance.Status.Permissions)
@@ -793,5 +800,6 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 		}
 		result = append(result, sa, dep, pdb.ToPodDisruptionBudget(dep))
 	}
+
 	return result, nil
 }

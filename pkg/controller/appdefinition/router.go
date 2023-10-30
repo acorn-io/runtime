@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/labels"
@@ -23,15 +22,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-func addRouters(appInstance *v1.AppInstance, resp router.Response) error {
-	routers, err := toRouters(appInstance)
-	if err != nil {
-		return err
-	}
-	resp.Objects(routers...)
-	return nil
-}
 
 func toRouters(appInstance *v1.AppInstance) (result []kclient.Object, _ error) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Routers) {
