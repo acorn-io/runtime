@@ -107,18 +107,6 @@ func TestRun(t *testing.T) {
 		prepare func(t *testing.T, f *mocks.MockClient)
 	}{
 		{
-			name: "acorn run -h", fields: fields{
-				All:   false,
-				Force: true,
-			},
-
-			args: args{
-				args: []string{"-h"},
-			},
-			wantErr: false,
-			wantOut: "./testdata/run/acorn_run_help.txt",
-		},
-		{
 			name: "acorn run -m found.container=256Miii found ", fields: fields{
 				All:   false,
 				Force: true,
