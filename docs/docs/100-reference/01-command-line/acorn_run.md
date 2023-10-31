@@ -13,78 +13,50 @@ acorn run [flags] IMAGE|DIRECTORY [acorn args]
 
 ```
 
- # Build and run from a directory
-   acorn run .
+Running an app
+ - Build and run from a directory
+	acorn run --name my-app .
 
- # Run from an image
-   acorn run ghcr.io/acorn-io/hello-world
+ - Run from an image
+	acorn run --name my-app ghcr.io/acorn-io/hello-world
 
- # Automatic upgrades
-   # Automatic upgrade for an app will be enabled if '#', '*', or '**' appears in the image's tag. Tags will be sorted according to the rules for these special characters described below. The newest tag will be selected for upgrade.
-   
-   # '#' denotes a segment of the image tag that should be sorted numerically when finding the newest tag.
+Updating an app
+ - Rebuild an app from the current directory (see 'acorn dev' to do this dynamically)
+	acorn run --update --name my-app .
 
-   # This example deploys the hello-world app with auto-upgrade enabled and matching all major, minor, and patch versions:
-   acorn run myorg/hello-world:v#.#.#
+ - Change an app's image
+	acorn run --update --image ghcr.io/acorn-io/hello-world:v1.0.2 --name my-app
 
-   # '*' denotes a segment of the image tag that should sorted alphabetically when finding the latest tag.
-  
-   # In this example, if you had a tag named alpha and a tag named zeta, zeta would be recognized as the newest:
-   acorn run myorg/hello-world:*
+Automatic upgrades
+ - Automatic upgrade for an app will be enabled if '#', '*', or '**' appears in the image's tag. Tags will be sorted according to the rules for these special characters described below. The newest tag will be selected for upgrade.
+	'#' denotes a segment of the image tag that should be sorted numerically when finding the newest tag.
+	'*' denotes a segment of the image tag that should sorted alphabetically when finding the latest tag.
+	'**' denotes a wildcard. This segment of the image tag won't be considered when sorting. This is useful if your tags have a segment that is unpredictable.
 
-   # '**' denotes a wildcard. This segment of the image tag won't be considered when sorting. This is useful if your tags have a segment that is unpredictable.
-   
-   # This example would sort numerically according to major and minor version (i.e. v1.2) and ignore anything following the "-":
-   acorn run myorg/hello-world:v#.#-**
+ - Deploy the hello-world app with auto-upgrade enabled and matching all major, minor, and patch versions:
+	acorn run ghcr.io/acorn-io/hello-world:v#.#.#
 
-   # NOTE: Depending on your shell, you may see errors when using '*' and '**'. Using quotes will tell the shell to ignore them so acorn can parse them:
-   acorn run "myorg/hello-world:v#.#-**"
+Publish Port Syntax
+ - Publish port 80 for any containers that define it as a port
+	acorn run -p 80 .
 
-   # Automatic upgrades can be configured explicitly via a flag.
+ - Publish container "myapp" using the hostname app.example.com
+	acorn run --publish app.example.com:myapp .
 
-   # In this example, the tag will always be "latest", but acorn will periodically check to see if new content has been pushed to that tag:
-   acorn run --auto-upgrade myorg/hello-world:latest
+Link Syntax
+ - Link the running acorn application named "mydatabase" into the current app, replacing the container named "db"
+	acorn run --link mydatabase:db .
 
-   # To have acorn notify you that an app has an upgrade available and require confirmation before proceeding, set the notify-upgrade flag:
-   acorn run --notify-upgrade myorg/hello-world:v#.#.# myapp
+Secret Syntax
+- Bind the acorn secret named "mycredentials" into the current app, replacing the secret named "creds"
+	acorn run --secret mycredentials:creds .
 
-   # To proceed with an upgrade you've been notified of:
-   acorn update --confirm-upgrade myapp
-
-More Usages:
-     # Publish and Expose Port Syntax
-     - Publish port 80 for any containers that define it as a port
-      	acorn run -p 80 .
-
-     - Publish container "myapp" using the hostname app.example.com
-      	acorn run --publish app.example.com:myapp .
-
-     - Expose port 80 to the rest of the cluster as port 8080
-      	acorn run --expose 8080:80/http .
-
-     # Labels and Annotations Syntax
-     - Add a label to all resources created by the app
-       	acorn run --label key=value .
-
-     - Add a label to resources created for all containers
-      	acorn run --label containers:key=value .
-
-     - Add a label to the resources created for the volume named "myvolume"
-      	acorn run --label volumes:myvolume:key=value .
-
-     # Link Syntax
-     - Link the running acorn application named "mydatabase" into the current app, replacing the container named "db"
-       	acorn run --link mydatabase:db .
-
-     # Secret Syntax
-     - Bind the acorn secret named "mycredentials" into the current app, replacing the secret named "creds". See "acorn secrets --help" for more info
-         acorn run --secret mycredentials:creds .
-
-     # Volume Syntax
-     - Create the volume named "mydata" with a size of 5 gigabyes and using the "fast" storage class
-        acorn run --volume mydata,size=5G,class=fast .
-     - Bind the acorn volume named "mydata" into the current app, replacing the volume named "data", See "acorn volumes --help for more info"
-        acorn run --volume mydata:data .
+Volume Syntax
+ - Create the volume named "mydata" with a size of 5 gigabyes and using the "fast" storage class
+	acorn run --volume mydata,size=5G,class=fast .
+ 
+- Bind the acorn volume named "mydata" into the current app, replacing the volume named "data"
+	acorn run --volume mydata:data .
 ```
 
 ### Options
