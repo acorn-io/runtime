@@ -1,4 +1,18 @@
 `apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJnaGNyLmlvIjp7ImF1dGgiOiJPZz09In0sImluZGV4LmRvY2tlci5pbyI6eyJhdXRoIjoiT2c9PSJ9fX0=
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+  name: delete-only-pull-1234567890ab
+  namespace: app-created-namespace
+type: kubernetes.io/dockerconfigjson
+
+---
+apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
@@ -85,20 +99,6 @@ spec:
           sizeLimit: 1M
         name: acorn-job-output-helper
 status: {}
-
----
-apiVersion: v1
-data:
-  .dockerconfigjson: eyJhdXRocyI6eyJnaGNyLmlvIjp7ImF1dGgiOiJPZz09In0sImluZGV4LmRvY2tlci5pbyI6eyJhdXRoIjoiT2c9PSJ9fX0=
-kind: Secret
-metadata:
-  creationTimestamp: null
-  labels:
-    acorn.io/managed: "true"
-    acorn.io/pull-secret: "true"
-  name: delete-only-pull-1234567890ab
-  namespace: app-created-namespace
-type: kubernetes.io/dockerconfigjson
 
 ---
 apiVersion: internal.acorn.io/v1

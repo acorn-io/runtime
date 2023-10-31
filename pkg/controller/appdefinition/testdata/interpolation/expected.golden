@@ -1,4 +1,33 @@
 `apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+  name: oneimage-pull-1234567890ab
+  namespace: app-created-namespace
+type: kubernetes.io/dockerconfigjson
+
+---
+apiVersion: v1
+data:
+  c53776b8f8ef0486fa82e2f0912453dd9d9dcdab4e4b2ec4a1c249a314daf7ba: cHJlZml4IHZhbHVlMSBhZnRlcg==
+  eec12d274809b6405b79110d6bafcc22235fa23858c2ac8e59e086d27df99360: cHJlZml4IHZhbHVlMSBzdWZmaXggdmFsdWUy
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+  name: secrets-1234567890ab
+  namespace: app-created-namespace
+
+---
+apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
@@ -111,35 +140,6 @@ status:
   desiredHealthy: 0
   disruptionsAllowed: 0
   expectedPods: 0
-
----
-apiVersion: v1
-data:
-  .dockerconfigjson: eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
-kind: Secret
-metadata:
-  creationTimestamp: null
-  labels:
-    acorn.io/managed: "true"
-    acorn.io/pull-secret: "true"
-  name: oneimage-pull-1234567890ab
-  namespace: app-created-namespace
-type: kubernetes.io/dockerconfigjson
-
----
-apiVersion: v1
-data:
-  c53776b8f8ef0486fa82e2f0912453dd9d9dcdab4e4b2ec4a1c249a314daf7ba: cHJlZml4IHZhbHVlMSBhZnRlcg==
-  eec12d274809b6405b79110d6bafcc22235fa23858c2ac8e59e086d27df99360: cHJlZml4IHZhbHVlMSBzdWZmaXggdmFsdWUy
-kind: Secret
-metadata:
-  creationTimestamp: null
-  labels:
-    acorn.io/app-name: app-name
-    acorn.io/app-namespace: app-namespace
-    acorn.io/managed: "true"
-  name: secrets-1234567890ab
-  namespace: app-created-namespace
 
 ---
 apiVersion: internal.acorn.io/v1

@@ -1,4 +1,35 @@
 `apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+  name: oneimage-pull-1234567890ab
+  namespace: app-created-namespace
+type: kubernetes.io/dockerconfigjson
+
+---
+apiVersion: v1
+data:
+  6c8b4535ccc87f19061c4646189e33d78f01c8b63dc4e3cb2f630b1796ee93b6: c2lkZWNhcg==
+  578c99c6aab47cb0133450fe46d2f6da46c3d794b2c37f5bfa5728fb38638148: YmFzZS1tb2Rl
+  cae662172fd450bb0cd710a769079c05bfc5d8e35efa6576edc7d0377afdd4a2: YmFzZQ==
+  d352de740e4a487eb6c62532a76323325097b77814837dca9babeed0e67be730: c2lkZWNhci1tb2Rl
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+  name: secrets-1234567890ab
+  namespace: app-created-namespace
+
+---
+apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
@@ -124,37 +155,6 @@ status:
   desiredHealthy: 0
   disruptionsAllowed: 0
   expectedPods: 0
-
----
-apiVersion: v1
-data:
-  .dockerconfigjson: eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
-kind: Secret
-metadata:
-  creationTimestamp: null
-  labels:
-    acorn.io/managed: "true"
-    acorn.io/pull-secret: "true"
-  name: oneimage-pull-1234567890ab
-  namespace: app-created-namespace
-type: kubernetes.io/dockerconfigjson
-
----
-apiVersion: v1
-data:
-  6c8b4535ccc87f19061c4646189e33d78f01c8b63dc4e3cb2f630b1796ee93b6: c2lkZWNhcg==
-  578c99c6aab47cb0133450fe46d2f6da46c3d794b2c37f5bfa5728fb38638148: YmFzZS1tb2Rl
-  cae662172fd450bb0cd710a769079c05bfc5d8e35efa6576edc7d0377afdd4a2: YmFzZQ==
-  d352de740e4a487eb6c62532a76323325097b77814837dca9babeed0e67be730: c2lkZWNhci1tb2Rl
-kind: Secret
-metadata:
-  creationTimestamp: null
-  labels:
-    acorn.io/app-name: app-name
-    acorn.io/app-namespace: app-namespace
-    acorn.io/managed: "true"
-  name: secrets-1234567890ab
-  namespace: app-created-namespace
 
 ---
 apiVersion: internal.acorn.io/v1

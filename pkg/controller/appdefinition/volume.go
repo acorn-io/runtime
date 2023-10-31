@@ -31,15 +31,6 @@ const (
 	AcornHelperSleepPath = "/.acorn/sleep"
 )
 
-func addPVCs(req router.Request, appInstance *v1.AppInstance, resp router.Response) error {
-	pvcs, err := toPVCs(req, appInstance)
-	if err != nil {
-		return err
-	}
-	resp.Objects(pvcs...)
-	return nil
-}
-
 func translateAccessModes(accessModes []v1.AccessMode) []corev1.PersistentVolumeAccessMode {
 	if len(accessModes) == 0 {
 		return []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce}

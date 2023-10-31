@@ -20,38 +20,10 @@ import (
 	"golang.org/x/exp/slices"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func addAcorns(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, resp router.Response) error {
-	for _, acorn := range toAcorns(appInstance, tag, pullSecrets) {
-		var devSession v1.DevSessionInstance
-		err := req.Get(&devSession, acorn.Namespace, acorn.Name)
-		if err == nil {
-			// Don't update app in dev mode
-			acorn.Annotations[apply.AnnotationUpdate] = "false"
-		} else if !apierrors.IsNotFound(err) {
-			return err
-		}
-		var existingApp v1.AppInstance
-		err = req.Get(&existingApp, acorn.Namespace, acorn.Name)
-		if err == nil {
-			if slices.Contains(existingApp.Finalizers, jobs.DestroyJobFinalizer) {
-				acorn.Annotations[apply.AnnotationPrune] = "false"
-			}
-		} else if !apierrors.IsNotFound(err) {
-			return err
-		}
-
-		if strings.Count(acorn.Labels[labels.AcornPublicName], ".") > 10 {
-			return fmt.Errorf("max limit of 10 nested acorns exceeded")
-		}
-
-		resp.Objects(acorn)
-	}
-	return nil
-}
-
-func toAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) (result []*v1.AppInstance) {
+func toAcorns(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) (result []kclient.Object, _ error) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Acorns) {
 		acornName, acorn := entry.Key, entry.Value
 		if ports.IsLinked(appInstance, acornName) {
@@ -64,7 +36,8 @@ func toAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *Pull
 		if ports.IsLinked(appInstance, serviceName) || service.Image == "" {
 			continue
 		}
-		result = append(result, toAcorn(appInstance, tag, pullSecrets, serviceName, appInstance.Status.AppStatus.Services[serviceName].ConfigHash, v1.Acorn{
+
+		acorn := toAcorn(appInstance, tag, pullSecrets, serviceName, appInstance.Status.AppStatus.Services[serviceName].ConfigHash, v1.Acorn{
 			Labels:              service.Labels,
 			Annotations:         service.Annotations,
 			Image:               service.Image,
@@ -78,9 +51,33 @@ func toAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *Pull
 			AutoUpgradeInterval: service.AutoUpgradeInterval,
 			Memory:              service.Memory,
 			ComputeClasses:      service.ComputeClasses,
-		}))
+		})
+
+		var devSession v1.DevSessionInstance
+		err := req.Get(&devSession, acorn.Namespace, acorn.Name)
+		if err == nil {
+			// Don't update app in dev mode
+			acorn.Annotations[apply.AnnotationUpdate] = "false"
+		} else if !apierrors.IsNotFound(err) {
+			return nil, err
+		}
+		var existingApp v1.AppInstance
+		err = req.Get(&existingApp, acorn.Namespace, acorn.Name)
+		if err == nil {
+			if slices.Contains(existingApp.Finalizers, jobs.DestroyJobFinalizer) {
+				acorn.Annotations[apply.AnnotationPrune] = "false"
+			}
+		} else if !apierrors.IsNotFound(err) {
+			return nil, err
+		}
+
+		if strings.Count(acorn.Labels[labels.AcornPublicName], ".") > 10 {
+			return nil, fmt.Errorf("max limit of 10 nested acorns exceeded")
+		}
+
+		result = append(result, acorn)
 	}
-	return result
+	return result, nil
 }
 
 func scopeSecrets(app *v1.AppInstance, bindings v1.SecretBindings) (result v1.SecretBindings) {
