@@ -6,7 +6,6 @@ import (
 
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/runtime/pkg/jobs"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/ports"
 	"github.com/acorn-io/z"
@@ -35,7 +34,7 @@ func (a *appStatusRenderer) readJobs() error {
 
 		c := v1.JobStatus{
 			CreateEventSucceeded: existingStatus[jobName].CreateEventSucceeded,
-			Skipped:              !jobs.ShouldRun(jobName, a.app),
+			Skipped:              existingStatus[jobName].Skipped,
 			ExpressionErrors:     existingStatus[jobName].ExpressionErrors,
 			Dependencies:         existingStatus[jobName].Dependencies,
 			CommonStatus: v1.CommonStatus{

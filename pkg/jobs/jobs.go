@@ -141,7 +141,7 @@ func GetEvent(jobName string, appInstance *v1.AppInstance) string {
 	if appInstance.Spec.Stop != nil && *appInstance.Spec.Stop {
 		return "stop"
 	}
-	if appInstance.Generation <= 1 || slices.Contains(appInstance.Status.AppSpec.Jobs[jobName].Events, "create") && !appInstance.Status.AppStatus.Jobs[jobName].CreateEventSucceeded {
+	if (appInstance.Generation <= 1 || slices.Contains(appInstance.Status.AppSpec.Jobs[jobName].Events, "create")) && !appInstance.Status.AppStatus.Jobs[jobName].CreateEventSucceeded {
 		// Create event jobs run at least once. So, if it hasn't succeeded, run it.
 		return "create"
 	}
