@@ -50,7 +50,7 @@ func ByProtocol(ports []v1.PortDef, include bool, protocols ...v1.Protocol) (res
 				break
 			}
 		}
-		if (matched && include) || (!matched && !include) {
+		if matched == include {
 			result = append(result, port)
 		}
 	}

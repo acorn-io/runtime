@@ -18,30 +18,21 @@ func RenderServices(req router.Request, resp router.Response) error {
 
 	var svcList []*v1.ServiceInstance
 	http2Ports := ports.ByProtocol(svcInstance.Spec.Ports, true, v1.ProtocolHTTP2)
-	httpPorts := ports.ByProtocol(svcInstance.Spec.Ports, true, v1.ProtocolHTTP)
-	// If we have both types of ports we need to create a separate service with the annotation
-	if len(http2Ports) > 0 && len(httpPorts) > 0 {
+	otherPorts := ports.ByProtocol(svcInstance.Spec.Ports, false, v1.ProtocolHTTP2)
+	if len(http2Ports) > 0 {
 		svcCopy := svcInstance.DeepCopy()
-		svcCopy.Spec.Ports = ports.ByProtocol(svcInstance.Spec.Ports, false, v1.ProtocolHTTP2) // filter out http2 ports
+		svcCopy.Spec.Ports = http2Ports
+		svcCopy.Name = fmt.Sprintf("%s-%s", svcInstance.Name, v1.ProtocolHTTP2)
+		if svcCopy.Spec.Annotations == nil {
+			svcCopy.Spec.Annotations = map[string]string{}
+		}
+		svcCopy.Spec.Annotations["traefik.ingress.kubernetes.io/service.serversscheme"] = "h2c"
 		svcList = append(svcList, svcCopy)
-
-		svcCopyHttp2 := svcInstance.DeepCopy()
-		svcCopyHttp2.Spec.Ports = http2Ports
-		svcCopyHttp2.Name = fmt.Sprintf("%s-%s", svcInstance.Name, v1.ProtocolHTTP2)
-		if svcCopyHttp2.Spec.Annotations == nil {
-			svcCopyHttp2.Spec.Annotations = map[string]string{}
-		}
-		svcCopyHttp2.Spec.Annotations["traefik.ingress.kubernetes.io/service.serversscheme"] = "h2c"
-		svcList = append(svcList, svcCopyHttp2)
-	} else if len(http2Ports) > 0 {
-		svcCopyHttp2 := svcInstance.DeepCopy()
-		if svcCopyHttp2.Spec.Annotations == nil {
-			svcCopyHttp2.Spec.Annotations = map[string]string{}
-		}
-		svcCopyHttp2.Spec.Annotations["traefik.ingress.kubernetes.io/service.serversscheme"] = "h2c"
-		svcList = append(svcList, svcCopyHttp2)
-	} else {
-		svcList = []*v1.ServiceInstance{svcInstance}
+	}
+	if len(otherPorts) > 0 {
+		svcCopy := svcInstance.DeepCopy()
+		svcCopy.Spec.Ports = otherPorts
+		svcList = append(svcList, svcCopy)
 	}
 
 	for _, svc := range svcList {
