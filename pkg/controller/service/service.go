@@ -29,11 +29,9 @@ func RenderServices(req router.Request, resp router.Response) error {
 		svcCopy.Spec.Annotations["traefik.ingress.kubernetes.io/service.serversscheme"] = "h2c"
 		svcList = append(svcList, svcCopy)
 	}
-	if len(otherPorts) > 0 {
-		svcCopy := svcInstance.DeepCopy()
-		svcCopy.Spec.Ports = otherPorts
-		svcList = append(svcList, svcCopy)
-	}
+	svcCopy := svcInstance.DeepCopy()
+	svcCopy.Spec.Ports = otherPorts
+	svcList = append(svcList, svcCopy)
 
 	for _, svc := range svcList {
 		objs, _, err := services.ToK8sService(req, svc)
@@ -59,6 +57,7 @@ func RenderServices(req router.Request, resp router.Response) error {
 		// Copy all modifications made by the above publish.Ingress call
 		svcInstance.Status.Endpoints = append(svcInstance.Status.Endpoints, svc.Status.Endpoints...)
 	}
+	svcInstance.Status.Conditions = svcCopy.Status.Conditions
 
 	resp.Objects(svcInstance)
 	return nil
