@@ -11,10 +11,11 @@ import (
 
 func NewDashboard(c CommandContext) *cobra.Command {
 	return cli.Command(&Dashboard{client: c.ClientFactory}, cobra.Command{
-		Use:          "dashboard [flags] [ACORN]",
-		SilenceUsage: true,
-		Short:        "Open the web dashboard for the project",
-		Args:         cobra.MaximumNArgs(1),
+		Use:               "dashboard [flags] [ACORN]",
+		SilenceUsage:      true,
+		Short:             "Open the web dashboard for the project",
+		Args:              cobra.MaximumNArgs(1),
+		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).complete,
 	})
 }
 
