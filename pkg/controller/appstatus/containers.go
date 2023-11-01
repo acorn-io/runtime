@@ -137,6 +137,14 @@ func setContainerMessages(app *v1.AppInstance) {
 			}
 		}
 
+		if !cs.Ready {
+			msg, blocked := isBlocked(cs.Dependencies, cs.ExpressionErrors)
+			if blocked {
+				cs.State = "waiting"
+			}
+			cs.TransitioningMessages = append(cs.TransitioningMessages, msg...)
+		}
+
 		// Add informative messages if all else is healthy
 		if len(cs.TransitioningMessages) == 0 && len(cs.ErrorMessages) == 0 {
 			if cs.RunningReplicaCount > 1 {

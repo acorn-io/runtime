@@ -29,11 +29,11 @@ type appStatusRenderer struct {
 // fields are specifically fields with aggregated values.
 // Additionally, some corner cases are handled in this code where fields need to be initialized in a special way
 func resetHandlerControlledFields(app *v1.AppInstance) {
-	appUpdated := app.Generation == app.Status.ObservedGeneration && app.Status.AppImage.Digest == app.Status.Staged.AppImage.Digest
+	appUpToDate := app.Generation == app.Status.ObservedGeneration && app.Status.AppImage.Digest == app.Status.ObservedImageDigest
 	for name, status := range app.Status.AppStatus.Containers {
 		// If the app is being updated, then set the containers to not ready so that the controller will run them again and the
 		// dependency status will be set correctly.
-		status.Ready = status.Ready && appUpdated
+		status.Ready = status.Ready && appUpToDate
 		status.ExpressionErrors = nil
 		status.Dependencies = nil
 		app.Status.AppStatus.Containers[name] = status
@@ -42,7 +42,7 @@ func resetHandlerControlledFields(app *v1.AppInstance) {
 	for name, status := range app.Status.AppStatus.Jobs {
 		status.ExpressionErrors = nil
 		status.Dependencies = nil
-		if !appUpdated && jobs.ShouldRun(name, app) {
+		if !appUpToDate && jobs.ShouldRun(name, app) {
 			// If a job is going to run again, then set its status to not ready so that the controller will run it again and the
 			// dependency status will be set correctly.
 			status.Ready = false
@@ -51,18 +51,21 @@ func resetHandlerControlledFields(app *v1.AppInstance) {
 	}
 
 	for name, status := range app.Status.AppStatus.Services {
+		status.Ready = status.Ready && appUpToDate
 		status.ExpressionErrors = nil
 		status.MissingConsumerPermissions = nil
 		app.Status.AppStatus.Services[name] = status
 	}
 
 	for name, status := range app.Status.AppStatus.Secrets {
+		status.Ready = status.Ready && appUpToDate
 		status.LookupErrors = nil
 		status.LookupTransitioning = nil
 		app.Status.AppStatus.Secrets[name] = status
 	}
 
 	for name, status := range app.Status.AppStatus.Routers {
+		status.Ready = status.Ready && appUpToDate
 		status.MissingTargets = nil
 		app.Status.AppStatus.Routers[name] = status
 	}
