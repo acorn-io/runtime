@@ -14,16 +14,18 @@ A simple application deployment framework for Kubernetes.
 ## Get Started
 
 - [Downloads](https://github.com/acorn-io/runtime/releases)
-- [Documentation](https://docs.acorn.io)
+- [Runtime Documentation](https://runtime-docs.acorn.io)
 - [Community Slack](https://slack.acorn.io)
 - [Discussions Forum](https://github.com/acorn-io/runtime/discussions)
 
 ## Contributing
+
 For the basics on how to contribute to acorn, checkout [CONTRIBUTING.md](CONTRIBUTING.md).
 
 More details can also be found in our [developer wiki](https://github.com/acorn-io/runtime/wiki).
 
 ## License
+
 Copyright (c) 2023 [Acorn Labs, Inc.](http://acorn.io)
 
 Licensed under the Apache License, Version 2.0 (the "License");
