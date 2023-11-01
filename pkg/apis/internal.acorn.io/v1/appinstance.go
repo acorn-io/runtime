@@ -255,6 +255,7 @@ type Endpoint struct {
 	Address         string          `json:"address,omitempty"`
 	Protocol        Protocol        `json:"protocol,omitempty"`
 	PublishProtocol PublishProtocol `json:"publishProtocol,omitempty"`
+	Path            string          `json:"path,omitempty"`
 	Pending         bool            `json:"pending,omitempty"`
 }
 

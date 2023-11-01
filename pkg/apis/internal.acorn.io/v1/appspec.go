@@ -129,6 +129,7 @@ func (in PortDef) FormatString(serviceName string) string {
 
 type PortDef struct {
 	Hostname   string   `json:"hostname,omitempty"`
+	Path       string   `json:"path,omitempty"`
 	Protocol   Protocol `json:"protocol,omitempty"`
 	Publish    bool     `json:"publish,omitempty"`
 	Dev        bool     `json:"dev,omitempty"`

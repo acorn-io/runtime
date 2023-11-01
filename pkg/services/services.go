@@ -250,6 +250,9 @@ func ToK8sService(req router.Request, service *v1.ServiceInstance) (result []kcl
 		return toAddressService(service), nil, nil
 	} else if service.Spec.Container != "" {
 		return toContainerService(service), nil, nil
+		// TODO(njhale): Flip this on when generating job services
+		//} else if service.Spec.Job != "" {
+		//	return toJobService(service), nil, nil
 	} else if len(service.Spec.ContainerLabels) > 0 {
 		return toContainerLabelsService(service), nil, nil
 	}

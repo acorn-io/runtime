@@ -72,6 +72,7 @@ type PortPublish struct {
 	Port       int32    `json:"port,omitempty"`
 	Protocol   Protocol `json:"protocol,omitempty"`
 	Hostname   string   `json:"hostname,omitempty"`
+	Path       string   `json:"path,omitempty"`
 	TargetPort int32    `json:"targetPort,omitempty"`
 }
 

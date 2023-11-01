@@ -142,9 +142,7 @@ func endpoints(req router.Request, app *v1.AppInstance) (string, error) {
 	var endpointStrings []string
 
 	for _, endpoints := range typed.SortedValues(endpointTarget) {
-		var (
-			publicStrings []string
-		)
+		var publicStrings []string
 
 		for _, endpoint := range endpoints {
 			buf := &strings.Builder{}
@@ -177,7 +175,12 @@ func endpoints(req router.Request, app *v1.AppInstance) (string, error) {
 				}
 			} else {
 				buf.WriteString(endpoint.Address)
+				if len(endpoint.Path) > 0 {
+					// TODO(njhale): Sanitize address and path if necessary
+					buf.WriteString(endpoint.Path)
+				}
 			}
+
 			publicStrings = append(publicStrings, buf.String())
 		}
 

@@ -156,6 +156,7 @@ func hash(limit int, s string) string {
 
 type Target struct {
 	Port    int32  `json:"port,omitempty"`
+	Path    string `json:"path,omitempty"`
 	Service string `json:"service,omitempty"`
 }
 
@@ -222,12 +223,16 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 					if err != nil {
 						return nil, err
 					}
+
+					target := Target{Port: port.TargetPort, Path: port.Path, Service: svc.Name}
+					rule := getIngressRule(svc, hostname, port.Port)
+
 					if domain == acornDNSDomain || strings.HasSuffix(domain, profiles.ClusterDomainDefault) {
-						acornDomainTargets[hostname] = Target{Port: port.TargetPort, Service: svc.Name}
-						acornDomainRules = append(acornDomainRules, getIngressRule(svc, hostname, port.Port))
+						acornDomainTargets[hostname] = target
+						acornDomainRules = append(acornDomainRules, rule)
 					} else {
-						customDomainTargets[hostname] = Target{Port: port.TargetPort, Service: svc.Name}
-						customDomainRules = append(customDomainRules, getIngressRule(svc, hostname, port.Port))
+						customDomainTargets[hostname] = target
+						customDomainRules = append(customDomainRules, rule)
 					}
 				}
 			}
@@ -235,7 +240,7 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 			if len(ports) > 1 {
 				return nil, fmt.Errorf("multiple ports bound to the same hostname [%s]", hostname)
 			}
-			customDomainTargets[hostname] = Target{Port: ports[0].TargetPort, Service: svc.Name}
+			customDomainTargets[hostname] = Target{Port: ports[0].TargetPort, Path: ports[0].Path, Service: svc.Name}
 			customDomainRules = append(customDomainRules, getIngressRule(svc, hostname, ports[0].Port))
 		}
 	}
@@ -276,6 +281,7 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 			svc.Status.Endpoints = append(svc.Status.Endpoints, v1.Endpoint{
 				Address:         rule.Host,
 				PublishProtocol: proto,
+				Path:            rules.target[rule.Host].Path,
 			})
 		}
 

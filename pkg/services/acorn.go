@@ -123,6 +123,10 @@ func serviceNames(appInstance *v1.AppInstance) sets.Set[string] {
 	for k := range appInstance.Status.AppSpec.Containers {
 		result.Insert(k)
 	}
+	// TODO(njhale): Uncomment me when supporting job ports
+	//for k := range appInstance.Status.AppSpec.Jobs {
+	//	result.Insert(k)
+	//}
 	for k := range appInstance.Status.AppSpec.Routers {
 		result.Insert(k)
 	}
@@ -237,7 +241,7 @@ func selfScope(scopedLabels v1.ScopedLabels) map[string]string {
 	return labelMap
 }
 
-func forContainers(appInstance *v1.AppInstance) (result []kclient.Object) {
+func forContainers(interpolator *secrets.Interpolator, appInstance *v1.AppInstance) (result []kclient.Object) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
 		containerName, container := entry.Key, entry.Value
 
@@ -247,6 +251,23 @@ func forContainers(appInstance *v1.AppInstance) (result []kclient.Object) {
 
 		ports := ports2.CollectContainerPorts(&container, appInstance.Status.GetDevMode())
 		if len(ports) == 0 {
+			continue
+		}
+
+		var failed bool
+		interp := interpolator.ForContainer(containerName)
+		for i, p := range ports {
+			replacement, err := interp.Replace(p.Path)
+			if err != nil {
+				interp.AddError(err)
+				failed = true
+				continue
+			}
+
+			ports[i].Path = replacement
+		}
+
+		if failed {
 			continue
 		}
 
@@ -274,6 +295,57 @@ func forContainers(appInstance *v1.AppInstance) (result []kclient.Object) {
 					appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations),
 				Ports:     ports,
 				Container: containerName,
+			},
+		})
+	}
+
+	return
+}
+
+func forJobs(appInstance *v1.AppInstance) (result []kclient.Object) {
+	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Jobs) {
+		jobName, job := entry.Key, entry.Value
+
+		if ports2.IsLinked(appInstance, jobName) {
+			continue
+		}
+
+		ports := ports2.CollectContainerPorts(&job, appInstance.Status.GetDevMode())
+		if len(ports) == 0 {
+			continue
+		}
+
+		result = append(result, &v1.ServiceInstance{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      jobName,
+				Namespace: appInstance.Status.Namespace,
+				Labels: labels.Managed(appInstance,
+					labels.AcornPublicName, publicname.ForChild(appInstance, jobName),
+					// TODO(njhale): Should this be AcornJobName?
+					//labels.AcornContainerName, jobName),
+					labels.AcornJobName, jobName),
+				Annotations: map[string]string{
+					labels.AcornAppGeneration:        strconv.FormatInt(appInstance.Generation, 10),
+					labels.AcornConfigHashAnnotation: appInstance.Status.AppStatus.Jobs[jobName].ConfigHash,
+				},
+			},
+			Spec: v1.ServiceInstanceSpec{
+				AppName:      appInstance.Name,
+				AppNamespace: appInstance.Namespace,
+				PublishMode:  publishMode(appInstance),
+				Publish:      ports2.PortPublishForService(jobName, appInstance.Spec.Publish),
+				Labels: labels.Merge(labels.Managed(appInstance, labels.AcornJobName, jobName),
+					labels.GatherScoped(jobName, v1.LabelTypeJob,
+						appInstance.Status.AppSpec.Labels, job.Labels, appInstance.Spec.Labels)),
+				Annotations: labels.GatherScoped(jobName, v1.LabelTypeJob,
+					appInstance.Status.AppSpec.Annotations, job.Annotations, appInstance.Spec.Annotations),
+				//Labels: labels.Merge(labels.Managed(appInstance, labels.AcornContainerName, containerName),
+				//	labels.GatherScoped(containerName, v1.LabelTypeContainer,
+				//		appInstance.Status.AppSpec.Labels, container.Labels, appInstance.Spec.Labels)),
+				//Annotations: labels.GatherScoped(containerName, v1.LabelTypeContainer,
+				//	appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations),
+				Ports: ports,
+				Job:   jobName,
 			},
 		})
 	}
@@ -369,7 +441,9 @@ func ToAcornServices(ctx context.Context, c kclient.Client, interpolator *secret
 	}
 	result = append(result, objs...)
 	result = append(result, forAcorns(appInstance)...)
-	result = append(result, forContainers(appInstance)...)
+	result = append(result, forContainers(interpolator, appInstance)...)
+	// TODO(njhale): add services for jobs
+	//result = append(result, forJobs(appInstance)...)
 
 	routers, err := forRouters(appInstance)
 	if err != nil {

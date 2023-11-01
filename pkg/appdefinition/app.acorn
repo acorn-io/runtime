@@ -240,6 +240,7 @@
 		port?:       int
 		targetPort?: int
 		protocol?:   enum("tcp", "udp", "http", "http2")
+		path?: string =~ "^/.*"
 	}
 
 	Metrics: {
