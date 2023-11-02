@@ -169,7 +169,7 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 		return nil, err
 	}
 
-	bindings := ports.ApplyBindings(svc.Spec.PublishMode, svc.Spec.Publish, ports.ByProtocol(svc.Spec.Ports, v1.ProtocolHTTP))
+	bindings := ports.ApplyBindings(svc.Spec.PublishMode, svc.Spec.Publish, ports.ByProtocol(svc.Spec.Ports, true, v1.ProtocolHTTP, v1.ProtocolHTTP2))
 
 	if len(bindings) == 0 {
 		return nil, nil

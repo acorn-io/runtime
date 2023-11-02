@@ -231,7 +231,7 @@
 
 	PortSingle: (int > 0 && int < 65536) || PortRegexp
 	Port:       (int > 0 && int < 65536) || PortRegexp || PortSpec
-	PortRegexp: string =~ `^([a-z][-a-z0-9.]+:)?([0-9]+:)?([a-z][-a-z0-9]+:)?([0-9]+)(/(tcp|udp|http))?$`
+	PortRegexp: string =~ `^([a-z][-a-z0-9.]+:)?([0-9]+:)?([a-z][-a-z0-9]+:)?([0-9]+)(/(tcp|udp|http|http2))?$`
 
 	PortSpec: {
 		publish?:    bool
@@ -239,7 +239,7 @@
 		hostname?:   string
 		port?:       int
 		targetPort?: int
-		protocol?:   enum("tcp", "udp", "http")
+		protocol?:   enum("tcp", "udp", "http", "http2")
 	}
 
 	Metrics: {
@@ -385,7 +385,7 @@
 		hostname?:         string
 		targetPort?:       int
 		targetServiceName: DNSName
-		protocol?:         enum("tcp", "udp", "http")
+		protocol?:         enum("tcp", "udp", "http", "http2")
 	} || string || int
 
 	Router: {

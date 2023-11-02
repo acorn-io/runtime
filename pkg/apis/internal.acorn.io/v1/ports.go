@@ -14,13 +14,7 @@ var (
 func validProto(p string) (Protocol, bool) {
 	ret := Protocol(p)
 	switch ret {
-	case ProtocolTCP:
-		fallthrough
-	case ProtocolUDP:
-		fallthrough
-	case ProtocolHTTP:
-		return ret, true
-	case "":
+	case ProtocolTCP, ProtocolUDP, ProtocolHTTP, ProtocolHTTP2, "":
 		return ret, true
 	}
 	return ret, false
