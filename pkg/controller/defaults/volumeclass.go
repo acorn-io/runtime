@@ -43,7 +43,9 @@ func addVolumeClassDefaults(ctx context.Context, c kclient.Client, app *v1.AppIn
 		// This is a bit of a hack as we're migrating away from the VolumeSize field. Essentially,
 		// we want to ensure that app.Status.Volumes[name] always has a size set. If the VolumeSize
 		// field has been set in the past, we want to mirgrate that over to be set on app.Status.Volumes[name].
-		if app.Status.Defaults.VolumeSize != nil {
+		// There is another edge case where the Size field was set by a VolumeClass's default size. In this
+		// case we want to leave the Size field alone.
+		if app.Status.Defaults.VolumeSize != nil && volDefaults.Size == "" {
 			volDefaults.Size = v1.Quantity(app.Status.Defaults.VolumeSize.String())
 		}
 
