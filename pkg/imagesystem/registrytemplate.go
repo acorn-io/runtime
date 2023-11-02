@@ -68,6 +68,9 @@ func registryDeployment(namespace, serviceAccountName, registryImage string, req
 					},
 				},
 				Spec: corev1.PodSpec{
+					SecurityContext: &corev1.PodSecurityContext{
+						FSGroup: z.Pointer[int64](1000),
+					},
 					TerminationGracePeriodSeconds: z.Pointer[int64](10),
 					PriorityClassName:             system.AcornPriorityClass,
 					EnableServiceLinks:            new(bool),
