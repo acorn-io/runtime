@@ -303,9 +303,6 @@ status:
         dependencies:
           container-name:
             serviceType: container
-        state: waiting
-        transitioningMessages:
-        - waiting for container to be ready [container-name]
   columns: {}
   conditions:
     reason: Success

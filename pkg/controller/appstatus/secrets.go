@@ -91,9 +91,6 @@ func (a *appStatusRenderer) readSecrets() error {
 
 func setSecretMessages(app *v1.AppInstance) {
 	for secretName, s := range app.Status.AppStatus.Secrets {
-		s.ErrorMessages = s.LookupErrors
-		s.TransitioningMessages = s.LookupTransitioning
-
 		// Not ready if we have any error messages
 		if len(s.ErrorMessages) > 0 {
 			s.Ready = false

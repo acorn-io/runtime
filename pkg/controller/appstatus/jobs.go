@@ -184,6 +184,14 @@ func setJobMessages(app *v1.AppInstance) {
 			}
 		}
 
+		if !c.Ready {
+			msg, blocked := isBlocked(c.Dependencies, c.ExpressionErrors)
+			if blocked {
+				c.State = "waiting"
+			}
+			c.TransitioningMessages = append(c.TransitioningMessages, msg...)
+		}
+
 		app.Status.AppStatus.Jobs[jobName] = c
 	}
 }

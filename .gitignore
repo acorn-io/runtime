@@ -15,4 +15,5 @@
 /vendor
 apiserver.local.config
 /.envrc
+/depot.json
 **/.DS_Store

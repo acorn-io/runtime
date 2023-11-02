@@ -60,13 +60,13 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	router.OnErrorHandler = appdefinition.OnError
 
 	appRouter := router.Type(&v1.AppInstance{}).Middleware(devsession.OverlayDevSession).IncludeFinalizing()
-	appRouter.HandlerFunc(appstatus.PrepareStatus)
 	appRouter.HandlerFunc(appdefinition.AssignNamespace)
 
 	// AppImage preparation, checks and promotion
 	appRouter.HandlerFunc(appdefinition.PullAppImage(registryTransport, recorder)) // pulls image to .status.Staged.AppImage
 	appRouter.HandlerFunc(permissions.CheckPermissions)                            // checks if newly staged image is allowed and that permissions are requested and granted properly
 	appRouter.HandlerFunc(permissions.CopyPromoteStagedAppImage)                   // if the above checks pass, the staged image is promoted to app.Status.AppImage and everything below will use that image
+	appRouter.HandlerFunc(appstatus.PrepareStatus)
 
 	// ---
 	appRouter.HandlerFunc(images.CreateImages)
@@ -82,7 +82,6 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	appHasNamespace.HandlerFunc(quota.WaitForAllocation)
 
 	appMeetsPreconditions := appHasNamespace.Middleware(appstatus.CheckStatus)
-	appMeetsPreconditions.HandlerFunc(appstatus.GetStatus)
 	appMeetsPreconditions.Middleware(appdefinition.ImagePulled).HandlerFunc(permissions.ConsumerPermissions)
 	appMeetsPreconditions.Middleware(appdefinition.ImagePulled).HandlerFunc(appdefinition.DeploySpec)
 	appMeetsPreconditions.Middleware(appdefinition.ImagePulled).HandlerFunc(secrets.CreateSecrets)
@@ -90,6 +89,7 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	appMeetsPreconditions.HandlerFunc(appdefinition.AddAcornProjectLabel)
 	appMeetsPreconditions.HandlerFunc(appdefinition.UpdateObservedFields)
 
+	appRouter.HandlerFunc(appstatus.GetStatus)
 	appRouter.HandlerFunc(appstatus.SetStatus)
 	appRouter.HandlerFunc(appstatus.ReadyStatus)
 	appRouter.HandlerFunc(appstatus.CLIStatus)
