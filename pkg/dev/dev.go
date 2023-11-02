@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -19,6 +20,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/log"
 	"github.com/acorn-io/runtime/pkg/rulerequest"
+	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/acorn/devsessions"
 	"github.com/acorn-io/z"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
@@ -277,6 +279,8 @@ func buildLoop(ctx context.Context, c client.Client, hash clientHash, opts *Opti
 				case <-time.After(time.Second):
 					continue
 				}
+			} else if apierror.IsForbidden(err) && strings.Contains(err.Error(), devsessions.ErrMsgDevSessionBlockedByIAR) {
+				return fmt.Errorf(devsessions.ErrMsgDevSessionBlockedByIAR)
 			} else if err != nil {
 				logger.Errorf("Failed to run/update app: %v", err)
 				failed.Store(true)
