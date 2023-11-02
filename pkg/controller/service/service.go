@@ -1,8 +1,7 @@
 package service
 
 import (
-	"fmt"
-
+	"github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/ports"
@@ -22,7 +21,8 @@ func RenderServices(req router.Request, resp router.Response) error {
 	if len(http2Ports) > 0 {
 		svcCopy := svcInstance.DeepCopy()
 		svcCopy.Spec.Ports = http2Ports
-		svcCopy.Name = fmt.Sprintf("%s-%s", svcInstance.Name, v1.ProtocolHTTP2)
+		// append uuid to reduce the chance of clash
+		svcCopy.Name = name.SafeConcatName(svcInstance.Name, string(v1.ProtocolHTTP2), string(svcInstance.UID))
 		if svcCopy.Spec.Annotations == nil {
 			svcCopy.Spec.Annotations = map[string]string{}
 		}
