@@ -162,22 +162,25 @@ func endpoints(req router.Request, app *v1.AppInstance) (string, error) {
 						buf.WriteString("http://")
 					}
 				}
+
+				if endpoint.Pending {
+					buf.WriteString("<Pending Ingress>")
+				} else {
+					buf.WriteString(endpoint.Address)
+
+					// Append the path if provided
+					if len(endpoint.Path) > 0 {
+						buf.WriteString(endpoint.Path)
+					}
+				}
 			default:
 				buf.WriteString(strings.ToLower(string(endpoint.Protocol)))
 				buf.WriteString("://")
-			}
 
-			if endpoint.Pending {
-				if endpoint.Protocol == "http" {
-					buf.WriteString("<Pending Ingress>")
-				} else {
+				if endpoint.Pending {
 					buf.WriteString("<Pending Load Balancer>")
-				}
-			} else {
-				buf.WriteString(endpoint.Address)
-				if len(endpoint.Path) > 0 {
-					// TODO(njhale): Sanitize address and path if necessary
-					buf.WriteString(endpoint.Path)
+				} else {
+					buf.WriteString(endpoint.Address)
 				}
 			}
 

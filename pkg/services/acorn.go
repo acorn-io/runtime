@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/acorn-io/baaah/pkg/apply"
+	"github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/jobs"
@@ -123,10 +124,9 @@ func serviceNames(appInstance *v1.AppInstance) sets.Set[string] {
 	for k := range appInstance.Status.AppSpec.Containers {
 		result.Insert(k)
 	}
-	// TODO(njhale): Uncomment me when supporting job ports
-	//for k := range appInstance.Status.AppSpec.Jobs {
-	//	result.Insert(k)
-	//}
+	for k := range appInstance.Status.AppSpec.Jobs {
+		result.Insert(jobServiceName(k))
+	}
 	for k := range appInstance.Status.AppSpec.Routers {
 		result.Insert(k)
 	}
@@ -302,7 +302,7 @@ func forContainers(interpolator *secrets.Interpolator, appInstance *v1.AppInstan
 	return
 }
 
-func forJobs(appInstance *v1.AppInstance) (result []kclient.Object) {
+func forJobs(interpolator *secrets.Interpolator, appInstance *v1.AppInstance) (result []kclient.Object) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Jobs) {
 		jobName, job := entry.Key, entry.Value
 
@@ -315,14 +315,35 @@ func forJobs(appInstance *v1.AppInstance) (result []kclient.Object) {
 			continue
 		}
 
+		var failed bool
+		interp := interpolator.ForJob(jobName)
+		for i, p := range ports {
+			replacement, err := interp.Replace(p.Path)
+			if err != nil {
+				interp.AddError(err)
+				failed = true
+				continue
+			}
+
+			ports[i].Path = replacement
+		}
+
+		if failed {
+			continue
+		}
+
+		publish := publishMode(appInstance)
+		if appInstance.Status.AppStatus.Jobs[jobName].State == "completed" {
+			// Don't publish endpoints for jobs that are completed
+			publish = v1.PublishModeNone
+		}
+
 		result = append(result, &v1.ServiceInstance{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      jobName,
+				Name:      jobServiceName(jobName),
 				Namespace: appInstance.Status.Namespace,
 				Labels: labels.Managed(appInstance,
 					labels.AcornPublicName, publicname.ForChild(appInstance, jobName),
-					// TODO(njhale): Should this be AcornJobName?
-					//labels.AcornContainerName, jobName),
 					labels.AcornJobName, jobName),
 				Annotations: map[string]string{
 					labels.AcornAppGeneration:        strconv.FormatInt(appInstance.Generation, 10),
@@ -332,20 +353,15 @@ func forJobs(appInstance *v1.AppInstance) (result []kclient.Object) {
 			Spec: v1.ServiceInstanceSpec{
 				AppName:      appInstance.Name,
 				AppNamespace: appInstance.Namespace,
-				PublishMode:  publishMode(appInstance),
+				PublishMode:  publish,
 				Publish:      ports2.PortPublishForService(jobName, appInstance.Spec.Publish),
 				Labels: labels.Merge(labels.Managed(appInstance, labels.AcornJobName, jobName),
 					labels.GatherScoped(jobName, v1.LabelTypeJob,
 						appInstance.Status.AppSpec.Labels, job.Labels, appInstance.Spec.Labels)),
 				Annotations: labels.GatherScoped(jobName, v1.LabelTypeJob,
 					appInstance.Status.AppSpec.Annotations, job.Annotations, appInstance.Spec.Annotations),
-				//Labels: labels.Merge(labels.Managed(appInstance, labels.AcornContainerName, containerName),
-				//	labels.GatherScoped(containerName, v1.LabelTypeContainer,
-				//		appInstance.Status.AppSpec.Labels, container.Labels, appInstance.Spec.Labels)),
-				//Annotations: labels.GatherScoped(containerName, v1.LabelTypeContainer,
-				//	appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations),
-				Ports: ports,
-				Job:   jobName,
+				Ports:     ports,
+				Container: jobName,
 			},
 		})
 	}
@@ -442,8 +458,7 @@ func ToAcornServices(ctx context.Context, c kclient.Client, interpolator *secret
 	result = append(result, objs...)
 	result = append(result, forAcorns(appInstance)...)
 	result = append(result, forContainers(interpolator, appInstance)...)
-	// TODO(njhale): add services for jobs
-	//result = append(result, forJobs(appInstance)...)
+	result = append(result, forJobs(interpolator, appInstance)...)
 
 	routers, err := forRouters(appInstance)
 	if err != nil {
@@ -525,4 +540,8 @@ func getUngranted(appInstance *v1.AppInstance, service *v1.ServiceInstance) []v1
 	}
 
 	return ungranted
+}
+
+func jobServiceName(jobName string) string {
+	return name.SafeConcatName(jobName, "job")
 }

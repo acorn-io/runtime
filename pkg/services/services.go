@@ -64,6 +64,27 @@ func toContainerService(service *v1.ServiceInstance) (result []kclient.Object) {
 	return
 }
 
+func toJobService(service *v1.ServiceInstance) (result []kclient.Object) {
+	newService := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      service.Name,
+			Namespace: service.Namespace,
+			Labels:    service.Spec.Labels,
+			Annotations: typed.Concat(service.Spec.Annotations, map[string]string{
+				labels.AcornConfigHashAnnotation: service.Annotations[labels.AcornConfigHashAnnotation],
+			}),
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: ports.ToServicePorts(service.Spec.Ports),
+			Type:  corev1.ServiceTypeClusterIP,
+			Selector: labels.ManagedByApp(service.Spec.AppNamespace,
+				service.Spec.AppName, labels.AcornJobName, service.Spec.Container),
+		},
+	}
+	result = append(result, newService)
+	return
+}
+
 func toAddressService(service *v1.ServiceInstance) (result []kclient.Object) {
 	newService := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -249,10 +270,10 @@ func ToK8sService(req router.Request, service *v1.ServiceInstance) (result []kcl
 	} else if service.Spec.Address != "" {
 		return toAddressService(service), nil, nil
 	} else if service.Spec.Container != "" {
+		if service.Labels[labels.AcornJobName] != "" {
+			return toJobService(service), nil, nil
+		}
 		return toContainerService(service), nil, nil
-		// TODO(njhale): Flip this on when generating job services
-		//} else if service.Spec.Job != "" {
-		//	return toJobService(service), nil, nil
 	} else if len(service.Spec.ContainerLabels) > 0 {
 		return toContainerLabelsService(service), nil, nil
 	}
