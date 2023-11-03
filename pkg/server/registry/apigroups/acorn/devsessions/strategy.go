@@ -6,11 +6,15 @@ import (
 
 	"github.com/acorn-io/baaah/pkg/router"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/config"
+	"github.com/acorn-io/runtime/pkg/profiles"
 	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/acorn/apps"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+const ErrMsgDevSessionBlockedByIAR = "ImageAllowRules active - DevSessions are being blocked"
 
 type Validator struct {
 	client       kclient.Client
@@ -29,6 +33,17 @@ func (v *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 	app := &apiv1.App{}
 	if err := v.client.Get(ctx, router.Key(devSession.Namespace, devSession.Name), app); err != nil {
 		result = append(result, field.Invalid(field.NewPath("metadata", "name"), devSession.Name, err.Error()))
+		return
+	}
+
+	iarEnabled, err := config.GetFeature(ctx, v.client, profiles.FeatureImageAllowRules)
+	if err != nil {
+		result = append(result, field.Invalid(field.NewPath("metadata", "name"), devSession.Name, err.Error()))
+		return
+	}
+
+	if iarEnabled {
+		result = append(result, field.Forbidden(field.NewPath("metadata", "name"), ErrMsgDevSessionBlockedByIAR))
 		return
 	}
 
