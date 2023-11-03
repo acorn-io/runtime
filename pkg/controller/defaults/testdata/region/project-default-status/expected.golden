@@ -31,7 +31,6 @@ status:
       "": 0
       container-name: 0
     region: local
-    volumeSize: 10G
   namespace: app-created-namespace
   observedGeneration: 1
   staged:

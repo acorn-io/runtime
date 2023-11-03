@@ -30,11 +30,10 @@ func Calculate(req router.Request, resp router.Response) (err error) {
 		}
 	}()
 
-	// Only set the default volume size if it hasn't been set yet.
-	if appInstance.Status.Defaults.Volumes == nil {
-		if err := addDefaultVolumeSize(req.Ctx, req.Client, appInstance); err != nil {
-			return err
-		}
+	// addVolumeClassDefaults should run everytime as the function itself will not overwrite any existing
+	// defaults. Effectively, this means that volume defaults only get set if they have not been set before.
+	if err = addVolumeClassDefaults(req.Ctx, req.Client, appInstance); err != nil {
+		return err
 	}
 
 	if appInstance.Generation != appInstance.Status.ObservedGeneration {
@@ -53,10 +52,6 @@ func calculate(req router.Request, appInstance *internalv1.AppInstance) error {
 	}
 
 	if err = AddDefaultRegion(req.Ctx, req.Client, appInstance); err != nil {
-		return err
-	}
-
-	if err = addVolumeClassDefaults(req.Ctx, req.Client, appInstance); err != nil {
 		return err
 	}
 

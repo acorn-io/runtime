@@ -1,6 +1,7 @@
 kind: AppInstance
 apiVersion: internal.acorn.io/v1
 metadata:
+  generation: 2
   name: app-name
   namespace: app-namespace
   uid: 1234567890abcdef
@@ -18,11 +19,8 @@ status:
         dirs:
           "/var/tmp":
             volume: foo
+  defaults:
     volumes:
-      foo: {}
-  conditions:
-    - error: true
-      message: 'cannot establish defaults because two defaults volume classes exist: test-volume-class and test-volume-class-1'
-      reason: Error
-      status: "False"
-      type: defaults
+      foo:
+        class: test-volume-class
+        size: 4Gi
