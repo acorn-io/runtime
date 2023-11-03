@@ -20,6 +20,8 @@ status:
             volume: foo
     volumes:
       foo: {}
+  defaults:
+    region: local
   conditions:
     - error: true
       message: 'cannot establish defaults because two defaults volume classes exist: test-volume-class and test-volume-class-1'
