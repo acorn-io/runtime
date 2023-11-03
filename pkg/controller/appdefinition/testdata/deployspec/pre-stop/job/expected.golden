@@ -122,6 +122,41 @@ status: {}
 
 ---
 apiVersion: internal.acorn.io/v1
+kind: ServiceInstance
+metadata:
+  annotations:
+    acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/job-name: oneimage
+    acorn.io/managed: "true"
+    acorn.io/public-name: app-name.oneimage
+  name: oneimage-job
+  namespace: app-created-namespace
+spec:
+  appName: app-name
+  appNamespace: app-namespace
+  container: oneimage
+  default: false
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/job-name: oneimage
+    acorn.io/managed: "true"
+  ports:
+  - port: 80
+    protocol: http
+    targetPort: 81
+  - port: 90
+    protocol: tcp
+    targetPort: 91
+status: {}
+
+---
+apiVersion: internal.acorn.io/v1
 kind: AppInstance
 metadata:
   creationTimestamp: null
