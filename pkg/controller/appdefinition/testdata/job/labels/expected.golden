@@ -137,6 +137,49 @@ status: {}
 
 ---
 apiVersion: internal.acorn.io/v1
+kind: ServiceInstance
+metadata:
+  annotations:
+    acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/job-name: job1
+    acorn.io/managed: "true"
+    acorn.io/public-name: app-name.job1
+  name: job1-job
+  namespace: app-created-namespace
+spec:
+  annotations:
+    alljobsa: value
+    global2a: value
+    globala: value
+    job1a: value
+    job3a: value
+  appName: app-name
+  appNamespace: app-namespace
+  container: job1
+  default: false
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/job-name: job1
+    acorn.io/managed: "true"
+    alljobs: value
+    global: value
+    global2: value
+    job1: value
+    job3: value
+  ports:
+  - port: 80
+    protocol: http
+    targetPort: 81
+status: {}
+
+---
+apiVersion: internal.acorn.io/v1
 kind: AppInstance
 metadata:
   creationTimestamp: null

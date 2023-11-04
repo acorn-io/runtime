@@ -226,6 +226,38 @@ spec:
 status: {}
 
 ---
+apiVersion: internal.acorn.io/v1
+kind: ServiceInstance
+metadata:
+  annotations:
+    acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/job-name: job-name
+    acorn.io/managed: "true"
+    acorn.io/public-name: app-name.job-name
+  name: job-name-job
+  namespace: app-created-namespace
+spec:
+  appName: app-name
+  appNamespace: app-namespace
+  container: job-name
+  default: false
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/job-name: job-name
+    acorn.io/managed: "true"
+  ports:
+  - port: 80
+    protocol: http
+    targetPort: 81
+status: {}
+
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

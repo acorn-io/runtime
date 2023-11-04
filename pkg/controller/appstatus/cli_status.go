@@ -142,9 +142,7 @@ func endpoints(req router.Request, app *v1.AppInstance) (string, error) {
 	var endpointStrings []string
 
 	for _, endpoints := range typed.SortedValues(endpointTarget) {
-		var (
-			publicStrings []string
-		)
+		var publicStrings []string
 
 		for _, endpoint := range endpoints {
 			buf := &strings.Builder{}
@@ -164,20 +162,28 @@ func endpoints(req router.Request, app *v1.AppInstance) (string, error) {
 						buf.WriteString("http://")
 					}
 				}
+
+				if endpoint.Pending {
+					buf.WriteString("<Pending Ingress>")
+				} else {
+					buf.WriteString(endpoint.Address)
+
+					// Append the path if provided
+					if len(endpoint.Path) > 0 {
+						buf.WriteString(endpoint.Path)
+					}
+				}
 			default:
 				buf.WriteString(strings.ToLower(string(endpoint.Protocol)))
 				buf.WriteString("://")
+
+				if endpoint.Pending {
+					buf.WriteString("<Pending Load Balancer>")
+				} else {
+					buf.WriteString(endpoint.Address)
+				}
 			}
 
-			if endpoint.Pending {
-				if endpoint.Protocol == "http" {
-					buf.WriteString("<Pending Ingress>")
-				} else {
-					buf.WriteString("<Pending Load Balancer>")
-				}
-			} else {
-				buf.WriteString(endpoint.Address)
-			}
 			publicStrings = append(publicStrings, buf.String())
 		}
 

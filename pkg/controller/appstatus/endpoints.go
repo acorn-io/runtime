@@ -126,6 +126,7 @@ func ingressEndpoints(ctx context.Context, c kclient.Client, app *v1.AppInstance
 			endpoints = append(endpoints, v1.Endpoint{
 				Target:     target.Service,
 				TargetPort: target.Port,
+				Path:       target.Path,
 				Address:    hostname,
 				Protocol:   v1.ProtocolHTTP,
 				Pending:    len(ingress.Status.LoadBalancer.Ingress) == 0,

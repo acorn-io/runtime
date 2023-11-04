@@ -30,8 +30,14 @@ func ServiceLoadBalancer(req router.Request, svc *v1.ServiceInstance) (result []
 
 	selectorLabels := svc.Spec.ContainerLabels
 	if svc.Spec.Container != "" {
+		selectorLabel := labels.AcornContainerName
+		if svc.Labels[labels.AcornJobName] != "" {
+			// Service targets a job, so we need to selector for containers matching the job name.
+			// Which will be marked as the Container on the spec.
+			selectorLabel = labels.AcornJobName
+		}
 		selectorLabels = map[string]string{
-			labels.AcornContainerName: svc.Spec.Container,
+			selectorLabel: svc.Spec.Container,
 		}
 	}
 

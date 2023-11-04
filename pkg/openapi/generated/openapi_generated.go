@@ -9025,6 +9025,12 @@ func schema_pkg_apis_internalacornio_v1_Endpoint(ref common.ReferenceCallback) c
 							Format: "",
 						},
 					},
+					"path": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"pending": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"boolean"},
@@ -10606,6 +10612,12 @@ func schema_pkg_apis_internalacornio_v1_PortDef(ref common.ReferenceCallback) co
 							Format: "",
 						},
 					},
+					"path": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"protocol": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
@@ -10661,6 +10673,12 @@ func schema_pkg_apis_internalacornio_v1_PortPublish(ref common.ReferenceCallback
 						},
 					},
 					"hostname": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"path": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
