@@ -30,6 +30,7 @@ func serviceEndpoints(ctx context.Context, c kclient.Client, app *v1.AppInstance
 		return nil, err
 	}
 
+	endpointSet := map[string]v1.Endpoint{}
 	for _, service := range serviceList.Items {
 		containerName := service.Labels[labels.AcornContainerName]
 		if containerName == "" {
@@ -53,44 +54,57 @@ func serviceEndpoints(ctx context.Context, c kclient.Client, app *v1.AppInstance
 					portNum := port.Port
 					if len(ingress.Ports) > 0 {
 						for _, ingressPort := range ingress.Ports {
-							endpoints = append(endpoints, v1.Endpoint{
+							portProtocol := port.Protocol
+							if ingressPort.Protocol != "" {
+								portProtocol = ingressPort.Protocol
+							}
+							ep := v1.Endpoint{
 								Target:     containerName,
 								TargetPort: port.TargetPort.IntVal,
 								Address:    fmt.Sprintf("%s:%d", ingress.Hostname, ingressPort.Port),
-								Protocol:   protocol,
-							})
+								Protocol:   v1.Protocol(portProtocol),
+							}
+							endpointSet[endpointKey(ep)] = ep
 						}
 					} else {
-						endpoints = append(endpoints, v1.Endpoint{
+						ep := v1.Endpoint{
 							Target:     containerName,
 							TargetPort: port.TargetPort.IntVal,
 							Address:    fmt.Sprintf("%s:%d", ingress.Hostname, portNum),
 							Protocol:   protocol,
-						})
+						}
+						endpointSet[endpointKey(ep)] = ep
 					}
 				} else if ingress.IP != "" {
-					endpoints = append(endpoints, v1.Endpoint{
+					ep := v1.Endpoint{
 						Target:     containerName,
 						TargetPort: port.TargetPort.IntVal,
 						Address:    fmt.Sprintf("%s:%d", ingress.IP, port.Port),
 						Protocol:   protocol,
-					})
+					}
+					endpointSet[endpointKey(ep)] = ep
 				}
 			}
 
 			if len(service.Status.LoadBalancer.Ingress) == 0 {
-				endpoints = append(endpoints, v1.Endpoint{
+				ep := v1.Endpoint{
 					Target:     containerName,
 					TargetPort: port.TargetPort.IntVal,
 					Address:    fmt.Sprintf("<Pending Ingress>:%d", port.Port),
 					Protocol:   protocol,
 					Pending:    true,
-				})
+				}
+				endpointSet[endpointKey(ep)] = ep
 			}
 		}
 	}
 
-	return
+	result := make([]v1.Endpoint, 0, len(endpointSet))
+	for _, ep := range endpointSet {
+		result = append(result, ep)
+	}
+
+	return result, nil
 }
 
 func ingressEndpoints(ctx context.Context, c kclient.Client, app *v1.AppInstance) (endpoints []v1.Endpoint, _ error) {
@@ -203,4 +217,8 @@ func ingressTLSHosts(ctx context.Context, client kclient.Client, app *v1.AppInst
 	}
 
 	return ingressTLSHosts, nil
+}
+
+func endpointKey(ep v1.Endpoint) string {
+	return fmt.Sprintf("%v://%v", ep.Protocol, ep.Address)
 }
