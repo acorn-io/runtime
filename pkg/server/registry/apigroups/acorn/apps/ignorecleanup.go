@@ -59,7 +59,7 @@ func (s *ignoreCleanupStrategy) Create(ctx context.Context, obj types.Object) (t
 		}
 
 		if app.DeletionTimestamp.IsZero() {
-			return fmt.Errorf("cannot force delete app %s because it is not being deleted", app.Name)
+			return apierrors.NewBadRequest(fmt.Sprintf("cannot force delete app %s because it is not being deleted", app.Name))
 		}
 
 		// If the app has the destroy job finalizer, remove it to force delete

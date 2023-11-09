@@ -2,7 +2,9 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -11,6 +13,7 @@ import (
 	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	k8swait "k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/acorn-io/runtime/pkg/client"
@@ -147,7 +150,19 @@ func removeAcorn(ctx context.Context, c client.Client, arg string, ignoreCleanup
 	}
 
 	if ignoreCleanup {
-		if err := c.AppIgnoreDeleteCleanup(ctx, arg); err != nil {
+		// There are situations where an app being deleted the first time with the --ignore-cleanup flag will fail at this
+		// step because the server thinks that the app is not being deleted. Retrying here will work around this issue.
+		if err = retry.OnError(k8swait.Backoff{
+			Steps:    5,
+			Duration: 500 * time.Millisecond,
+			Factor:   2,
+			Jitter:   0.1,
+		}, func(err error) bool {
+			var statusErr *apierrors.StatusError
+			return errors.As(err, &statusErr) && statusErr.Status().Code == http.StatusBadRequest && strings.HasSuffix(statusErr.Status().Message, "it is not being deleted")
+		}, func() error {
+			return c.AppIgnoreDeleteCleanup(ctx, arg)
+		}); err != nil {
 			return fmt.Errorf("skipping cleanup for app %s: %w", arg, err)
 		}
 	}
