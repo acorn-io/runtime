@@ -27,13 +27,13 @@ import (
 // - there are no missing permissions
 // - there are no image permissions denied (if ImageRoleAuthorizations are enabled)
 // - the image is allowed by the image allow rules (if enabled)
-func CopyPromoteStagedAppImage(req router.Request, resp router.Response) error {
+func CopyPromoteStagedAppImage(req router.Request, _ router.Response) error {
 	app := req.Object.(*v1.AppInstance)
 	if app.Status.Staged.AppImage.ID != "" &&
 		app.Status.Staged.PermissionsChecked &&
 		len(app.Status.Staged.PermissionsMissing) == 0 &&
 		len(app.Status.Staged.ImagePermissionsDenied) == 0 &&
-		z.Dereference[bool](app.Status.Staged.ImageAllowed) {
+		z.Dereference(app.Status.Staged.ImageAllowed) {
 		app.Status.AppImage = app.Status.Staged.AppImage
 		app.Status.Permissions = app.Status.Staged.AppScopedPermissions
 	}
@@ -63,9 +63,8 @@ func CheckPermissions(req router.Request, _ router.Response) error {
 	}
 
 	// Early exit
-	if (app.Status.Staged.AppImage.ID == "" ||
-		app.Status.Staged.AppImage.Digest == app.Status.AppImage.Digest) &&
-		app.Status.Staged.PermissionsObservedGeneration == app.Generation {
+	if app.Status.Staged.AppImage.ID == "" ||
+		app.Status.Staged.AppImage.Digest == app.Status.AppImage.Digest && app.Status.Staged.PermissionsObservedGeneration == app.Generation {
 		// IAR disabled? Allow the Image if we're not re-checking permissions
 		if enabled, err := config.GetFeature(req.Ctx, req.Client, profiles.FeatureImageAllowRules); err != nil {
 			return err
