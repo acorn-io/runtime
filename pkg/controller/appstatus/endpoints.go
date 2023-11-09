@@ -54,17 +54,29 @@ func serviceEndpoints(ctx context.Context, c kclient.Client, app *v1.AppInstance
 					portNum := port.Port
 					if len(ingress.Ports) > 0 {
 						for _, ingressPort := range ingress.Ports {
-							portProtocol := port.Protocol
+							portProtocol := protocol
 							if ingressPort.Protocol != "" {
-								portProtocol = ingressPort.Protocol
+								switch ingressPort.Protocol {
+								case corev1.ProtocolTCP:
+									portProtocol = v1.ProtocolTCP
+								case corev1.ProtocolUDP:
+									portProtocol = v1.ProtocolUDP
+								default:
+									continue
+								}
 							}
-							ep := v1.Endpoint{
-								Target:     containerName,
-								TargetPort: port.TargetPort.IntVal,
-								Address:    fmt.Sprintf("%s:%d", ingress.Hostname, ingressPort.Port),
-								Protocol:   v1.Protocol(portProtocol),
+							// Checking for ingressPort.Port == port.NodePort is a hack. It's not possible to check which port in status.LoadBalancer.Ingress
+							// matches which port in service.Spec.Ports. But in TCP port allocation in manager we always allocate the same port for NodePort and Port
+							// so that we can use this hack to match the ports.
+							if ingressPort.Port == port.Port || ingressPort.Port == port.NodePort {
+								ep := v1.Endpoint{
+									Target:     containerName,
+									TargetPort: port.TargetPort.IntVal,
+									Address:    fmt.Sprintf("%s:%d", ingress.Hostname, ingressPort.Port),
+									Protocol:   portProtocol,
+								}
+								endpointSet[endpointKey(ep)] = ep
 							}
-							endpointSet[endpointKey(ep)] = ep
 						}
 					} else {
 						ep := v1.Endpoint{
