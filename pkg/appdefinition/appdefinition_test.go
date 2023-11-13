@@ -1589,7 +1589,7 @@ for i in std.range(1,args.scale+1) {
 	}
 
 	app = app.WithImageData(*image)
-	devApp := app.WithArgs(map[string]any{"scale": 2}, nil)
+	devApp := app.WithArgs(map[string]any{"scale": 4}, nil)
 
 	appSpec, err := devApp.AppSpec()
 	if err != nil {
@@ -2583,12 +2583,12 @@ localData: {
 
 func TestStdMissing(t *testing.T) {
 	data := `
-foo : std.toyaml({})
+localData: foo : std.toyaml({})
 `
 
 	_, err := NewAppDefinition([]byte(data))
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "key not found \"toyaml\": Acornfile:2:11")
+	assert.Contains(t, err.Error(), "key not found \"toyaml\": Acornfile:2:22")
 }
 
 func TestArgsTopCondition(t *testing.T) {

@@ -3,11 +3,11 @@ package appdefinition
 import "embed"
 
 var (
-	//go:embed app.acorn app-default.acorn
+	//go:embed acornfile-schema.acorn app-default.acorn
 	fs embed.FS
 )
 
 const (
-	schemaFile  = "app.acorn"
+	schemaFile  = "acornfile-schema.acorn"
 	defaultFile = "app-default.acorn"
 )

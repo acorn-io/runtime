@@ -129,6 +129,15 @@ func (i ImageSource) WatchFiles(ctx context.Context, c client.Client) ([]string,
 		return []string{file}, err
 	}
 
+	if entries, err := os.ReadDir(file); err == nil {
+		var result []string
+		for _, entry := range entries {
+			result = append(result, filepath.Join(file, entry.Name()))
+		}
+		result = append(result, files...)
+		return result, nil
+	}
+
 	return append([]string{file}, files...), nil
 }
 
