@@ -439,9 +439,6 @@ func (s *RBACValidator) getSARResourceRole(sar *authv1.SubjectAccessReview, serv
 	if len(rule.Verbs) == 0 {
 		return nil, fmt.Errorf("can not deploy acorn due to requesting role with empty verbs")
 	}
-	if slices.Contains(rule.Verbs, "*") {
-		rule.Verbs = v1.DefaultVerbs
-	}
 	if len(rule.Resources) == 0 {
 		rule.Resources = []string{"*"}
 	}

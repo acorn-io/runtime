@@ -30,7 +30,7 @@ var (
 		},
 		ClusterEdit: {
 			{
-				Verbs: []string{"create", "update", "delete", "deletecollection"},
+				Verbs: []string{"create", "update", "delete"},
 				Resources: []string{
 					"projects",
 				},
@@ -91,7 +91,7 @@ var (
 		},
 		Edit: {
 			{
-				Verbs: []string{"create", "update", "delete", "deletecollection", "patch"},
+				Verbs: []string{"create", "update", "delete", "patch"},
 				Resources: []string{
 					"apps",
 					"devsessions",
@@ -100,7 +100,7 @@ var (
 				},
 			},
 			{
-				Verbs: []string{"update", "delete", "deletecollection", "patch"},
+				Verbs: []string{"update", "delete", "patch"},
 				Resources: []string{
 					"images",
 				},
@@ -117,7 +117,7 @@ var (
 				},
 			},
 			{
-				Verbs: []string{"delete", "deletecollection"},
+				Verbs: []string{"delete"},
 				Resources: []string{
 					"services",
 					"volumes",
@@ -136,7 +136,7 @@ var (
 		},
 		Build: {
 			{
-				Verbs: []string{"create", "delete", "deletecollection"},
+				Verbs: []string{"create", "delete"},
 				Resources: []string{
 					"builders",
 					"acornimagebuilds",
@@ -151,7 +151,7 @@ var (
 		},
 		Admin: {
 			{
-				Verbs: []string{"create", "update", "delete", "deletecollection", "patch", "get", "list", "watch"},
+				Verbs: []string{"create", "update", "delete", "patch", "get", "list", "watch"},
 				Resources: []string{
 					"projectvolumeclasses",
 					"clustervolumeclasses",
@@ -163,7 +163,7 @@ var (
 				APIGroups: []string{admin_acorn_io.Group},
 			},
 			{
-				Verbs: []string{"create", "update", "delete", "deletecollection", "patch"},
+				Verbs: []string{"create", "update", "delete", "patch"},
 				Resources: []string{
 					"imageallowrules",
 				},
