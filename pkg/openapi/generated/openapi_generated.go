@@ -8102,16 +8102,9 @@ func schema_pkg_apis_internalacornio_v1_Constraint(ref common.ReferenceCallback)
 							Format: "",
 						},
 					},
-					"type": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.FieldType"),
-						},
-					},
 				},
 			},
 		},
-		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.FieldType"},
 	}
 }
 
