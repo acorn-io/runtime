@@ -11,12 +11,13 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/acorn-io/aml"
 	amllegacy "github.com/acorn-io/aml/legacy"
 	"github.com/acorn-io/aml/pkg/eval"
-	"github.com/acorn-io/aml/pkg/schema"
+	"github.com/acorn-io/aml/pkg/value"
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"sigs.k8s.io/yaml"
@@ -39,11 +40,32 @@ const (
 
 var (
 	ErrInvalidInput = errors.New("invalid input")
+	schema          value.Schema
+	schemaOnce      sync.Once
 )
 
 func init() {
 	// Disable AML debug printing
 	eval.DebugEnabled = false
+}
+
+func getSchema() value.Schema {
+	schemaOnce.Do(func() {
+		f, err := fs.Open(schemaFile)
+		if err != nil {
+			// this shouldn't happen, this an embedded FS
+			panic(err)
+		}
+		defer f.Close()
+
+		err = aml.NewDecoder(f, aml.DecoderOption{
+			SchemaSourceName: schemaFile,
+		}).Decode(&schema)
+		if err != nil {
+			panic(err)
+		}
+	})
+	return schema
 }
 
 type DataFiles struct {
@@ -200,25 +222,25 @@ func (a *AppDefinition) decodeLegacy(out any) error {
 		Acornfile: true,
 	})
 
-	if f, ok := out.(*schema.File); ok {
+	if f, ok := out.(*value.FuncSchema); ok {
 		args, err := decoder.Args()
 		if err != nil {
 			return err
 		}
 
 		for _, profile := range args.Profiles {
-			f.ProfileNames = append(f.ProfileNames, schema.Name{
+			f.ProfileNames = append(f.ProfileNames, value.Name{
 				Name:        profile.Name,
 				Description: profile.Description,
 			})
 		}
 
 		for _, param := range args.Params {
-			f.Args.Fields = append(f.Args.Fields, schema.Field{
-				Name:        param.Name,
+			f.Args = append(f.Args, value.ObjectSchemaField{
+				Key:         param.Name,
 				Description: param.Description,
-				Type: schema.FieldType{
-					Kind: schema.Kind(param.Type),
+				Schema: &value.TypeSchema{
+					KindValue: value.Kind(param.Type),
 				},
 			})
 		}
@@ -233,12 +255,6 @@ func (a *AppDefinition) decode(out any) error {
 	if a.acornfileV0 {
 		return a.decodeLegacy(out)
 	}
-	f, err := fs.Open(schemaFile)
-	if err != nil {
-		// this shouldn't happen, this an embedded FS
-		panic(err)
-	}
-	defer f.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -249,7 +265,7 @@ func (a *AppDefinition) decode(out any) error {
 		Args:             a.args,
 		Profiles:         a.profiles,
 		SchemaSourceName: "acornfile-schema.acorn",
-		Schema:           f,
+		SchemaValue:      getSchema(),
 	}).Decode(out)
 }
 

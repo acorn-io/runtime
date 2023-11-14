@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/acorn-io/aml/cli/pkg/flagargs"
-	"github.com/acorn-io/aml/pkg/schema"
+	"github.com/acorn-io/aml/pkg/value"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 )
 
@@ -19,14 +19,14 @@ var (
 	}
 )
 
-func fromNames(names schema.Names) (result []v1.Profile) {
+func fromNames(names value.Names) (result []v1.Profile) {
 	for _, name := range names {
 		result = append(result, v1.Profile(name))
 	}
 	return
 }
 
-func dropHiddenProfiles(names schema.Names) (result schema.Names) {
+func dropHiddenProfiles(names value.Names) (result value.Names) {
 	for _, profile := range names {
 		if _, ok := hiddenProfiles[profile.Name]; ok {
 			continue
@@ -36,9 +36,9 @@ func dropHiddenProfiles(names schema.Names) (result schema.Names) {
 	return
 }
 
-func dropHiddenArgs(args []schema.Field) (result []schema.Field) {
+func dropHiddenArgs(args []value.ObjectSchemaField) (result []value.ObjectSchemaField) {
 	for _, arg := range args {
-		if _, ok := hiddenArgs[arg.Name]; ok {
+		if _, ok := hiddenArgs[arg.Key]; ok {
 			continue
 		}
 		result = append(result, arg)
@@ -46,7 +46,7 @@ func dropHiddenArgs(args []schema.Field) (result []schema.Field) {
 	return
 }
 
-func fromFields(in []schema.Field) (result []v1.Field) {
+func fromFields(in []value.ObjectSchemaField) (result []v1.Field) {
 	for _, item := range in {
 		result = append(result, fromField(item))
 	}
@@ -54,6 +54,15 @@ func fromFields(in []schema.Field) (result []v1.Field) {
 }
 
 func anyToString(v any) string {
+	var (
+		ts *value.TypeSchema
+	)
+	ts, ok := v.(*value.TypeSchema)
+	if ok {
+		v = ts.DefaultValue
+	} else {
+		v = nil
+	}
 	if v == nil {
 		return ""
 	}
@@ -64,36 +73,59 @@ func anyToString(v any) string {
 	return string(d)
 }
 
-func fromObject(in *schema.Object) *v1.Object {
+func fromObject(s value.Schema) *v1.Object {
+	var (
+		in *value.ObjectSchema
+		ts *value.TypeSchema
+	)
+	ts, ok := s.(*value.TypeSchema)
+	if ok {
+		in = ts.Object
+	}
+
 	if in == nil {
 		return nil
 	}
 	return &v1.Object{
-		Path:         in.Path,
-		Reference:    in.Reference,
+		Path:         ts.Path.String(),
+		Reference:    ts.Reference,
 		Description:  in.Description,
 		Fields:       fromFields(in.Fields),
 		AllowNewKeys: in.AllowNewKeys,
 	}
 }
 
-func fromArray(in *schema.Array) *v1.Array {
+func fromArray(s value.Schema) *v1.Array {
+	var (
+		in *value.ArraySchema
+		ts *value.TypeSchema
+	)
+	ts, ok := s.(*value.TypeSchema)
+	if ok {
+		in = ts.Array
+	}
 	if in == nil {
 		return nil
 	}
 	return &v1.Array{
-		Types: fromFieldTypes(in.Types),
+		Types: fromFieldTypes(in.Valid),
 	}
 }
 
-func fromConstraints(in []schema.Constraint) (result []v1.Constraint) {
+func fromConstraints(s value.Schema) (result []v1.Constraint) {
+	var (
+		in []value.Constraint
+		ts *value.TypeSchema
+	)
+	ts, ok := s.(*value.TypeSchema)
+	if ok {
+		in = ts.Constraints
+	}
 	for _, item := range in {
 		result = append(result, v1.Constraint{
-			Description: item.Description,
-			Op:          item.Op,
-			ID:          item.ID,
-			Right:       anyToString(item.Right),
-			Type:        anyToFieldType(item.Right),
+			Op:    item.Op,
+			Right: anyToString(item.Right),
+			Type:  anyToFieldType(item.Right),
 		})
 	}
 	return
@@ -104,32 +136,44 @@ func anyToFieldType(v any) *v1.FieldType {
 	return rt
 }
 
-func fromFieldTypes(in []schema.FieldType) (out []v1.FieldType) {
+func fromAlternates(s value.Schema) (out []v1.FieldType) {
+	var (
+		in []value.Schema
+		ts *value.TypeSchema
+	)
+	ts, ok := s.(*value.TypeSchema)
+	if ok {
+		in = ts.Alternates
+	}
+	return fromFieldTypes(in)
+}
+
+func fromFieldTypes(in []value.Schema) (out []v1.FieldType) {
 	for _, fieldType := range in {
-		out = append(out, *fromFieldType(&fieldType))
+		out = append(out, *fromFieldType(fieldType))
 	}
 	return
 }
 
-func fromFieldType(in *schema.FieldType) *v1.FieldType {
+func fromFieldType(in value.Schema) *v1.FieldType {
 	if in == nil {
 		return nil
 	}
 	return &v1.FieldType{
-		Kind:        string(in.Kind),
-		Object:      fromObject(in.Object),
-		Array:       fromArray(in.Array),
-		Constraints: fromConstraints(in.Contstraints),
-		Default:     anyToString(in.Default),
-		Alternates:  fromFieldTypes(in.Alternates),
+		Kind:        string(in.TargetKind()),
+		Object:      fromObject(in),
+		Array:       fromArray(in),
+		Constraints: fromConstraints(in),
+		Default:     anyToString(in),
+		Alternates:  fromAlternates(in),
 	}
 }
 
-func fromField(in schema.Field) v1.Field {
+func fromField(in value.ObjectSchemaField) v1.Field {
 	return v1.Field{
-		Name:        in.Name,
+		Name:        in.Key,
 		Description: in.Description,
-		Type:        *fromFieldType(&in.Type),
+		Type:        *fromFieldType(in.Schema),
 		Match:       in.Match,
 		Optional:    in.Optional,
 	}
@@ -140,7 +184,7 @@ type Flags interface {
 }
 
 func (a *AppDefinition) ToFlags(programName, argsFile string, usage func()) (Flags, error) {
-	var file schema.File
+	var file value.FuncSchema
 	err := a.decode(&file)
 	if err != nil {
 		return nil, err
@@ -148,19 +192,19 @@ func (a *AppDefinition) ToFlags(programName, argsFile string, usage func()) (Fla
 
 	args := flagargs.New(argsFile, programName,
 		dropHiddenProfiles(file.ProfileNames),
-		dropHiddenArgs(file.Args.Fields))
+		dropHiddenArgs(file.Args))
 	args.Usage = usage
 	return args, nil
 }
 
 func (a *AppDefinition) ToParamSpec() (*v1.ParamSpec, error) {
-	var file schema.File
+	var file value.FuncSchema
 	err := a.decode(&file)
 	if err != nil {
 		return nil, err
 	}
 	result := &v1.ParamSpec{
-		Args:     fromFields(dropHiddenArgs(file.Args.Fields)),
+		Args:     fromFields(dropHiddenArgs(file.Args)),
 		Profiles: fromNames(dropHiddenProfiles(file.ProfileNames)),
 	}
 
