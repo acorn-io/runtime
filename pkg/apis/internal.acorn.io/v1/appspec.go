@@ -165,6 +165,7 @@ type VolumeMount struct {
 	Volume     string            `json:"volume,omitempty"`
 	SubPath    string            `json:"subPath,omitempty"`
 	ContextDir string            `json:"contextDir,omitempty"`
+	Preload    bool              `json:"preload,omitempty"`
 	Secret     VolumeSecretMount `json:"secret,omitempty"`
 }
 

@@ -974,7 +974,7 @@ func (in *VolumeMount) UnmarshalJSON(data []byte) error {
 	} else if strings.HasPrefix(s, "./") {
 		in.ContextDir = s
 	} else {
-		in.Volume, in.SubPath, err = parseVolumeReference(s)
+		in.Volume, in.SubPath, in.Preload, err = parseVolumeReference(s)
 		if err != nil {
 			return err
 		}
@@ -1411,14 +1411,14 @@ func parseVolumeDefinition(anonName, s string) (VolumeBinding, error) {
 	return result, nil
 }
 
-func parseVolumeReference(s string) (string, string, error) {
+func parseVolumeReference(s string) (string, string, bool, error) {
 	if !strings.HasPrefix(s, "volume://") && !strings.HasPrefix(s, "ephemeral://") {
-		return s, "", nil
+		return s, "", false, nil
 	}
 
 	u, err := url.Parse(s)
 	if err != nil {
-		return "", "", fmt.Errorf("parsing volume reference %s: %w", s, err)
+		return "", "", false, fmt.Errorf("parsing volume reference %s: %w", s, err)
 	}
 
 	subPath := u.Query().Get("subPath")
@@ -1429,7 +1429,12 @@ func parseVolumeReference(s string) (string, string, error) {
 		subPath = u.Query().Get("sub-path")
 	}
 
-	return s, subPath, nil
+	preload, err := strconv.ParseBool(u.Query().Get("preload"))
+	if err != nil {
+		return "", "", false, fmt.Errorf("malformed ?preload value: %v", err)
+	}
+
+	return s, subPath, preload, nil
 }
 
 func MustParseResourceQuantity(s Quantity) *resource.Quantity {
