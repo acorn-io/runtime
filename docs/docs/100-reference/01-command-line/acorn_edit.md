@@ -1,25 +1,24 @@
 ---
-title: "acorn image details"
+title: "acorn edit"
 ---
-## acorn image details
+## acorn edit
 
-Show details of an Image
+Edits an acorn or secret
 
 ```
-acorn image details IMAGE_NAME [NESTED DIGEST] [flags]
+acorn edit ACORN_NAME|SECRET_NAME [flags]
 ```
 
 ### Examples
 
 ```
-acorn image details my-image
+acorn edit my-acorn
 ```
 
 ### Options
 
 ```
-  -h, --help            help for details
-  -o, --output string   Output format (json, yaml, aml) (default "aml")
+  -h, --help   help for edit
 ```
 
 ### Options inherited from parent commands
@@ -34,5 +33,5 @@ acorn image details my-image
 
 ### SEE ALSO
 
-* [acorn image](acorn_image.md)	 - Manage images
+* [acorn](acorn.md)	 - 
 

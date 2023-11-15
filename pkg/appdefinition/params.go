@@ -53,7 +53,7 @@ func fromFields(in []value.ObjectSchemaField) (result []v1.Field) {
 	return
 }
 
-func anyToString(v any) string {
+func getDefault(v any) string {
 	var (
 		ts *value.TypeSchema
 	)
@@ -65,9 +65,6 @@ func anyToString(v any) string {
 	}
 	if v == nil {
 		return ""
-	}
-	if s, ok := v.(string); ok {
-		return s
 	}
 	d, _ := json.Marshal(v)
 	return string(d)
@@ -124,16 +121,22 @@ func fromConstraints(s value.Schema) (result []v1.Constraint) {
 	for _, item := range in {
 		result = append(result, v1.Constraint{
 			Op:    item.Op,
-			Right: anyToString(item.Right),
-			Type:  anyToFieldType(item.Right),
+			Right: toString(item.Right),
 		})
 	}
 	return
 }
 
-func anyToFieldType(v any) *v1.FieldType {
-	rt, _ := v.(*v1.FieldType)
-	return rt
+func toString(v any) string {
+	if v == nil {
+		return ""
+	}
+	ts, ok := v.(*value.TypeSchema)
+	if ok {
+		v = fromFieldType(ts)
+	}
+	s, _ := json.Marshal(v)
+	return string(s)
 }
 
 func fromAlternates(s value.Schema) (out []v1.FieldType) {
@@ -159,14 +162,24 @@ func fromFieldType(in value.Schema) *v1.FieldType {
 	if in == nil {
 		return nil
 	}
-	return &v1.FieldType{
+	result := &v1.FieldType{
 		Kind:        string(in.TargetKind()),
 		Object:      fromObject(in),
 		Array:       fromArray(in),
 		Constraints: fromConstraints(in),
-		Default:     anyToString(in),
+		Default:     getDefault(in),
 		Alternates:  fromAlternates(in),
 	}
+	if result.Default == "" {
+		for _, alt := range result.Alternates {
+			if alt.Default != "" {
+				result.Default = alt.Default
+				break
+			}
+		}
+	}
+
+	return result
 }
 
 func fromField(in value.ObjectSchemaField) v1.Field {

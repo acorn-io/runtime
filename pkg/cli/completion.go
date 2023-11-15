@@ -86,6 +86,14 @@ func (a *completion) complete(cmd *cobra.Command, args []string, toComplete stri
 	return removeExistingArgs(result, args), a.successDirective
 }
 
+func appsThenSecretsCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
+	result, err := appsCompletion(ctx, c, toComplete)
+	if err != nil || len(result) > 0 {
+		return result, err
+	}
+	return secretsCompletion(ctx, c, toComplete)
+}
+
 func appsThenContainersCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
 	// If the toComplete has a '.', then the user is looking for a container.
 	if strings.Contains(toComplete, ".") {

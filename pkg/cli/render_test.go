@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/acorn-io/runtime/pkg/cli/testdata"
+	"github.com/hexops/autogold/v2"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
@@ -66,8 +67,6 @@ func TestRender(t *testing.T) {
 				args:   []string{"./testdata/render/"},
 				client: &testdata.MockClient{},
 			},
-			wantErr: false,
-			wantOut: "./testdata/render/render_test.txt",
 		},
 	}
 	for _, tt := range tests {
@@ -84,8 +83,7 @@ func TestRender(t *testing.T) {
 			} else {
 				w.Close()
 				out, _ := io.ReadAll(r)
-				testOut, _ := os.ReadFile(tt.wantOut)
-				assert.Equal(t, string(testOut), string(out))
+				autogold.ExpectFile(t, string(out))
 			}
 		})
 	}

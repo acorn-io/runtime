@@ -1,4 +1,4 @@
----
+`---
 client:
   cli:
     acornConfig: /fake-file
@@ -14,11 +14,5 @@ projects:
       gitCommit: ""
       tag: OneTag
       version: ""
-  NameTwo:
-    local:
-      controllerImage: ""
-      dirty: false
-      gitCommit: ""
-      tag: TwoTag
-      version: ""
 
+`

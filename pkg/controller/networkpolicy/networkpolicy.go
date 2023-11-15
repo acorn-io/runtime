@@ -146,7 +146,7 @@ func ForIngress(req router.Request, resp router.Response) error {
 			}
 		}
 
-		netPolName := name.SafeConcatName(projectName, appName, ingress.Name, svcName)
+		netPolName := name.SafeConcatName(appName, projectName, ingress.Name, svcName)
 
 		// build the namespaceSelector for the NetPol
 		var namespaceSelector metav1.LabelSelector

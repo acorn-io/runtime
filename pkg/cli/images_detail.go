@@ -23,7 +23,7 @@ func NewImageDetails(c CommandContext) *cobra.Command {
 
 type ImageDetails struct {
 	client ClientFactory
-	Output string `usage:"Output format (json, yaml, aml)" short:"o" local:"true" default:"yaml"`
+	Output string `usage:"Output format (json, yaml, aml)" short:"o" local:"true" default:"aml"`
 }
 
 func (a *ImageDetails) Run(cmd *cobra.Command, args []string) error {

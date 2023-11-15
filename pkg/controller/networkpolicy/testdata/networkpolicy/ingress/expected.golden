@@ -4,7 +4,7 @@ metadata:
   creationTimestamp: null
   labels:
     acorn.io/managed: "true"
-  name: acorn-my-app-my-service-nginx-9090-9090
+  name: my-app-acorn-my-service-nginx-9090-9090
   namespace: my-app-namespace
 spec:
   ingress:
@@ -36,7 +36,7 @@ metadata:
   creationTimestamp: null
   labels:
     acorn.io/managed: "true"
-  name: acorn-my-app-my-service-service-7777-9999-10000
+  name: my-app-acorn-my-service-service-7777-9999-10000
   namespace: my-app-namespace
 spec:
   ingress:
