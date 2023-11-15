@@ -70,6 +70,7 @@ Volume Syntax
       --dangerous               Automatically approve all privileges requested by the application
   -i, --dev                     Enable interactive dev mode: build image, stream logs/status in the foreground and stop on exit
   -e, --env strings             Environment variables to set on running containers
+      --env-file string         Default env vars to apply (default ".acorn.env")
   -f, --file string             Name of the build file (default "DIRECTORY/Acornfile")
   -h, --help                    help for run
       --interval string         If configured for auto-upgrade, this is the time interval at which to check for new releases (ex: 1h, 5m)

@@ -52,6 +52,7 @@ type UpdateArgs struct {
 
 type Update struct {
 	UpdateArgs
+	EnvFile        string `usage:"Default env vars to apply to update command" default:""`
 	Image          string `usage:"Acorn image name"`
 	ConfirmUpgrade bool   `usage:"When an auto-upgrade app is marked as having an upgrade available, pass this flag to confirm the upgrade. Used in conjunction with --notify-upgrade."`
 	Pull           bool   `usage:"Re-pull the app's image, which will cause the app to re-deploy if the image has changed"`
@@ -114,5 +115,6 @@ func (s *Update) getRunArgs(name string) RunArgs {
 	return RunArgs{
 		Name:       name,
 		UpdateArgs: s.UpdateArgs,
+		EnvFile:    s.EnvFile,
 	}
 }

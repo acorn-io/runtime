@@ -8,9 +8,11 @@ import (
 
 func TestBuildSecret(t *testing.T) {
 	c := SecretCreate{
-		Data: []string{"key1=value1", "@key2=testdata/secret/value2.txt"},
-		File: "testdata/secret/secret.yaml",
-		Type: "fancy",
+		SecretFactory: SecretFactory{
+			Data: []string{"key1=value1", "@key2=testdata/secret/value2.txt"},
+			File: "testdata/secret/secret.yaml",
+			Type: "fancy",
+		},
 	}
 
 	secret, err := c.buildSecret()

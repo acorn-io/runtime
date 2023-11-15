@@ -33,6 +33,7 @@ acorn update [flags] ACORN_NAME [deploy flags]
       --confirm-upgrade         When an auto-upgrade app is marked as having an upgrade available, pass this flag to confirm the upgrade. Used in conjunction with --notify-upgrade.
       --dangerous               Automatically approve all privileges requested by the application
   -e, --env strings             Environment variables to set on running containers
+      --env-file string         Default env vars to apply to update command
   -f, --file string             Name of the build file (default "DIRECTORY/Acornfile")
   -h, --help                    help for update
       --image string            Acorn image name

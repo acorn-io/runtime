@@ -11,7 +11,7 @@ func NewEdit(c CommandContext) *cobra.Command {
 		Use:               "edit ACORN_NAME|SECRET_NAME",
 		Example:           `acorn edit my-acorn`,
 		SilenceUsage:      true,
-		Short:             "Edits an acorn or secret",
+		Short:             "Edits an acorn or secret interactively",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: newCompletion(c.ClientFactory, appsThenSecretsCompletion).complete,
 	})

@@ -3,7 +3,7 @@ title: "acorn edit"
 ---
 ## acorn edit
 
-Edits an acorn or secret
+Edits an acorn or secret interactively
 
 ```
 acorn edit ACORN_NAME|SECRET_NAME [flags]

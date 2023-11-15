@@ -1,12 +1,12 @@
 ---
-title: "acorn secret create"
+title: "acorn secret update"
 ---
-## acorn secret create
+## acorn secret update
 
-Create a secret
+Update a secret
 
 ```
-acorn secret create [flags] SECRET_NAME
+acorn secret update [flags] SECRET_NAME
 ```
 
 ### Examples
@@ -14,13 +14,13 @@ acorn secret create [flags] SECRET_NAME
 ```
 
 # Create secret with specific keys
-acorn secret create --data key-name=value --data key-name2=value2 my-secret
+acorn secret update --data key-name=value --data key-name2=value2 my-secret
 
 # Read full secret from a file. The file should have a type and data field.
-acorn secret create --file secret.yaml my-secret
+acorn secret update --file secret.yaml my-secret
 
 # Read key value from a file
-acorn secret create --data @key-name=secret.yaml my-secret
+acorn secret update --data @key-name=secret.yaml my-secret
 ```
 
 ### Options
@@ -28,10 +28,8 @@ acorn secret create --data @key-name=secret.yaml my-secret
 ```
       --data strings   Secret data format key=value or @key=filename to read from file
       --file string    File to read for entire secret in aml/yaml/json format
-  -h, --help           help for create
-      --replace        Replace the secret with only defined values, resetting undefined fields to default values
+  -h, --help           help for update
       --type string    Secret type
-  -u, --update         Update the secret if it already exists
 ```
 
 ### Options inherited from parent commands

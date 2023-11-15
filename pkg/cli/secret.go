@@ -19,6 +19,7 @@ acorn secret`,
 		ValidArgsFunction: newCompletion(c.ClientFactory, secretsCompletion).complete,
 	})
 	cmd.AddCommand(NewSecretCreate(c))
+	cmd.AddCommand(NewSecretUpdate(c))
 	cmd.AddCommand(NewSecretDelete(c))
 	cmd.AddCommand(NewSecretReveal(c))
 	cmd.AddCommand(NewSecretEncrypt(c))
