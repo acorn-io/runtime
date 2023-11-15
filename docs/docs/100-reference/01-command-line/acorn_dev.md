@@ -31,6 +31,7 @@ acorn dev --name wandering-sound --clone [acorn args]
       --clone                     Clone the vcs repository and infer the build context for the given app allowing for local development
       --compute-class strings     Set computeclass for a workload in the format of workload=computeclass. Specify a single computeclass to set all workloads. (ex foo=example-class or example-class)
   -e, --env strings               Environment variables to set on running containers
+      --env-file string           Default env vars to apply (default ".acorn.env")
   -f, --file string               Name of the build file (default "DIRECTORY/Acornfile")
   -h, --help                      help for dev
       --interval string           If configured for auto-upgrade, this is the time interval at which to check for new releases (ex: 1h, 5m)

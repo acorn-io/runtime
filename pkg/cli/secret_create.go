@@ -9,6 +9,7 @@ import (
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/spf13/cobra"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 func NewSecretCreate(c CommandContext) *cobra.Command {
@@ -18,7 +19,7 @@ func NewSecretCreate(c CommandContext) *cobra.Command {
 # Create secret with specific keys
 acorn secret create --data key-name=value --data key-name2=value2 my-secret
 
-# Read full secret from a file
+# Read full secret from a file. The file should have a type and data field.
 acorn secret create --file secret.yaml my-secret
 
 # Read key value from a file
@@ -30,14 +31,20 @@ acorn secret create --data @key-name=secret.yaml my-secret`,
 	return cmd
 }
 
-type SecretCreate struct {
-	Data   []string `usage:"Secret data format key=value or @key=filename to read from file"`
-	File   string   `usage:"File to read for entire secret in cue/yaml/json format"`
-	Type   string   `usage:"Secret type"`
-	client ClientFactory
+type SecretFactory struct {
+	Data []string `usage:"Secret data format key=value or @key=filename to read from file"`
+	File string   `usage:"File to read for entire secret in aml/yaml/json format"`
+	Type string   `usage:"Secret type"`
 }
 
-func (a *SecretCreate) buildSecret() (*apiv1.Secret, error) {
+type SecretCreate struct {
+	SecretFactory
+	Update  bool `usage:"Update the secret if it already exists" short:"u"`
+	Replace bool `usage:"Replace the secret with only defined values, resetting undefined fields to default values" json:"replace,omitempty"`
+	client  ClientFactory
+}
+
+func (a *SecretFactory) buildSecret() (*apiv1.Secret, error) {
 	secret := &struct {
 		apiv1.Secret `json:",inline"`
 		StringData   map[string]string `json:"stringData,omitempty"`
@@ -94,7 +101,29 @@ func (a *SecretCreate) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	newSecret, err := client.SecretCreate(cmd.Context(), args[0], secret.Type, secret.Data)
-	if err != nil {
+	if apierrors.IsAlreadyExists(err) {
+		if a.Replace {
+			newSecret, err = client.SecretUpdate(cmd.Context(), args[0], secret.Data)
+			if err != nil {
+				return err
+			}
+		} else if a.Update {
+			existing, err := client.SecretReveal(cmd.Context(), args[0])
+			if err != nil {
+				return err
+			}
+			if existing.Data == nil {
+				existing.Data = map[string][]byte{}
+			}
+			for k, v := range secret.Data {
+				existing.Data[k] = v
+			}
+			newSecret, err = client.SecretUpdate(cmd.Context(), args[0], existing.Data)
+			if err != nil {
+				return err
+			}
+		}
+	} else if err != nil {
 		return err
 	}
 

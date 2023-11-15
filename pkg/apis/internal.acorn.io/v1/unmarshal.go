@@ -1421,15 +1421,18 @@ func ParseQuantity(s string) (Quantity, error) {
 
 func ParseNameValues(fillEnv bool, s ...string) (result []NameValue) {
 	for _, s := range s {
+		s = strings.TrimSpace(s)
 		k, v, _ := strings.Cut(s, "=")
 		if v == "" && fillEnv {
 			parts := strings.Split(k, ".")
 			v = os.Getenv(parts[len(parts)-1])
 		}
-		result = append(result, NameValue{
-			Name:  k,
-			Value: v,
-		})
+		if k != "" {
+			result = append(result, NameValue{
+				Name:  k,
+				Value: v,
+			})
+		}
 	}
 	return result
 }

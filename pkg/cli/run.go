@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
@@ -114,7 +115,8 @@ type Run struct {
 
 type RunArgs struct {
 	UpdateArgs
-	Name string `usage:"Name of app to create" short:"n"`
+	EnvFile string `usage:"Default env vars to apply" default:".acorn.env"`
+	Name    string `usage:"Name of app to create" short:"n"`
 }
 
 func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
@@ -155,6 +157,16 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 	}
 
 	opts.Env = v1.ParseNameValues(true, s.Env...)
+
+	if s.EnvFile != "" {
+		envData, err := os.ReadFile(s.EnvFile)
+		if os.IsNotExist(err) {
+		} else if err != nil {
+			return opts, err
+		} else {
+			opts.Env = append(opts.Env, v1.ParseNameValues(false, strings.Split(string(envData), "\n")...)...)
+		}
+	}
 
 	opts.Labels, err = v1.ParseScopedLabels(s.Label...)
 	if err != nil {
