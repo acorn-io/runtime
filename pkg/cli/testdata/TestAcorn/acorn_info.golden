@@ -1,4 +1,4 @@
-Acorn: Containerized Application Packaging Framework
+`Acorn: Containerized Application Packaging Framework
 
 Usage:
   acorn [flags]
@@ -13,6 +13,7 @@ Available Commands:
   credential   Manage registry credentials
   dashboard    Open the web dashboard for the project
   dev          Run an app from an image or Acornfile in dev mode or attach a dev session to a currently running app
+  edit         Edits an acorn or secret
   events       List events about Acorn resources
   exec         Run a command in a container
   fmt          Format an Acornfile
@@ -52,3 +53,4 @@ Flags:
   -j, --project string       Project to work in
 
 Use "acorn [command] --help" for more information about a command.
+`

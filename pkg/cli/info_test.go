@@ -10,6 +10,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/cli/testdata"
 	"github.com/acorn-io/runtime/pkg/mocks"
 	"github.com/golang/mock/gomock"
+	"github.com/hexops/autogold/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,9 +52,7 @@ func TestInfo(t *testing.T) {
 						},
 					}, nil)
 			},
-			args:    []string{},
-			wantErr: false,
-			wantOut: "./testdata/info/info_test.txt",
+			args: []string{},
 		},
 		{
 			name: "acorn info empty response", fields: fields{
@@ -65,9 +64,7 @@ func TestInfo(t *testing.T) {
 				f.EXPECT().Info(gomock.Any()).Return(
 					nil, nil)
 			},
-			args:    []string{},
-			wantErr: false,
-			wantOut: "./testdata/info/info_test_empty.txt",
+			args: []string{},
 		},
 		{
 			name: "acorn info -A", fields: fields{
@@ -103,9 +100,7 @@ func TestInfo(t *testing.T) {
 						},
 					}, nil)
 			},
-			args:    []string{},
-			wantErr: false,
-			wantOut: "./testdata/info/info_test-a.txt",
+			args: []string{},
 		},
 		{
 			name: "acorn info -o yaml", fields: fields{
@@ -128,9 +123,7 @@ func TestInfo(t *testing.T) {
 					},
 				}, nil)
 			},
-			args:    []string{"-oyaml"},
-			wantErr: false,
-			wantOut: "./testdata/info/info_test.txt",
+			args: []string{"-oyaml"},
 		},
 		{
 			name: "acorn info -o json", fields: fields{
@@ -154,9 +147,7 @@ func TestInfo(t *testing.T) {
 						},
 					}, nil)
 			},
-			args:    []string{"-ojson"},
-			wantErr: false,
-			wantOut: "./testdata/info/info_test_json.txt",
+			args: []string{"-ojson"},
 		},
 	}
 	for _, tt := range tests {
@@ -191,8 +182,7 @@ func TestInfo(t *testing.T) {
 			} else {
 				require.NoError(t, w.Close())
 				out, _ := io.ReadAll(r)
-				testOut, _ := os.ReadFile(tt.wantOut)
-				assert.Equal(t, string(testOut), string(out))
+				autogold.ExpectFile(t, string(out))
 			}
 		})
 	}

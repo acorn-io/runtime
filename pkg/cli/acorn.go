@@ -43,6 +43,7 @@ func New() *cobra.Command {
 		NewController(cmdContext),
 		NewCredential(cmdContext),
 		NewDev(cmdContext),
+		NewEdit(cmdContext),
 		NewRender(cmdContext),
 		NewExec(cmdContext),
 		NewPortForward(cmdContext),

@@ -12,6 +12,7 @@ func NewRm(c CommandContext) *cobra.Command {
 acorn rm ACORN_NAME
 acorn rm --volumes --secrets ACORN_NAME`,
 		SilenceUsage:      true,
+		Aliases:           []string{"delete"},
 		Short:             "Delete an acorn, optionally with it's associated secrets and volumes",
 		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).complete,
 		Args:              cobra.MinimumNArgs(1),

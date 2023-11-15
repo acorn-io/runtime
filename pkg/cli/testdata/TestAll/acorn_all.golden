@@ -1,11 +1,11 @@
-
+`
 ACORNS:
 NAME      IMAGE     COMMIT    CREATED    ENDPOINTS   MESSAGE
-found                         292y ago               
+found                         292y ago
 
 CONTAINERS:
 NAME              ACORN     IMAGE     STATE     RESTARTCOUNT   CREATED    MESSAGE
-found.container                                 0              292y ago   
+found.container                                 0              292y ago
 
 VOLUMES:
 NAME        BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED
@@ -14,3 +14,4 @@ found.vol   vol            <nil>                                              29
 SECRETS:
 NAME           TYPE      KEYS      CREATED
 found.secret             []        292y ago
+`

@@ -73,7 +73,7 @@ var (
 	Container = [][]string{
 		{"Name", "{{ . | name }}"},
 		{"Acorn", "Status.Columns.App"},
-		{"Image", "Spec.Image"},
+		{"Image", "{{trunc .Spec.Image}}"},
 		{"State", "Status.Columns.State"},
 		{"RestartCount", "Status.RestartCount"},
 		{"Created", "{{ago .CreationTimestamp}}"},

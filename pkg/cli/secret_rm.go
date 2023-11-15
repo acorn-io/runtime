@@ -13,6 +13,7 @@ func NewSecretDelete(c CommandContext) *cobra.Command {
 		Example: `
 acorn secret rm my-secret`,
 		SilenceUsage:      true,
+		Aliases:           []string{"delete"},
 		Short:             "Delete a secret",
 		ValidArgsFunction: newCompletion(c.ClientFactory, secretsCompletion).complete,
 	})

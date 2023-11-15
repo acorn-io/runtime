@@ -39,6 +39,7 @@ type writer struct {
 	ValueFormat   string
 	errs          []error
 	headerPrinted bool
+	rawWriter     io.Writer
 	Writer        *tabwriter.Writer
 	buffered      []buffered
 	customFormat  bool
@@ -58,6 +59,7 @@ func NewWriter(values [][]string, quiet bool, format string) Writer {
 		funcMap: maps.Clone(FuncMap),
 	}
 
+	t.rawWriter = os.Stdout
 	t.Writer = tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', tabwriter.RememberWidths)
 
 	t.HeaderFormat, t.ValueFormat = SimpleFormat(values)
@@ -166,7 +168,7 @@ func (t *writer) writeDataObject(objs ...any) error {
 		switch t.ValueFormat {
 		case "json":
 			if i > 0 {
-				_, err := t.Writer.Write([]byte("\n"))
+				_, err := t.rawWriter.Write([]byte("\n"))
 				if t.saveErr(err) {
 					continue
 				}
@@ -175,13 +177,13 @@ func (t *writer) writeDataObject(objs ...any) error {
 			if t.saveErr(err) {
 				continue
 			}
-			_, err = t.Writer.Write([]byte(content + "\n"))
+			_, err = t.rawWriter.Write([]byte(content + "\n"))
 			if t.saveErr(err) {
 				continue
 			}
 		case "jsoncompact":
 			if i > 0 {
-				_, err := t.Writer.Write([]byte("\n"))
+				_, err := t.rawWriter.Write([]byte("\n"))
 				if t.saveErr(err) {
 					continue
 				}
@@ -190,7 +192,7 @@ func (t *writer) writeDataObject(objs ...any) error {
 			if t.saveErr(err) {
 				continue
 			}
-			_, err = t.Writer.Write([]byte(content))
+			_, err = t.rawWriter.Write([]byte(content))
 			if t.saveErr(err) {
 				continue
 			}
@@ -205,11 +207,11 @@ func (t *writer) writeDataObject(objs ...any) error {
 				continue
 			}
 
-			_, err = t.Writer.Write([]byte("---\n"))
+			_, err = t.rawWriter.Write([]byte("---\n"))
 			if t.saveErr(err) {
 				continue
 			}
-			_, err = t.Writer.Write(append(converted, []byte("\n")...))
+			_, err = t.rawWriter.Write(append(converted, []byte("\n")...))
 			if t.saveErr(err) {
 				continue
 			}
@@ -218,7 +220,8 @@ func (t *writer) writeDataObject(objs ...any) error {
 			if t.saveErr(err) {
 				continue
 			}
-			_, err = t.Writer.Write([]byte(string(content) + "\n"))
+
+			_, err = t.rawWriter.Write([]byte(string(content) + "\n"))
 			if t.saveErr(err) {
 				continue
 			}

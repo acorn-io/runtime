@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/acorn-io/runtime/pkg/cli/testdata"
+	"github.com/hexops/autogold/v2"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
@@ -47,8 +48,6 @@ func TestAll(t *testing.T) {
 				args:   []string{},
 				client: &testdata.MockClient{},
 			},
-			wantErr: false,
-			wantOut: "./testdata/all/all_test.txt",
 		},
 		{
 			name: "acorn all -i", fields: fields{
@@ -66,8 +65,6 @@ func TestAll(t *testing.T) {
 				args:   []string{"-i"},
 				client: &testdata.MockClient{},
 			},
-			wantErr: false,
-			wantOut: "./testdata/all/all_test_i.txt",
 		},
 		{
 			name: "acorn all -o yaml", fields: fields{
@@ -85,8 +82,6 @@ func TestAll(t *testing.T) {
 				args:   []string{"-o", "yaml"},
 				client: &testdata.MockClient{},
 			},
-			wantErr: false,
-			wantOut: "./testdata/all/all_test_yaml.txt",
 		},
 		{
 			name: "acorn all -o json", fields: fields{
@@ -104,8 +99,6 @@ func TestAll(t *testing.T) {
 				args:   []string{"-o", "json"},
 				client: &testdata.MockClient{},
 			},
-			wantErr: false,
-			wantOut: "./testdata/all/all_test_json.txt",
 		},
 	}
 	for _, tt := range tests {
@@ -122,8 +115,7 @@ func TestAll(t *testing.T) {
 			} else {
 				w.Close()
 				out, _ := io.ReadAll(r)
-				testOut, _ := os.ReadFile(tt.wantOut)
-				assert.Equal(t, string(testOut), string(out))
+				autogold.ExpectFile(t, string(out))
 			}
 		})
 	}

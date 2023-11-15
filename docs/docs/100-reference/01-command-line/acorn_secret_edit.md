@@ -1,25 +1,24 @@
 ---
-title: "acorn image details"
+title: "acorn secret edit"
 ---
-## acorn image details
+## acorn secret edit
 
-Show details of an Image
+Edits a secret
 
 ```
-acorn image details IMAGE_NAME [NESTED DIGEST] [flags]
+acorn secret edit SECRET_NAME [flags]
 ```
 
 ### Examples
 
 ```
-acorn image details my-image
+acorn secret edit my-secret
 ```
 
 ### Options
 
 ```
-  -h, --help            help for details
-  -o, --output string   Output format (json, yaml, aml) (default "aml")
+  -h, --help   help for edit
 ```
 
 ### Options inherited from parent commands
@@ -29,10 +28,12 @@ acorn image details my-image
       --debug                Enable debug logging
       --debug-level int      Debug log level (valid 0-9) (default 7)
       --kubeconfig string    Explicitly use kubeconfig file, overriding the default context
+  -o, --output string        Output format (json, yaml, {{gotemplate}})
   -j, --project string       Project to work in
+  -q, --quiet                Output only names
 ```
 
 ### SEE ALSO
 
-* [acorn image](acorn_image.md)	 - Manage images
+* [acorn secret](acorn_secret.md)	 - Manage secrets
 
