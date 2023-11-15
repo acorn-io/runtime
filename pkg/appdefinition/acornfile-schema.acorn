@@ -215,11 +215,14 @@
 		match "probes|probe":                     Probes
 		match "depends[oO]n|depends_on|consumes": string || [string]
 		match "mem|memory":                       int
+		user?:																		User
 		permissions?: {
 			rules: [RuleSpec]
 			clusterRules?: [ClusterRuleSpec]
 		}
 	}
+
+	User: string =~ "^[0-9]+(:[0-9]+)?$"
 
 	ShortVolumeRef: string =~ "^[a-z][-a-z0-9]*$"
 	VolumeRef:      string =~ "^volume://.+$"

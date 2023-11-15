@@ -454,6 +454,13 @@ func toContainer(app *v1.AppInstance, tag name.Reference, containerName string, 
 		Resources:      app.Status.Scheduling[containerName].Requirements,
 	}
 
+	if container.UserContext != nil {
+		containerObject.SecurityContext = &corev1.SecurityContext{
+			RunAsUser:  z.Pointer[int64](container.UserContext.UID),
+			RunAsGroup: z.Pointer[int64](container.UserContext.GID),
+		}
+	}
+
 	if addWait {
 		// If a container exposes a port, then add a pre-stop lifecycle hook that sleeps for 5 seconds. This should allow the
 		// endpoints controller to remove the pods IP on termination and stop sending traffic to the container.
