@@ -456,8 +456,8 @@ func toContainer(app *v1.AppInstance, tag name.Reference, containerName string, 
 
 	if container.UserContext != nil {
 		containerObject.SecurityContext = &corev1.SecurityContext{
-			RunAsUser:  z.Pointer[int64](container.UserContext.UID),
-			RunAsGroup: z.Pointer[int64](container.UserContext.GID),
+			RunAsUser:  z.Pointer(container.UserContext.UID),
+			RunAsGroup: z.Pointer(container.UserContext.GID),
 		}
 	}
 
