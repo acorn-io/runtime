@@ -109,8 +109,8 @@ github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d h1:licZJFw2RwpH
 github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d/go.mod h1:asat636LX7Bqt5lYEZ27JNDcqxfjdBQuJ/MM4CN/Lzo=
 github.com/acomagu/bufpipe v1.0.4 h1:e3H4WUzM3npvo5uv95QuJM3cQspFNtFBzvJ2oNjKIDQ=
 github.com/acomagu/bufpipe v1.0.4/go.mod h1:mxdxdup/WdsKVreO5GpW4+M/1CE2sMG4jeGJ2sYmHc4=
-github.com/acorn-io/aml v0.0.0-20231115002431-c08b165964de h1:vFVPRhT87Js+8S6WyyABZdtUpgrwMP6/US+4ChaolhQ=
-github.com/acorn-io/aml v0.0.0-20231115002431-c08b165964de/go.mod h1:jImvyZGYOReKDJEEjS2SLjvVAEFcXFMA7OPQ96l1JYA=
+github.com/acorn-io/aml v0.0.0-20231115044900-37e80122de99 h1:gsGIU3LyIi8WobSnYwEJsJ+LyhdA4m1zlI///YXRtb0=
+github.com/acorn-io/aml v0.0.0-20231115044900-37e80122de99/go.mod h1:jImvyZGYOReKDJEEjS2SLjvVAEFcXFMA7OPQ96l1JYA=
 github.com/acorn-io/aml/cli v0.0.0-20231113171943-4844e2f3e1a2 h1:CtflOEPAvtpALuC3SM1WApsfTuECXcDuq25E3fZaPdg=
 github.com/acorn-io/aml/cli v0.0.0-20231113171943-4844e2f3e1a2/go.mod h1:D4tWmJlLdsmMbQ/MI4T+Tj4j2PjgTAdde2QDGkeWH20=
 github.com/acorn-io/aml/legacy v0.0.0-20230929081514-1e9f3394432e h1:W67DG9AcoNvBwIOR9OFUCZlSJBaHuvM2kXQ2+C6EnLk=
