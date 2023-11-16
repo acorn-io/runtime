@@ -1,4 +1,4 @@
- let types: {
+let types: {
 	AcornBuild: {
 		match "buildArgs|args": object
 		context:                "."
@@ -124,15 +124,15 @@
 		ScopedMetadata
 		NameDescription
 
-		"default":           false
-		image?:              string
-		build?:              string || AcornBuild
+		"default":            false
+		image?:               string
+		build?:               string || AcornBuild
 		secrets?:             string || [AcornSecretBinding]
 		links?:               string || [AcornServiceBinding]
 		autoUpgrade?:         bool
 		autoUpgradeInterval?: string
 		notifyUpgrade?:       bool
-		match "mem|memory":  int || {
+		match "mem|memory":   int || {
 			match "\(DNSNamePattern)": int
 		}
 		class?: string || {
@@ -240,7 +240,7 @@
 		port?:       int
 		targetPort?: int
 		protocol?:   enum("tcp", "udp", "http", "http2")
-		path?: string =~ "^/.*"
+		path?:       string =~ "^/.*"
 	}
 
 	Metrics: {
@@ -307,11 +307,21 @@
 		alias?:    string
 	}
 
+	SecretCredential: {
+		SecretBase
+		type: string =~ `credential\..*`
+		params?: {
+			instructions?: string
+			promptOrder?: [string]
+		}
+		data?: StringMap
+	}
+
 	SecretOpaque: {
 		SecretBase
-		type:   "opaque"
+		type:    string == "opaque" || default "opaque"
 		params?: object
-		data?:  StringMap
+		data?:   StringMap
 	}
 
 	SecretTemplate: {
@@ -362,7 +372,7 @@
 		}
 	}
 
-	Secret: SecretBasicAuth || SecretGenerated || SecretTemplate || SecretToken || SecretOpaque
+	Secret: SecretBasicAuth || SecretGenerated || SecretTemplate || SecretToken || SecretOpaque || SecretCredential
 
 	AcornSecretBinding: {
 		secret: string

@@ -38,6 +38,7 @@ func secretsOrdered(app *v1.AppInstance) (result []secEntry) {
 func addSecretTransitioning(appInstance *v1.AppInstance, secretName, title, msg string) {
 	c := appInstance.Status.AppStatus.Secrets[secretName]
 	c.LookupTransitioning = append(c.LookupTransitioning, fmt.Sprintf("%s: [%s]", title, msg))
+	c.Missing = title == "missing"
 	appInstance.Status.AppStatus.Secrets[secretName] = c
 }
 

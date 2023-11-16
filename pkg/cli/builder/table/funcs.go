@@ -315,7 +315,7 @@ func MemoryToRange(obj any) (string, error) {
 
 func AppGeneration(app apiv1.App, msg string) string {
 	if app.Generation != app.Status.ObservedGeneration {
-		return "[controller: not processed] " + msg
+		return msg + "[update requested]"
 	}
 	return msg
 }

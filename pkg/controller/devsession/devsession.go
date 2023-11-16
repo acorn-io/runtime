@@ -58,6 +58,26 @@ func getNewGeneration(devSession *v1.DevSessionInstance) int64 {
 	return v
 }
 
+// We merge secret bindings so that "acorn login" will work when in dev mode. This
+// somewhat of a hack but it's odd to force the client to update both the app and the devsession
+// with the same info
+func mergeSecretBindings(base, overlay v1.AppInstanceSpec) (result []v1.SecretBinding) {
+	seen := map[string]struct{}{}
+	for _, binding := range overlay.Secrets {
+		seen[binding.Target] = struct{}{}
+		result = append(result, binding)
+	}
+
+	for _, binding := range base.Secrets {
+		if _, ok := seen[binding.Target]; ok {
+			continue
+		}
+		result = append(result, binding)
+	}
+
+	return
+}
+
 func updateAppForDevSession(req router.Request, resp router.Response) (int64, error) {
 	if req.Object == nil {
 		return 0, nil
@@ -77,8 +97,10 @@ func updateAppForDevSession(req router.Request, resp router.Response) (int64, er
 	app.Status.DevSession = &devSession.Spec
 	if devSession.Spec.SpecOverride != nil {
 		generation = app.Generation
+		secrets := mergeSecretBindings(app.Spec, *devSession.Spec.SpecOverride)
 		app.Generation = getNewGeneration(devSession)
 		app.Spec = *devSession.Spec.SpecOverride
+		app.Spec.Secrets = secrets
 		// If already in sync, keep in sync
 		if app.Status.ObservedGeneration == generation {
 			app.Status.ObservedGeneration = app.Generation

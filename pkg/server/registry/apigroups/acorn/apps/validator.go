@@ -258,11 +258,6 @@ func (s *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object)
 		}
 	}
 
-	if oldParams.Status.GetDevMode() {
-		result = append(result, field.Invalid(field.NewPath("status", "devSession"), "", "app is locked by dev session"))
-		return result
-	}
-
 	if newParams.Spec.Region != oldParams.Spec.Region && newParams.Spec.Region != oldParams.Status.Defaults.Region {
 		result = append(result, field.Invalid(field.NewPath("spec", "region"), newParams.Spec.Region, "cannot change region"))
 		return result

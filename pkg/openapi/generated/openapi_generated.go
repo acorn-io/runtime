@@ -11553,6 +11553,24 @@ func schema_pkg_apis_internalacornio_v1_SecretStatus(ref common.ReferenceCallbac
 							},
 						},
 					},
+					"missing": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"loginRequired": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"loginInstructions": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"dataKeys": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"array"},
