@@ -18,7 +18,7 @@ import (
 func NewProject(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Project{client: c.ClientFactory}, cobra.Command{
 		Use:     "project [flags]",
-		Aliases: []string{"projects"},
+		Aliases: []string{"projects", "proj"},
 		Example: `
 acorn project`,
 		SilenceUsage:      true,
