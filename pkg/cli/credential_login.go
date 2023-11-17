@@ -11,10 +11,12 @@ import (
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/credentials"
+	"github.com/acorn-io/runtime/pkg/login"
 	"github.com/acorn-io/runtime/pkg/manager"
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 func NewCredentialLogin(root bool, c CommandContext) *cobra.Command {
@@ -46,6 +48,17 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 	var (
 		client client.Client
 	)
+
+	if len(args) == 1 {
+		if c, err := a.client.CreateDefault(); err == nil {
+			app, err := c.AppGet(cmd.Context(), args[0])
+			if err == nil {
+				return login.Secrets(cmd.Context(), c, app)
+			} else if !apierrors.IsNotFound(err) {
+				return err
+			}
+		}
+	}
 
 	cfg, err := a.client.Options().CLIConfig()
 	if err != nil {

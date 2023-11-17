@@ -126,6 +126,9 @@ type SecretStatus struct {
 	JobReady            bool     `json:"jobReady,omitempty"`
 	LookupErrors        []string `json:"lookupErrors,omitempty"`
 	LookupTransitioning []string `json:"lookupTransitioning,omitempty"`
+	Missing             bool     `json:"missing,omitempty"`
+	LoginRequired       bool     `json:"loginRequired,omitempty"`
+	LoginInstructions   string   `json:"loginInstructions,omitempty"`
 	DataKeys            []string `json:"dataKeys,omitempty"`
 }
 

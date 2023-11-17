@@ -12,7 +12,7 @@ replace (
 require (
 	cuelang.org/go v0.6.0
 	github.com/AlecAivazis/survey/v2 v2.3.6
-	github.com/acorn-io/aml v0.0.0-20231115044900-37e80122de99
+	github.com/acorn-io/aml v0.0.0-20231117162239-064dc5b61b1f
 	github.com/acorn-io/aml/cli v0.0.0-20231113171943-4844e2f3e1a2
 	github.com/acorn-io/aml/legacy v0.0.0-20230929081514-1e9f3394432e
 	github.com/acorn-io/baaah v0.0.0-20231009165317-af2b68361b8a
@@ -23,6 +23,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.20.0
 	github.com/aws/aws-sdk-go-v2/config v1.18.32
 	github.com/aws/aws-sdk-go-v2/service/iam v1.19.10
+	github.com/charmbracelet/glamour v0.6.0
 	github.com/containerd/console v1.0.3
 	github.com/containerd/containerd v1.6.20
 	github.com/denisbrodbeck/machineid v1.0.1
@@ -93,6 +94,7 @@ require (
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/acorn-io/cmd v0.0.0-20230929053520-ebe1b9879b38 // indirect
 	github.com/agnivade/levenshtein v1.1.1 // indirect
+	github.com/alecthomas/chroma v0.10.0 // indirect
 	github.com/antlr/antlr4/runtime/Go/antlr v1.4.10 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.31 // indirect
@@ -105,6 +107,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.15.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.21.1 // indirect
 	github.com/aws/smithy-go v1.14.0 // indirect
+	github.com/aymanbagabas/go-osc52 v1.0.3 // indirect
+	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
@@ -127,6 +131,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/digitorus/pkcs7 v0.0.0-20230818184609-3a137a874352 // indirect
 	github.com/digitorus/timestamp v0.0.0-20230821155606-d1ad5ca9624c // indirect
+	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/docker/docker v24.0.0+incompatible // indirect
 	github.com/emicklei/go-restful/v3 v3.10.2 // indirect
@@ -175,6 +180,7 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/pprof v0.0.0-20221103000818-d260c55eee4c // indirect
 	github.com/gookit/color v1.5.2 // indirect
+	github.com/gorilla/css v1.0.0 // indirect
 	github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.1-0.20210315223345-82c243799c99 // indirect
@@ -200,13 +206,15 @@ require (
 	github.com/lithammer/fuzzysearch v1.1.5 // indirect
 	github.com/loft-sh/notify v0.0.0-20210827094439-0720dcc7feee // indirect
 	github.com/loft-sh/utils v0.0.16 // indirect
+	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
-	github.com/mattn/go-runewidth v0.0.13 // indirect
+	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
+	github.com/microcosm-cc/bluemonday v1.0.26 // indirect
 	github.com/miekg/dns v1.1.50 // indirect
 	github.com/miekg/pkcs11 v1.1.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -222,6 +230,8 @@ require (
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/mpvl/unique v0.0.0-20150818121801-cbe035fff7de // indirect
+	github.com/muesli/reflow v0.3.0 // indirect
+	github.com/muesli/termenv v0.13.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
 	github.com/nightlyone/lockfile v1.0.0 // indirect
@@ -271,6 +281,8 @@ require (
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect
+	github.com/yuin/goldmark v1.5.2 // indirect
+	github.com/yuin/goldmark-emoji v1.0.1 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.9 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.9 // indirect
 	go.etcd.io/etcd/client/v3 v3.5.9 // indirect
@@ -289,7 +301,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.25.0 // indirect
 	golang.org/x/mod v0.13.0 // indirect
-	golang.org/x/net v0.16.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/oauth2 v0.11.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/term v0.13.0 // indirect
