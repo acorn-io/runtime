@@ -2,6 +2,10 @@
 title: Getting Started
 ---
 
+:::note
+This getting started guide is to walk through using runtime on your own Kubernetes clusters. To get started quickly with Acorn without needing a Kubernetes cluster, check out the [getting started guide](https://docs.acorn.io/getting-started).
+:::
+
 In this walk through you will build a Python web app, package it up and deploy it as an Acorn app.
 The app will interact with Redis and Postgres, which both will be packaged along with the web app in a single Acorn image.
 
@@ -236,7 +240,7 @@ secrets: {
     - `accessModes`: (list of) modes to allow access to this volume
 - `secrets`: set of secrets that can be auto-generated and used by any container in the Acorn app
   - `quickstart-pg-pass`: custom secret name, referenced by `containers.app.env` and `containers.db.env`
-    - `type`: There are several [secret types](38-authoring/05-secrets.md#types-of-secrets). Here, a token (random string) will be generated for you at runtime.
+    - `type`: There are several [secret types](https://docs.acorn.io/authoring/secrets#types-of-secrets). Here, a token (random string) will be generated for you at runtime.
 
 ## Step 4. Run your Acorn app
 
@@ -406,7 +410,7 @@ acorn rm awesome-acorn
 
 ## What's next?
 
-- [Explore all the other awesome Acorn commands](100-reference/01-command-line/acorn.md)
-- [Read through the Acornfile reference](100-reference/03-acornfile.md)
+- [Explore all the other awesome Acorn commands](reference/command-line/acorn)
+- [Read through the Acornfile reference](https://docs.acorn.io/reference/acornfile)
 - [Have a look what makes up Acorn](60-architecture/01-ten-thousand-foot-view.md)
-- [Try some of our other example Acorns](https://github.com/acorn-io/examples)
+- [Try our hands on guide for a more in depth overview](https://docs.acorn.io/hands-on-with-acorn)

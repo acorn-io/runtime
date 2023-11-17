@@ -29,56 +29,12 @@ const sidebars = {
     "getting-started",
     {
       "type": "category",
-      "label": "Authoring Acornfiles",
+      "label": "Administration",
       "items": [
-        "authoring/overview",
-        "authoring/best-practices",
-        "authoring/structure",
-        "authoring/containers",
-        "authoring/volumes",
-        "authoring/secrets",
-        "authoring/jobs",
-        "authoring/args-and-profiles",
-        "authoring/localdata",
-        "authoring/permissions",
-        "authoring/labels",
-        "authoring/services",
-        "authoring/advanced",
-        "authoring/nested-acorns"
+        "admin/volumeclasses",
+        "admin/computeclasses",
+        "admin/alpha-image-allow-rules",
       ]
-    },
-    "publishing",
-    {
-      "type": "category",
-      "label": "Running Acorn Apps",
-      "items": [
-        "running/args-and-secrets",
-        "running/networking",
-        "running/certificates",
-        "running/volumes",
-        "running/linking-acorns",
-        "running/labels",
-        "running/troubleshooting",
-        "running/upgrades",
-        "running/auto-upgrades",
-        "running/namespaces-and-service-accounts",
-        "running/compute-resources",
-        "running/projects",
-        "running/update-acorns",
-        "running/remove-acorns",
-        "running/dev",
-        "running/events",
-        "running/alpha-image-allow-rules"
-      ],
-      "collapsed": true
-    },
-    {
-      "type": "category",
-      "label": "Integrations",
-      "items": [
-        "integrations/github-actions"
-      ],
-      "collapsed": true
     },
     {
       "type": "category",
@@ -143,19 +99,6 @@ const sidebars = {
             "reference/command-line/acorn_wait"
           ]
         },
-        {
-          "type": "category",
-          "label": "Administration",
-          "items": [
-            "reference/admin/volumeclasses",
-            "reference/admin/computeclasses"
-          ]
-        },
-        "reference/acornfile",
-        "reference/functions",
-        "reference/compute-resources",
-        "reference/encryption",
-        "reference/services"
       ],
       "collapsed": true
     },
