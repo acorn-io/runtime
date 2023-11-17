@@ -213,7 +213,7 @@ func hasContextDir(container v1.Container) bool {
 	return false
 }
 
-func toContainers(app *v1.AppInstance, tag name.Reference, name string, container v1.Container, interpolator *secrets.Interpolator, addWait bool) ([]corev1.Container, []corev1.Container) {
+func toContainers(app *v1.AppInstance, tag name.Reference, name string, container v1.Container, interpolator *secrets.Interpolator, addWait, addCp bool) ([]corev1.Container, []corev1.Container) {
 	var (
 		containers     []corev1.Container
 		initContainers []corev1.Container
@@ -234,7 +234,46 @@ func toContainers(app *v1.AppInstance, tag name.Reference, name string, containe
 		})
 	}
 
+	if addCp {
+		// Drop the special cp binary into the shared volume so that it can be used by other initContainers
+		initContainers = append(initContainers, corev1.Container{
+			Name:            "acorn-helper-cp",
+			Image:           system.DefaultImage(),
+			Command:         []string{"acorn-cp-init"},
+			ImagePullPolicy: corev1.PullIfNotPresent,
+			VolumeMounts: []corev1.VolumeMount{
+				{
+					Name:      sanitizeVolumeName(AcornHelper),
+					MountPath: AcornHelperPath,
+				},
+			},
+		},
+		)
+	}
+
 	newContainer := toContainer(app, tag, name, container, interpolator, addWait && len(container.Ports) > 0)
+	for src, dir := range container.Dirs {
+		if dir.Preload {
+			initContainers = append(initContainers, corev1.Container{
+				Name:            "acorn-preload-dir-" + sanitizeVolumeName(src),
+				Image:           newContainer.Image,
+				Command:         []string{AcornHelperCpPath},
+				ImagePullPolicy: corev1.PullIfNotPresent,
+				Args:            []string{path.Join(src), "/data"},
+				VolumeMounts: []corev1.VolumeMount{
+					{
+						Name:      sanitizeVolumeName(dir.Volume),
+						MountPath: "/data",
+						SubPath:   "data",
+					},
+					{
+						Name:      sanitizeVolumeName(AcornHelper),
+						MountPath: AcornHelperPath,
+					},
+				},
+			})
+		}
+	}
 	containers = append(containers, newContainer)
 	for _, entry := range typed.Sorted(container.Sidecars) {
 		newContainer = toContainer(app, tag, entry.Key, entry.Value, interpolator, addWait && len(entry.Value.Ports) > 0)
@@ -672,18 +711,25 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 	var (
 		stateful = isStateful(appInstance, container)
 		addWait  = !stateful && len(acornSleepBinary) > 0 && z.Dereference(container.Scale) > 1 && !appInstance.Status.GetDevMode()
+		addCp    = false
 	)
+
+	for _, v := range container.Dirs {
+		if v.Preload {
+			addCp = true
+		}
+	}
 
 	interpolator = interpolator.ForContainer(name)
 
-	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator, addWait)
+	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator, addWait, addCp)
 
 	secretAnnotations, err := getSecretAnnotations(req, appInstance, container, interpolator)
 	if err != nil {
 		return nil, err
 	}
 
-	volumes, err := toVolumes(appInstance, container, interpolator, addWait)
+	volumes, err := toVolumes(appInstance, container, interpolator, addWait, addCp)
 	if err != nil {
 		return nil, err
 	}

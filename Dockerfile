@@ -5,6 +5,7 @@ FROM ghcr.io/acorn-io/images-mirror/moby/buildkit:v0.11.6 AS buildkit
 FROM ghcr.io/acorn-io/images-mirror/registry:2.8.1 AS registry
 FROM ghcr.io/acorn-io/images-mirror/rancher/klipper-lb:v0.3.5 AS klipper-lb
 FROM ghcr.io/acorn-io/sleep:latest AS sleep
+FROM docker.io/iwilltry42/acorn:cp AS cp
 
 FROM ghcr.io/acorn-io/images-mirror/golang:1.21-alpine AS helper
 WORKDIR /usr/src
@@ -14,7 +15,7 @@ RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-
 
 FROM ghcr.io/acorn-io/images-mirror/golang:1.21-alpine AS loglevel
 WORKDIR /usr/src
-RUN apk -U add curl
+RUN apk -U add curl && rm -rf /var/cache/apk/*
 RUN curl -sfL https://github.com/acorn-io/loglevel/archive/refs/tags/v0.1.6.tar.gz | tar xzf - --strip-components=1
 RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 go build -o /usr/local/bin/loglevel -ldflags "-s -w"
 
@@ -22,6 +23,7 @@ FROM ghcr.io/acorn-io/images-mirror/golang:1.21 AS build
 COPY / /src
 WORKDIR /src
 COPY --from=sleep /sleep /src/pkg/controller/appdefinition/embed/acorn-sleep
+COPY --from=cp /cp /src/pkg/controller/appdefinition/embed/acorn-cp
 RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-build GO_TAGS=netgo,image make build
 
 FROM ghcr.io/acorn-io/images-mirror/nginx:1.23.2-alpine AS base
@@ -32,17 +34,19 @@ RUN mkdir apiserver.local.config && chown acorn apiserver.local.config
 RUN --mount=from=binfmt,src=/usr/bin,target=/usr/src for i in aarch64 x86_64; do if [ -e /usr/src/qemu-$i ]; then cp /usr/src/qemu-$i /usr/bin; fi; done
 RUN --mount=from=buildkit,src=/usr/bin,target=/usr/src for i in aarch64 x86_64; do if [ -e /usr/src/buildkit-qemu-$i ]; then cp /usr/src/buildkit-qemu-$i /usr/bin; fi; done
 COPY --from=binfmt /usr/bin/binfmt /usr/local/bin
-COPY --from=buildkit /usr/bin/buildkitd /usr/bin/buildctl /usr/bin/buildkit-runc /usr/local/bin
+COPY --from=buildkit /usr/bin/buildkitd /usr/bin/buildctl /usr/bin/buildkit-runc /usr/local/bin/
 COPY --from=registry /etc/docker/registry/config.yml /etc/docker/registry/config.yml
 COPY --from=registry /bin/registry /usr/local/bin
 COPY --from=klipper-lb /usr/bin/entry /usr/local/bin/klipper-lb
 COPY ./scripts/ds-containerd-config-path-entry /usr/local/bin
 COPY ./scripts/setup-binfmt /usr/local/bin
 COPY --from=helper /usr/local/bin/acorn-helper /usr/local/bin/
+COPY --from=cp /cp /usr/local/bin/acorn-cp
 COPY --from=loglevel /usr/local/bin/loglevel /usr/local/bin/
 VOLUME /var/lib/buildkit
 
 COPY /scripts/acorn-helper-init /usr/local/bin
+COPY /scripts/acorn-cp-init /usr/local/bin
 COPY /scripts/acorn-job-helper-init /usr/local/bin
 COPY /scripts/acorn-job-helper-shutdown /usr/local/bin
 COPY /scripts/acorn-job-get-output /usr/local/bin
