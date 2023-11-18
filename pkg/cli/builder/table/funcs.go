@@ -10,6 +10,7 @@ import (
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/labels"
+	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/acorn-io/runtime/pkg/tags"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -314,6 +315,9 @@ func MemoryToRange(obj any) (string, error) {
 }
 
 func AppGeneration(app apiv1.App, msg string) string {
+	if app.Status.AppStatus.LoginRequired {
+		return fmt.Sprintf("\"acorn login %s\" required", publicname.Get(&app))
+	}
 	if app.Generation != app.Status.ObservedGeneration {
 		return msg + "[update requested]"
 	}

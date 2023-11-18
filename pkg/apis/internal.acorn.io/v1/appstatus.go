@@ -17,9 +17,10 @@ type AppStatus struct {
 	Routers    map[string]RouterStatus    `json:"routers,omitempty"`
 	Services   map[string]ServiceStatus   `json:"services,omitempty"`
 
-	Endpoints []Endpoint `json:"endpoints,omitempty"`
-	Stopped   bool       `json:"stopped,omitempty"`
-	Completed bool       `json:"completed,omitempty"`
+	Endpoints     []Endpoint `json:"endpoints,omitempty"`
+	Stopped       bool       `json:"stopped,omitempty"`
+	Completed     bool       `json:"completed,omitempty"`
+	LoginRequired bool       `json:"loginRequired,omitempty"`
 }
 
 type DependencyNotFound struct {

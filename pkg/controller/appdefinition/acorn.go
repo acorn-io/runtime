@@ -80,8 +80,23 @@ func toAcorns(req router.Request, appInstance *v1.AppInstance, tag name.Referenc
 	return result, nil
 }
 
-func scopeSecrets(app *v1.AppInstance, bindings v1.SecretBindings) (result v1.SecretBindings) {
+func scopeSecrets(app *v1.AppInstance, bindings v1.SecretBindings, acornName string) (result v1.SecretBindings) {
+	seen := map[string]struct{}{}
+	for _, binding := range app.Spec.Secrets {
+		prefix := acornName + "."
+		if strings.HasPrefix(binding.Target, prefix) {
+			targetName := strings.TrimPrefix(binding.Target, prefix)
+			seen[targetName] = struct{}{}
+			result = append(result, v1.SecretBinding{
+				Secret: binding.Secret,
+				Target: targetName,
+			})
+		}
+	}
 	for _, binding := range bindings {
+		if _, ok := seen[binding.Target]; ok {
+			continue
+		}
 		binding.Secret = publicname.Get(app) + "." + binding.Secret
 		result = append(result, binding)
 	}
@@ -195,7 +210,7 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			Annotations:         append(acorn.Annotations, appInstance.Spec.Annotations...),
 			Image:               image,
 			Volumes:             acorn.Volumes,
-			Secrets:             scopeSecrets(appInstance, acorn.Secrets),
+			Secrets:             scopeSecrets(appInstance, acorn.Secrets, acornName),
 			PublishMode:         publishMode,
 			Links:               scopeLinks(appInstance, acorn.Links),
 			Profiles:            acorn.Profiles,

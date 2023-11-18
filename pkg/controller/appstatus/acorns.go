@@ -51,6 +51,9 @@ func (a *appStatusRenderer) readAcorns() error {
 			return err
 		}
 
+		if acorn.Status.AppStatus.LoginRequired {
+			a.app.Status.AppStatus.LoginRequired = true
+		}
 		s.Defined = true
 		s.UpToDate = acorn.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) && acorn.Annotations[labels.AcornConfigHashAnnotation] == hash
 		s.Ready = s.UpToDate && acorn.Status.Ready

@@ -56,6 +56,9 @@ func (a *appStatusRenderer) readServices() error {
 			if apierrors.IsNotFound(err) || err == nil {
 				s.ServiceAcornName = publicname.Get(serviceAcorn)
 				s.ServiceAcornReady = serviceAcorn.Status.Ready && serviceAcorn.Annotations[labels.AcornConfigHashAnnotation] == hash
+				if serviceAcorn.Status.AppStatus.LoginRequired {
+					a.app.Status.AppStatus.LoginRequired = true
+				}
 			} else {
 				return err
 			}

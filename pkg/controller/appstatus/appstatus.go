@@ -75,6 +75,8 @@ func resetHandlerControlledFields(app *v1.AppInstance) {
 func PrepareStatus(req router.Request, _ router.Response) error {
 	app := req.Object.(*v1.AppInstance)
 
+	app.Status.AppStatus.LoginRequired = false
+
 	if app.Status.AppStatus.Containers == nil {
 		app.Status.AppStatus.Containers = map[string]v1.ContainerStatus{}
 	}
@@ -117,7 +119,7 @@ func GetStatus(req router.Request, _ router.Response) error {
 
 func SetStatus(req router.Request, _ router.Response) error {
 	app := req.Object.(*v1.AppInstance)
-	setMessages(req.Ctx, req.Client, app)
+	setMessages(app)
 
 	status := app.Status.AppStatus
 
@@ -204,12 +206,12 @@ func setCondition[T commonStatusGetter](obj kclient.Object, conditionName string
 	}
 }
 
-func setMessages(ctx context.Context, c kclient.Client, app *v1.AppInstance) {
+func setMessages(app *v1.AppInstance) {
 	setContainerMessages(app)
 	setJobMessages(app)
 	setVolumeMessages(app)
 	setServiceMessages(app)
-	setSecretMessages(ctx, c, app)
+	setSecretMessages(app)
 	setAcornMessages(app)
 	setRouterMessages(app)
 }

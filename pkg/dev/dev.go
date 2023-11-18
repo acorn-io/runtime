@@ -19,6 +19,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/imagesource"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/log"
+	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/acorn-io/runtime/pkg/rulerequest"
 	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/acorn/devsessions"
 	"github.com/acorn-io/z"
@@ -40,7 +41,7 @@ type Logger interface {
 }
 
 type AppStatusLogger interface {
-	AppStatus(ready bool, msg string)
+	AppStatus(ready bool, msg string, app *apiv1.App)
 }
 
 type Options struct {
@@ -70,13 +71,13 @@ type BuildStatus struct {
 	Message string
 }
 
-func (o *Options) complete() *Options {
+func (o *Options) complete(ctx context.Context, c client.Client) *Options {
 	var cp Options
 	if o != nil {
 		cp = *o
 	}
 	if cp.Logger == nil {
-		cp.Logger = log.DefaultLogger
+		cp.Logger = log.NewDefaultLogger(ctx, c)
 	}
 
 	return &cp
@@ -204,7 +205,7 @@ func buildStart(c chan<- BuildStatus) {
 }
 
 func buildLoop(ctx context.Context, c client.Client, hash clientHash, opts *Options) error {
-	opts = opts.complete()
+	opts = opts.complete(ctx, c)
 
 	var (
 		watcher = watcher{
@@ -453,7 +454,7 @@ func appDeleteStop(ctx context.Context, c client.Client, logger AppStatusLogger,
 	w := objwatcher.New[*apiv1.App](wc)
 	_, err = w.ByName(ctx, c.GetNamespace(), appName, func(app *apiv1.App) (bool, error) {
 		if !app.DeletionTimestamp.IsZero() {
-			logger.AppStatus(false, fmt.Sprintf("app %s deleted, exiting", app.Name))
+			logger.AppStatus(false, fmt.Sprintf("app %s deleted, exiting", app.Name), app)
 			cancel()
 			return true, nil
 		}
@@ -493,6 +494,9 @@ func appStatusMessage(app *apiv1.App) (string, bool) {
 		// This is really only needed on the first run, before the controller runs
 		msg = "pending"
 	}
+	if app.Status.AppStatus.LoginRequired {
+		msg = fmt.Sprintf("\"acorn login %s\" required", publicname.Get(app))
+	}
 	return fmt.Sprintf("STATUS: ENDPOINTS[%s] HEALTHY[%s] UPTODATE[%s] %s",
 		app.Status.Columns.Endpoints,
 		app.Status.Columns.Healthy,
@@ -502,7 +506,7 @@ func appStatusMessage(app *apiv1.App) (string, bool) {
 
 func PrintAppStatus(app *apiv1.App, logger AppStatusLogger) {
 	msg, ready := appStatusMessage(app)
-	logger.AppStatus(ready, msg)
+	logger.AppStatus(ready, msg, app)
 }
 
 func AppStatusLoop(ctx context.Context, c client.Client, logger AppStatusLogger, appName string) error {

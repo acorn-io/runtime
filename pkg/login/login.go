@@ -11,6 +11,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/prompt"
 	"github.com/charmbracelet/glamour"
+	apierror "k8s.io/apimachinery/pkg/api/errors"
 )
 
 func Secrets(ctx context.Context, c client.Client, app *apiv1.App) error {
@@ -22,23 +23,33 @@ func Secrets(ctx context.Context, c client.Client, app *apiv1.App) error {
 		}
 	}
 
-	//for _, acorn := range app.Status.AppStatus.Acorns {
-	//	if acorn.AcornName != "" {
-	//		if err := loginApp(ctx, c, app, acorn.AcornName); err != nil {
-	//			return err
-	//		}
-	//	}
-	//}
-	//
-	//for _, service := range app.Status.AppStatus.Services {
-	//	if service.ServiceAcornName != "" {
-	//		if err := loginApp(ctx, c, app, service.ServiceAcornName); err != nil {
-	//			return err
-	//		}
-	//	}
-	//}
+	for _, acorn := range app.Status.AppStatus.Acorns {
+		if acorn.AcornName != "" {
+			if err := loginApp(ctx, c, acorn.AcornName); err != nil {
+				return err
+			}
+		}
+	}
+
+	for _, service := range app.Status.AppStatus.Services {
+		if service.ServiceAcornName != "" {
+			if err := loginApp(ctx, c, service.ServiceAcornName); err != nil {
+				return err
+			}
+		}
+	}
 
 	return nil
+}
+
+func loginApp(ctx context.Context, c client.Client, appName string) error {
+	app, err := c.AppGet(ctx, appName)
+	if apierror.IsNotFound(err) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+	return Secrets(ctx, c, app)
 }
 
 func secretIsOk(app *apiv1.App, secretName string) (string, bool) {
@@ -69,7 +80,11 @@ func printInstructions(app *apiv1.App, secretName string) error {
 }
 
 func bindSecret(ctx context.Context, c client.Client, app *apiv1.App, targetSecretName, overrideSecretName string) error {
-	_, err := c.AppUpdate(ctx, app.Name, &client.AppUpdateOptions{
+	parts := append(strings.Split(app.Name, "."), targetSecretName)
+	appName := parts[0]
+	targetSecretName = strings.Join(parts[1:], ".")
+
+	_, err := c.AppUpdate(ctx, appName, &client.AppUpdateOptions{
 		Secrets: []v1.SecretBinding{
 			{
 				Secret: overrideSecretName,
