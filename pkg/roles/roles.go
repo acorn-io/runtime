@@ -130,6 +130,7 @@ var (
 					"images/push",
 					"images/pull",
 					"containerreplicas/exec",
+					"containerreplicas/portforward",
 					"secrets/reveal",
 				},
 			},
