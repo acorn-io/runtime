@@ -26,7 +26,7 @@ func App(ctx context.Context, c client.Client, appName string, quiet bool) error
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			_ = dev.AppStatusLoop(ctx, c, log.DefaultLogger, app.Name)
+			_ = dev.AppStatusLoop(ctx, c, log.NewDefaultLogger(ctx, c), app.Name)
 		}()
 	}
 
@@ -38,7 +38,7 @@ func App(ctx context.Context, c client.Client, appName string, quiet bool) error
 	cancel()
 	wg.Wait()
 	fmt.Println()
-	dev.PrintAppStatus(app, log.DefaultLogger)
+	dev.PrintAppStatus(app, log.NewDefaultLogger(ctx, c))
 	return nil
 }
 
