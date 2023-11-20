@@ -222,7 +222,7 @@
 		}
 	}
 
-	User: string =~ "^[0-9]+(:[0-9]+)?$"
+	User: (int > 0) || (string =~ "^[0-9]+(:[0-9]+)?$")
 
 	ShortVolumeRef: string =~ "^[a-z][-a-z0-9]*$"
 	VolumeRef:      string =~ "^volume://.+$"
