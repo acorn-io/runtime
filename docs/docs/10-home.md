@@ -8,13 +8,17 @@ slug: /
 Acorn is a work in progress.  Features will evolve over time and there may be breaking changes between releases.  Please give us your feedback in [Slack](https://slack.acorn.io), [Discussions](https://github.com/acorn-io/runtime/discussions), or [Issues](https://github.com/acorn-io/runtime/issues)!
 :::
 
+:::note
+These are the docs for installing and running Acorn runtime on your own Kubernetes clusters. To learn how to use Acorn to package and deploy your applications, and the Acorn hosted platform please visit [docs.acorn.io](https://docs.acorn.io).
+:::
+
 ## Overview
 
 ### What is Acorn?
 
 Acorn is an application packaging and deployment framework that simplifies running apps on Kubernetes. Acorn is able to package up all of an application's Docker images, configuration, and deployment specifications into a single Acorn image artifact. This artifact is publishable to any OCI container registry allowing it to be deployed on any dev, test, or production Kubernetes.  The portability of Acorn images enables developers to develop applications locally and move to production without having to switch tools or technology stacks.
 
-Developers create Acorn images by describing the application configuration in an [Acornfile](38-authoring/00-overview.md). The Acornfile describes the whole application without all of the boilerplate of Kubernetes YAML files. The Acorn CLI is used to build, deploy, and operate Acorn images on any Kubernetes cluster.
+Developers create Acorn images by describing the application configuration in an [Acornfile](https://docs.acorn.io/authoring/overview). The Acornfile describes the whole application without all of the boilerplate of Kubernetes YAML files. The Acorn CLI is used to build, deploy, and operate Acorn images on any Kubernetes cluster.
 
 ### Acorn Workflow
 
@@ -35,7 +39,7 @@ differences between Acorn and Helm.
 
 1. Helm charts are templates for Kubernetes YAML files, whereas Acornfiles define application-level constructs. Acorn is
 a layer of abstraction on top of Kubernetes. Acorn users do not work with Kubernetes YAML files directly. By design, no Kubernetes
-knowledge is needed to use Acorn. 
+knowledge is needed to use Acorn.
 
 2. Helm users can package any Kubernetes workload into Helm charts, whereas Acorn is designed to package applications and not
 system-level drivers, plugins, and agents. Acorn supports any type of application, stateless and stateful. Applications
@@ -46,9 +50,7 @@ underlying Kubernetes API or use the underlying etcd as a database by defining c
 deployment specifications. Acorn brings structure to application deployment on Kubernetes. This is in marked contrast with
 unconstrained use of Kubernetes YAML files in Helm charts.
 
-We hope Acorn will simplify packaging and deployment of applications on Kubernetes. 
-
-
+We hope Acorn will simplify packaging and deployment of applications on Kubernetes.
 
 ## Quickstart
 
@@ -133,6 +135,6 @@ Next you can learn more about what you can do with Acorn in the [getting started
 
 * [Installation](30-installation/01-installing.md)
 * [Getting Started](37-getting-started.md)
-* [Authoring Acornfiles](38-authoring/00-overview.md)
-* [Running Acorn Apps](50-running/01-args-and-secrets.md)
+* [Authoring Acornfiles](https://docs.acorn.io/authoring/overview)
+* [Hands On Running Acorn Apps](https://docs.acorn.io/hands-on-with-acorn)
 * [Join our Slack channel](https://slack.acorn.io)

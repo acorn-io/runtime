@@ -106,6 +106,11 @@ const config = {
         darkTheme: darkCodeTheme,
         additionalLanguages: ['cue', 'docker'],
       },
+      algolia: {
+        appId: 'KA4CNV2PUX',
+        apiKey: 'd65a6b6f6eb217f433716ba99aa51bc2',
+        indexName: 'runtime-acorn',
+      }
     })
 };
 
