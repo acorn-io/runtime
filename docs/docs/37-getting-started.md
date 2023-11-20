@@ -3,7 +3,7 @@ title: Getting Started
 ---
 
 :::note
-This getting started guide is to walk through using runtime on your own Kubernetes clusters. To get started quickly with Acorn without needing a Kubernetes cluster, check out the [getting started guide](https://docs.acorn.io/getting-started).
+This getting started guide is to walk through using runtime on your own Kubernetes clusters. To get started quickly with Acorn without needing a Kubernetes cluster, check out the [getting started guide] (https://docs.acorn.io/getting-started) for our hosted offering.
 :::
 
 In this walk through you will build a Python web app, package it up and deploy it as an Acorn app.
