@@ -36,7 +36,7 @@ Let's Encrypt integration is only useful if you are running a non-local Kubernet
 
 ## Endpoint domain names
 
-Acorn provides several installation options for controlling the domain name used to generate endpoints. These are outlined in detail on our [network publishing]<https://docs.acorn.io/production/publish-http>) page.
+Acorn provides several installation options for controlling the domain name used to generate endpoints. These are outlined in detail on our [network publishing](https://docs.acorn.io/production/publish-http) page.
 
 ## Custom CA bundle
 
