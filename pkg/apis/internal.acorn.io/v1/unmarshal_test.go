@@ -160,10 +160,10 @@ func FuzzUserContextUnmarshalJSON(f *testing.F) {
 				if len(parts) == 2 {
 					_, errGID := strconv.ParseInt(parts[1], 10, 64)
 					if errUID != nil || errGID != nil {
-						require.Error(t, fmt.Errorf("Expected error for invalid UID/GID in string but got nil"))
+						require.Error(t, err, fmt.Errorf("Expected error for invalid UID/GID in string but got nil"))
 					}
 				} else if errUID != nil {
-					require.Error(t, fmt.Errorf("Expected error for invalid UID in string but got nil"))
+					require.Error(t, err, fmt.Errorf("Expected error for invalid UID in string but got nil"))
 				}
 			}
 		} else {
@@ -171,7 +171,7 @@ func FuzzUserContextUnmarshalJSON(f *testing.F) {
 			var tempInt int64
 			if errUnmarshal := json.Unmarshal(data, &tempInt); errUnmarshal == nil {
 				// If it's a valid integer, expect no error from UnmarshalJSON
-				require.NoError(t, fmt.Errorf("Expected no error for valid integer input but got %w", err))
+				require.NoError(t, err, fmt.Errorf("Expected no error for valid integer input but got %w", err))
 				if userContext.UID != tempInt || userContext.GID != tempInt {
 					t.Errorf("Expected UID and GID to be %v, got UID: %v, GID: %v", tempInt, userContext.UID, userContext.GID)
 				}
@@ -181,10 +181,10 @@ func FuzzUserContextUnmarshalJSON(f *testing.F) {
 				if json.Unmarshal(data, &temp) == nil {
 					_, ok := temp.(map[string]interface{})
 					if !ok {
-						require.Error(t, fmt.Errorf("Expected error for non-object JSON but got nil"))
+						require.Error(t, err, fmt.Errorf("Expected error for non-object JSON but got nil"))
 					}
 				} else {
-					require.Error(t, fmt.Errorf("Expected error for invalid JSON but got nil"))
+					require.Error(t, err, fmt.Errorf("Expected error for invalid JSON but got nil"))
 				}
 			}
 		}
