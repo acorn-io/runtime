@@ -213,6 +213,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignatureRules":                                  schema_pkg_apis_internalacornio_v1_SignatureRules(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignedBy":                                        schema_pkg_apis_internalacornio_v1_SignedBy(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.TCPProbe":                                        schema_pkg_apis_internalacornio_v1_TCPProbe(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.UserContext":                                     schema_pkg_apis_internalacornio_v1_UserContext(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VCS":                                             schema_pkg_apis_internalacornio_v1_VCS(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeBinding":                                   schema_pkg_apis_internalacornio_v1_VolumeBinding(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeDefault":                                   schema_pkg_apis_internalacornio_v1_VolumeDefault(ref),
@@ -2880,6 +2881,11 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref common.ReferenceCall
 							Format: "int64",
 						},
 					},
+					"user": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.UserContext"),
+						},
+					},
 					"metrics": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Metrics is available on containers and jobs, but not sidecars",
@@ -2973,7 +2979,7 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref common.ReferenceCall
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Dependency", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EnvVar", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.File", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MetricsDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Probe", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeMount"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Dependency", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EnvVar", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.File", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MetricsDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Probe", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.UserContext", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeMount"},
 	}
 }
 
@@ -3492,6 +3498,11 @@ func schema_pkg_apis_apiacornio_v1_EmbeddedContainer(ref common.ReferenceCallbac
 							Format: "int64",
 						},
 					},
+					"user": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.UserContext"),
+						},
+					},
 					"metrics": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Metrics is available on containers and jobs, but not sidecars",
@@ -3555,7 +3566,7 @@ func schema_pkg_apis_apiacornio_v1_EmbeddedContainer(ref common.ReferenceCallbac
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Dependency", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EnvVar", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.File", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MetricsDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Probe", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeMount"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Dependency", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EnvVar", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.File", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MetricsDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Probe", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.UserContext", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeMount"},
 	}
 }
 
@@ -8311,6 +8322,11 @@ func schema_pkg_apis_internalacornio_v1_Container(ref common.ReferenceCallback) 
 							Format: "int64",
 						},
 					},
+					"user": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.UserContext"),
+						},
+					},
 					"metrics": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Metrics is available on containers and jobs, but not sidecars",
@@ -8374,7 +8390,7 @@ func schema_pkg_apis_internalacornio_v1_Container(ref common.ReferenceCallback) 
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Dependency", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EnvVar", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.File", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MetricsDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Probe", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeMount"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Dependency", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EnvVar", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.File", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MetricsDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Probe", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.UserContext", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeMount"},
 	}
 }
 
@@ -12530,6 +12546,30 @@ func schema_pkg_apis_internalacornio_v1_TCPProbe(ref common.ReferenceCallback) c
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schema_pkg_apis_internalacornio_v1_UserContext(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"uid": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
+					"gid": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
 						},
 					},
 				},

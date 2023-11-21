@@ -32,6 +32,50 @@ type routeTarget struct {
 	TargetServiceName string   `json:"targetServiceName,omitempty"`
 }
 
+func (in *UserContext) UnmarshalJSON(data []byte) error {
+	if !isString(data) {
+		var d int64
+		if err := json.Unmarshal(data, &d); err == nil {
+			in.UID = d
+			in.GID = d
+			return nil
+		}
+		type userContext UserContext
+		return json.Unmarshal(data, (*userContext)(in))
+	}
+
+	s, err := parseString(data)
+	if err != nil {
+		return err
+	}
+	parts := strings.Split(s, ":")
+
+	if len(parts) > 2 {
+		return fmt.Errorf("invalid user context has extra part: %s", s)
+	}
+
+	uid, err := strconv.ParseInt(parts[0], 10, 64)
+	if err != nil {
+		return fmt.Errorf("failed to parse uid %s in %s: %w", parts[0], s, err)
+	}
+	in.UID = uid
+	in.GID = uid
+
+	if len(parts) == 2 {
+		gid, err := strconv.ParseInt(parts[1], 10, 64)
+		if err != nil {
+			return fmt.Errorf("failed to parse gid %s in %s: %w", parts[1], s, err)
+		}
+		in.GID = gid
+	}
+
+	if in.UID < 0 || in.GID < 0 {
+		return fmt.Errorf("invalid user context uid or gid < 0: %s", s)
+	}
+
+	return nil
+}
+
 func (in *routeTarget) UnmarshalJSON(data []byte) error {
 	if !isString(data) {
 		type routeTargetType routeTarget

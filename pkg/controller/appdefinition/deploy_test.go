@@ -13,6 +13,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/secrets"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -317,4 +318,39 @@ func TestFiles(t *testing.T) {
 	assert.Len(t, configMap.Data, 2)
 	assert.Equal(t, []byte("d"), configMap.Data[toHash("ZA==")])
 	assert.Equal(t, []byte("e"), configMap.Data[toHash("ZQ==")])
+}
+
+func TestUserContext(t *testing.T) {
+	app := &v1.AppInstance{
+		Status: v1.AppInstanceStatus{
+			AppSpec: v1.AppSpec{
+				Containers: map[string]v1.Container{
+					"foo": {
+						Image: "foo:latest",
+						UserContext: &v1.UserContext{
+							UID: 1000,
+							GID: 2000,
+						},
+						Sidecars: map[string]v1.Container{
+							"bar": {
+								Image: "bar:latest",
+								UserContext: &v1.UserContext{
+									UID: 3000,
+									GID: 4000,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	objs := ToDeploymentsTest(t, app, testTag, nil)
+	dep := objs[1].(*appsv1.Deployment)
+
+	require.Equal(t, int64(1000), *dep.Spec.Template.Spec.Containers[0].SecurityContext.RunAsUser)
+	require.Equal(t, int64(2000), *dep.Spec.Template.Spec.Containers[0].SecurityContext.RunAsGroup)
+	require.Equal(t, int64(3000), *dep.Spec.Template.Spec.Containers[1].SecurityContext.RunAsUser)
+	require.Equal(t, int64(4000), *dep.Spec.Template.Spec.Containers[1].SecurityContext.RunAsGroup)
 }

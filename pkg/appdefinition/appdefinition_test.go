@@ -3058,3 +3058,52 @@ func TestNestedScopedLabels(t *testing.T) {
 	}}`))
 	assert.Error(t, err)
 }
+
+func TestUserContext(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`containers: foo: {
+		image: "foo:latest"
+		user: "1000:2000"
+	}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		errors.Print(os.Stderr, err, nil)
+		t.Fatal(err)
+	}
+
+	require.Equal(t, &v1.UserContext{UID: 1000, GID: 2000}, appSpec.Containers["foo"].UserContext)
+
+	// GID default to UID
+	nAppImage, err := NewAppDefinition([]byte(`containers: foo: {
+		image: "foo:latest"
+		user: "1000"
+	}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	nAppSpec, err := nAppImage.AppSpec()
+	if err != nil {
+		errors.Print(os.Stderr, err, nil)
+		t.Fatal(err)
+	}
+
+	require.Equal(t, &v1.UserContext{UID: 1000, GID: 1000}, nAppSpec.Containers["foo"].UserContext)
+
+	// Expect error because of non-integer values
+	_, err = NewAppDefinition([]byte(`containers: foo: {
+		image: "foo:latest"
+		user: "me:you"
+	}`))
+	require.Error(t, err)
+
+	// Expect error because of third entry
+	_, err = NewAppDefinition([]byte(`containers: foo: {
+		image: "foo:latest"
+		user: "1000:1000:1000"
+	}`))
+	require.Error(t, err)
+}

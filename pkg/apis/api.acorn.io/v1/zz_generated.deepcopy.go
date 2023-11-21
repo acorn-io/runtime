@@ -1032,6 +1032,11 @@ func (in *EmbeddedContainer) DeepCopyInto(out *EmbeddedContainer) {
 		*out = new(int64)
 		**out = **in
 	}
+	if in.UserContext != nil {
+		in, out := &in.UserContext, &out.UserContext
+		*out = new(internal_acorn_iov1.UserContext)
+		**out = **in
+	}
 	out.Metrics = in.Metrics
 	if in.Scale != nil {
 		in, out := &in.Scale, &out.Scale

@@ -238,6 +238,11 @@ type PolicyRule struct {
 	Scopes            []string `json:"scopes,omitempty"`
 }
 
+type UserContext struct {
+	UID int64 `json:"uid,omitempty"`
+	GID int64 `json:"gid,omitempty"`
+}
+
 func slicePermutation(in []string) (result [][]string) {
 	if len(in) == 0 {
 		return [][]string{nil}
@@ -640,6 +645,7 @@ type Container struct {
 	Permissions  *Permissions           `json:"permissions,omitempty"`
 	ComputeClass *string                `json:"class,omitempty"`
 	Memory       *int64                 `json:"memory,omitempty"`
+	UserContext  *UserContext           `json:"user,omitempty"`
 
 	// Metrics is available on containers and jobs, but not sidecars
 	Metrics MetricsDef `json:"metrics,omitempty"`
