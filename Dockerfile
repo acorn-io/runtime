@@ -5,7 +5,6 @@ FROM ghcr.io/acorn-io/images-mirror/moby/buildkit:v0.11.6 AS buildkit
 FROM ghcr.io/acorn-io/images-mirror/registry:2.8.1 AS registry
 FROM ghcr.io/acorn-io/images-mirror/rancher/klipper-lb:v0.3.5 AS klipper-lb
 FROM ghcr.io/acorn-io/sleep:latest AS sleep
-FROM docker.io/iwilltry42/acorn:cp AS cp
 
 FROM ghcr.io/acorn-io/images-mirror/golang:1.21-alpine AS helper
 WORKDIR /usr/src
@@ -23,11 +22,10 @@ FROM ghcr.io/acorn-io/images-mirror/golang:1.21 AS build
 COPY / /src
 WORKDIR /src
 COPY --from=sleep /sleep /src/pkg/controller/appdefinition/embed/acorn-sleep
-COPY --from=cp /cp /src/pkg/controller/appdefinition/embed/acorn-cp
 RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-build GO_TAGS=netgo,image make build
 
 FROM ghcr.io/acorn-io/images-mirror/nginx:1.23.2-alpine AS base
-RUN apk add --no-cache ca-certificates iptables ip6tables fuse3 git openssh pigz xz \
+RUN apk add --no-cache ca-certificates iptables ip6tables fuse3 git openssh pigz xz busybox-static \
   && ln -s fusermount3 /usr/bin/fusermount
 RUN adduser -D acorn
 RUN mkdir apiserver.local.config && chown acorn apiserver.local.config
@@ -41,12 +39,11 @@ COPY --from=klipper-lb /usr/bin/entry /usr/local/bin/klipper-lb
 COPY ./scripts/ds-containerd-config-path-entry /usr/local/bin
 COPY ./scripts/setup-binfmt /usr/local/bin
 COPY --from=helper /usr/local/bin/acorn-helper /usr/local/bin/
-COPY --from=cp /cp /usr/local/bin/acorn-cp
 COPY --from=loglevel /usr/local/bin/loglevel /usr/local/bin/
 VOLUME /var/lib/buildkit
 
 COPY /scripts/acorn-helper-init /usr/local/bin
-COPY /scripts/acorn-cp-init /usr/local/bin
+COPY /scripts/acorn-busybox-init /usr/local/bin
 COPY /scripts/acorn-job-helper-init /usr/local/bin
 COPY /scripts/acorn-job-helper-shutdown /usr/local/bin
 COPY /scripts/acorn-job-get-output /usr/local/bin

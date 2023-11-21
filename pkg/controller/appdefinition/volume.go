@@ -26,10 +26,10 @@ import (
 )
 
 const (
-	AcornHelper          = " /acorn-helper"
-	AcornHelperPath      = "/.acorn"
-	AcornHelperSleepPath = "/.acorn/sleep"
-	AcornHelperCpPath    = "/.acorn/acorn-cp"
+	AcornHelper            = " /acorn-helper"
+	AcornHelperPath        = "/.acorn"
+	AcornHelperSleepPath   = "/.acorn/sleep"
+	AcornHelperBusyboxPath = "/.acorn/busybox"
 )
 
 func translateAccessModes(accessModes []v1.AccessMode) []corev1.PersistentVolumeAccessMode {

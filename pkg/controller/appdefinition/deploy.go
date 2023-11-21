@@ -235,11 +235,11 @@ func toContainers(app *v1.AppInstance, tag name.Reference, name string, containe
 	}
 
 	if addCp {
-		// Drop the special cp binary into the shared volume so that it can be used by other initContainers
+		// Drop the static busybox binary into a shared volume so that we can use it in initContainers.
 		initContainers = append(initContainers, corev1.Container{
 			Name:            "acorn-helper-cp",
 			Image:           system.DefaultImage(),
-			Command:         []string{"acorn-cp-init"},
+			Command:         []string{"acorn-busybox-init"},
 			ImagePullPolicy: corev1.PullIfNotPresent,
 			VolumeMounts: []corev1.VolumeMount{
 				{
@@ -254,17 +254,21 @@ func toContainers(app *v1.AppInstance, tag name.Reference, name string, containe
 	newContainer := toContainer(app, tag, name, container, interpolator, addWait && len(container.Ports) > 0)
 	for src, dir := range container.Dirs {
 		if dir.Preload {
+			// If a directory is marked for preload, then add an initContainer that copies the directory into the shared volume.
+			// Data will be copied to the data/ subdirectory and we'll drop a .preload-done file in the root to indicate that
+			// the copy has been completed (and should not be repeated).
 			initContainers = append(initContainers, corev1.Container{
 				Name:            "acorn-preload-dir-" + sanitizeVolumeName(src),
 				Image:           newContainer.Image,
-				Command:         []string{AcornHelperCpPath},
+				Command:         []string{AcornHelperBusyboxPath, "sh", "-c"},
 				ImagePullPolicy: corev1.PullIfNotPresent,
-				Args:            []string{path.Join(src), "/data"},
+				// cp -aT == copy recursively, following symlinks and preserving file attributes, only copy the contents of the source directory
+				Args: []string{fmt.Sprintf("if [ ! -f /dest/.preload-done ]; then mkdir -p /dest/data && cp -aT %s /dest/data && date > /dest/.preload-done; fi", src)},
 				VolumeMounts: []corev1.VolumeMount{
 					{
 						Name:      sanitizeVolumeName(dir.Volume),
-						MountPath: "/data",
-						SubPath:   "data",
+						MountPath: "/dest",
+						SubPath:   dir.SubPath,
 					},
 					{
 						Name:      sanitizeVolumeName(AcornHelper),
@@ -332,11 +336,18 @@ func toMounts(app *v1.AppInstance, container v1.Container, interpolation *secret
 				helperMounted = true
 			}
 		} else if mount.Secret.Name == "" {
-			result = append(result, corev1.VolumeMount{
+			vm := corev1.VolumeMount{
 				Name:      sanitizeVolumeName(mount.Volume),
 				MountPath: path.Join("/", mountPath),
 				SubPath:   mount.SubPath,
-			})
+			}
+			if mount.Preload {
+				// Preloaded contents land in the data/ subdirectory, since we have to drop the .preload-done file
+				// in the root of the volume to indicate that the copy has been completed
+				// and that may cause issues with applications that dislike unknown files in their path.
+				vm.SubPath = path.Join(vm.SubPath, "data")
+			}
+			result = append(result, vm)
 		} else {
 			result = append(result, corev1.VolumeMount{
 				Name:      secretPodVolName(mount.Secret.Name),
