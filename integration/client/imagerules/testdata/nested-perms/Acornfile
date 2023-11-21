@@ -1,6 +1,6 @@
 containers: {
   "rootapp": {
-      image: "nginx:latest"
+      image: "ghcr.io/acorn-io/images-mirror/nginx:latest"
       permissions: rules: [{
         verbs: ["get"]
         apiGroups: ["foo.bar.com"]

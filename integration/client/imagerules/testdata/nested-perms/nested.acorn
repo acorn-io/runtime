@@ -1,6 +1,6 @@
 containers: {
   "awsapp": {
-      image: "nginx:latest"
+      image: "ghcr.io/acorn-io/images-mirror/nginx:latest"
       permissions: {
         rules: [{
           verbs: ["get"]
