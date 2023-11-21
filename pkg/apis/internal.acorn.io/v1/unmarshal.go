@@ -1411,6 +1411,11 @@ func parseVolumeDefinition(anonName, s string) (VolumeBinding, error) {
 	return result, nil
 }
 
+// parseVolumeReference parses a volume reference string into its components, including query parameters
+// @return string - volume reference (unmodified)
+// @return string - subpath that should be mounted (query param)
+// @return bool 	- preload: if the volume should be pre-populated with data from the container image (query param)
+// @return error 	- parse error
 func parseVolumeReference(s string) (string, string, bool, error) {
 	if !strings.HasPrefix(s, "volume://") && !strings.HasPrefix(s, "ephemeral://") {
 		return s, "", false, nil
