@@ -1434,7 +1434,7 @@ func parseVolumeReference(s string) (string, string, bool, error) {
 	if preloadStr != "" {
 		preload, err = strconv.ParseBool(preloadStr)
 		if err != nil {
-			return "", "", false, fmt.Errorf("malformed ?preload value: %v", err)
+			return "", "", false, fmt.Errorf("malformed ?preload value %q: %v", preloadStr, err)
 		}
 	}
 
