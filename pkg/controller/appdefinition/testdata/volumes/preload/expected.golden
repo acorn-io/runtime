@@ -1,0 +1,249 @@
+`apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJnaGNyLmlvIjp7ImF1dGgiOiJPZz09In0sImluZGV4LmRvY2tlci5pbyI6eyJhdXRoIjoiT2c9PSJ9fX0=
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+  name: container-name-pull-1234567890ab
+  namespace: app-created-namespace
+type: kubernetes.io/dockerconfigjson
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/container-name: container-name
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: container-name
+  namespace: app-created-namespace
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/container-name: container-name
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: container-name
+  namespace: app-created-namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      acorn.io/app-name: app-name
+      acorn.io/app-namespace: app-namespace
+      acorn.io/container-name: container-name
+      acorn.io/managed: "true"
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        acorn.io/container-spec: '{"dirs":{"/foo/bar":{"preload":true,"secret":{},"subPath":"baz","volume":"testvol"},"/spam/eggs":{"secret":{},"volume":"testvol2"}},"image":"image-name","metrics":{},"probes":null}'
+        karpenter.sh/do-not-evict: "true"
+      creationTimestamp: null
+      labels:
+        acorn.io/app-name: app-name
+        acorn.io/app-namespace: app-namespace
+        acorn.io/app-public-name: app-name
+        acorn.io/container-name: container-name
+        acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
+    spec:
+      containers:
+      - image: image-name
+        name: container-name
+        resources: {}
+        volumeMounts:
+        - mountPath: /foo/bar
+          name: testvol
+          subPath: baz/data
+        - mountPath: /spam/eggs
+          name: testvol2
+      enableServiceLinks: false
+      hostname: container-name
+      imagePullSecrets:
+      - name: container-name-pull-1234567890ab
+      initContainers:
+      - command:
+        - acorn-busybox-init
+        image: ghcr.io/acorn-io/runtime:main
+        name: acorn-helper-busybox-1234567890abcdef
+        resources: {}
+        volumeMounts:
+        - mountPath: /.acorn
+          name: 6c47b5c86693
+      - args:
+        - if [ ! -f /dest/.preload-done ]; then mkdir -p /dest/data && cp -aT /foo/bar
+          /dest/data && date > /dest/.preload-done; fi
+        command:
+        - /.acorn/busybox
+        - sh
+        - -c
+        image: image-name
+        imagePullPolicy: IfNotPresent
+        name: acorn-preload-dir-a05d96ad6bf8-1234567890abcdef
+        resources: {}
+        volumeMounts:
+        - mountPath: /dest
+          name: testvol
+          subPath: baz
+        - mountPath: /.acorn
+          name: 6c47b5c86693
+      serviceAccountName: container-name
+      terminationGracePeriodSeconds: 10
+      volumes:
+      - emptyDir: {}
+        name: 6c47b5c86693
+      - name: testvol
+        persistentVolumeClaim:
+          claimName: testvol
+      - name: testvol2
+        persistentVolumeClaim:
+          claimName: testvol2
+status: {}
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  annotations:
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/container-name: container-name
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: container-name
+  namespace: app-created-namespace
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      acorn.io/app-name: app-name
+      acorn.io/app-namespace: app-namespace
+      acorn.io/container-name: container-name
+      acorn.io/managed: "true"
+status:
+  currentHealthy: 0
+  desiredHealthy: 0
+  disruptionsAllowed: 0
+  expectedPods: 0
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/public-name: app-name.testvol
+    acorn.io/volume-name: testvol
+  name: testvol
+  namespace: app-created-namespace
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10G
+status: {}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/public-name: app-name.testvol2
+    acorn.io/volume-name: testvol2
+  name: testvol2
+  namespace: app-created-namespace
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10G
+status: {}
+
+---
+apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  creationTimestamp: null
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+status:
+  appImage:
+    buildContext: {}
+    id: test
+    imageData: {}
+    vcs: {}
+  appSpec:
+    containers:
+      container-name:
+        dirs:
+          /foo/bar:
+            preload: true
+            secret: {}
+            subPath: baz
+            volume: testvol
+          /spam/eggs:
+            secret: {}
+            volume: testvol2
+        image: image-name
+        metrics: {}
+        probes: null
+    volumes:
+      testvol: {}
+      testvol2: {}
+  appStatus: {}
+  columns: {}
+  conditions:
+    reason: Success
+    status: "True"
+    success: true
+    type: defined
+  defaults: {}
+  namespace: app-created-namespace
+  staged:
+    appImage:
+      buildContext: {}
+      imageData: {}
+      vcs: {}
+  summary: {}
+`
