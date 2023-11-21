@@ -225,8 +225,8 @@ let types: {
 	User: (int > 0) || (string =~ "^[0-9]+(:[0-9]+)?$")
 
 	ShortVolumeRef: string =~ "^[a-z][-a-z0-9]*$"
-	VolumeRef:      string =~ "^volume://.+(.preload=(true|false))?$"
-	EphemeralRef:   string =~ "^ephemeral://.*(.preload=(true|false))?$|^$"
+	VolumeRef:      string =~ "^volume://.+$"
+	EphemeralRef:   string =~ "^ephemeral://.*$|^$"
 	ContextDirRef:  string =~ "^\\./.*$"
 	SecretRef:      string =~ "^secret://[a-z][-a-z0-9.]*(.onchange=(redeploy|no-action))?$"
 
