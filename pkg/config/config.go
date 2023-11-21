@@ -155,6 +155,9 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader, inclu
 	if c.CertManagerIssuer == nil {
 		c.CertManagerIssuer = profile.CertManagerIssuer
 	}
+	if c.AutoConfigureKarpenterDontEvictAnnotations == nil {
+		c.AutoConfigureKarpenterDontEvictAnnotations = profile.AutoConfigureKarpenterDontEvictAnnotations
+	}
 	return nil
 }
 
@@ -452,6 +455,9 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	}
 	if newConfig.APIServerCPU != nil {
 		mergedConfig.APIServerCPU = newConfig.APIServerCPU
+	}
+	if newConfig.AutoConfigureKarpenterDontEvictAnnotations != nil {
+		mergedConfig.AutoConfigureKarpenterDontEvictAnnotations = newConfig.AutoConfigureKarpenterDontEvictAnnotations
 	}
 
 	return &mergedConfig

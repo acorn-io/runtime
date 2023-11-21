@@ -806,7 +806,13 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 
 	// Set karpenter do-not-evict annotation if scale is nil or 1. This prevents karpenter from evicting the pod if deployment is not running with more than 1 replica.
 	if dep.Spec.Replicas == nil || *dep.Spec.Replicas == 1 {
-		dep.Spec.Template.Annotations["karpenter.sh/do-not-evict"] = "true"
+		cfg, err := config.Get(req.Ctx, req.Client)
+		if err != nil {
+			return nil, err
+		}
+		if z.Dereference(cfg.AutoConfigureKarpenterDontEvictAnnotations) {
+			dep.Spec.Template.Annotations["karpenter.sh/do-not-evict"] = "true"
+		}
 	}
 
 	return dep, nil
