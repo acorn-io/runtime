@@ -12757,6 +12757,12 @@ func schema_pkg_apis_internalacornio_v1_VolumeMount(ref common.ReferenceCallback
 							Format: "",
 						},
 					},
+					"preload": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
 					"secret": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},

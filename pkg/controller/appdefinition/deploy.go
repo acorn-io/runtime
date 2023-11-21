@@ -31,6 +31,7 @@ import (
 	"github.com/acorn-io/z"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/rancher/wrangler/pkg/data/convert"
+	wname "github.com/rancher/wrangler/pkg/name"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
@@ -213,7 +214,7 @@ func hasContextDir(container v1.Container) bool {
 	return false
 }
 
-func toContainers(app *v1.AppInstance, tag name.Reference, name string, container v1.Container, interpolator *secrets.Interpolator, addWait bool) ([]corev1.Container, []corev1.Container) {
+func toContainers(app *v1.AppInstance, tag name.Reference, name string, container v1.Container, interpolator *secrets.Interpolator, addWait, addBusybox bool) ([]corev1.Container, []corev1.Container) {
 	var (
 		containers     []corev1.Container
 		initContainers []corev1.Container
@@ -234,7 +235,49 @@ func toContainers(app *v1.AppInstance, tag name.Reference, name string, containe
 		})
 	}
 
+	if addBusybox {
+		// Drop the static busybox binary into a shared volume so that we can use it in initContainers.
+		initContainers = append(initContainers, corev1.Container{
+			Name:    wname.SafeConcatName("acorn-helper-busybox", string(app.UID)),
+			Image:   system.DefaultImage(),
+			Command: []string{"acorn-busybox-init"},
+			VolumeMounts: []corev1.VolumeMount{
+				{
+					Name:      sanitizeVolumeName(AcornHelper),
+					MountPath: AcornHelperPath,
+				},
+			},
+		},
+		)
+	}
+
 	newContainer := toContainer(app, tag, name, container, interpolator, addWait && len(container.Ports) > 0)
+	for src, dir := range container.Dirs {
+		if dir.Preload {
+			// If a directory is marked for preload, then add an initContainer that copies the directory into the shared volume.
+			// Data will be copied to the data/ subdirectory and we'll drop a .preload-done file in the root to indicate that
+			// the copy has been completed (and should not be repeated).
+			initContainers = append(initContainers, corev1.Container{
+				Name:            wname.SafeConcatName("acorn-preload-dir", sanitizeVolumeName(src), string(app.UID)),
+				Image:           newContainer.Image,
+				Command:         []string{AcornHelperBusyboxPath, "sh", "-c"},
+				ImagePullPolicy: corev1.PullIfNotPresent,
+				// cp -aT == copy recursively, following symlinks and preserving file attributes, only copy the contents of the source directory
+				Args: []string{fmt.Sprintf("if [ ! -f /dest/.preload-done ]; then mkdir -p /dest/data && cp -aT %s /dest/data && date > /dest/.preload-done; fi", src)},
+				VolumeMounts: []corev1.VolumeMount{
+					{
+						Name:      sanitizeVolumeName(dir.Volume),
+						MountPath: "/dest",
+						SubPath:   dir.SubPath,
+					},
+					{
+						Name:      sanitizeVolumeName(AcornHelper),
+						MountPath: AcornHelperPath,
+					},
+				},
+			})
+		}
+	}
 	containers = append(containers, newContainer)
 	for _, entry := range typed.Sorted(container.Sidecars) {
 		newContainer = toContainer(app, tag, entry.Key, entry.Value, interpolator, addWait && len(entry.Value.Ports) > 0)
@@ -293,11 +336,18 @@ func toMounts(app *v1.AppInstance, container v1.Container, interpolation *secret
 				helperMounted = true
 			}
 		} else if mount.Secret.Name == "" {
-			result = append(result, corev1.VolumeMount{
+			vm := corev1.VolumeMount{
 				Name:      sanitizeVolumeName(mount.Volume),
 				MountPath: path.Join("/", mountPath),
 				SubPath:   mount.SubPath,
-			})
+			}
+			if mount.Preload {
+				// Preloaded contents land in the data/ subdirectory, since we have to drop the .preload-done file
+				// in the root of the volume to indicate that the copy has been completed
+				// and that may cause issues with applications that dislike unknown files in their path.
+				vm.SubPath = path.Join(vm.SubPath, "data")
+			}
+			result = append(result, vm)
 		} else {
 			result = append(result, corev1.VolumeMount{
 				Name:      secretPodVolName(mount.Secret.Name),
@@ -670,20 +720,27 @@ func getSecretAnnotations(req router.Request, appInstance *v1.AppInstance, conta
 
 func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Reference, name string, container v1.Container, pullSecrets *PullSecrets, interpolator *secrets.Interpolator) (*appsv1.Deployment, error) {
 	var (
-		stateful = isStateful(appInstance, container)
-		addWait  = !stateful && len(acornSleepBinary) > 0 && z.Dereference(container.Scale) > 1 && !appInstance.Status.GetDevMode()
+		stateful   = isStateful(appInstance, container)
+		addWait    = !stateful && len(acornSleepBinary) > 0 && z.Dereference(container.Scale) > 1 && !appInstance.Status.GetDevMode()
+		addBusybox = false
 	)
+
+	for _, v := range container.Dirs {
+		if v.Preload {
+			addBusybox = true
+		}
+	}
 
 	interpolator = interpolator.ForContainer(name)
 
-	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator, addWait)
+	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator, addWait, addBusybox)
 
 	secretAnnotations, err := getSecretAnnotations(req, appInstance, container, interpolator)
 	if err != nil {
 		return nil, err
 	}
 
-	volumes, err := toVolumes(appInstance, container, interpolator, addWait)
+	volumes, err := toVolumes(appInstance, container, interpolator, addWait, addBusybox)
 	if err != nil {
 		return nil, err
 	}

@@ -26,9 +26,10 @@ import (
 )
 
 const (
-	AcornHelper          = " /acorn-helper"
-	AcornHelperPath      = "/.acorn"
-	AcornHelperSleepPath = "/.acorn/sleep"
+	AcornHelper            = " /acorn-helper"
+	AcornHelperPath        = "/.acorn"
+	AcornHelperSleepPath   = "/.acorn/sleep"
+	AcornHelperBusyboxPath = "/.acorn/busybox"
 )
 
 func translateAccessModes(accessModes []v1.AccessMode) []corev1.PersistentVolumeAccessMode {
@@ -294,8 +295,8 @@ func volumeLabels(appInstance *v1.AppInstance, volume string, volumeRequest v1.V
 		volumeRequest.Labels, appInstance.Spec.Labels))
 }
 
-func isEphemeral(appInstance *v1.AppInstance, volume string) (v1.VolumeRequest, bool) {
-	if volume == AcornHelper && appInstance.Status.GetDevMode() {
+func isEphemeral(appInstance *v1.AppInstance, volume string, addHelperVolume bool) (v1.VolumeRequest, bool) {
+	if volume == AcornHelper && (appInstance.Status.GetDevMode() || addHelperVolume) {
 		return v1.VolumeRequest{
 			Class: v1.VolumeRequestTypeEphemeral,
 		}, true
@@ -331,6 +332,9 @@ func toVolumeName(appInstance *v1.AppInstance, volume string) (string, bool) {
 func addVolumeReferencesForContainer(app *v1.AppInstance, volumeReferences map[volumeReference]bool, container v1.Container) {
 	for _, entry := range typed.Sorted(container.Dirs) {
 		volume := entry.Value
+		if volume.Preload {
+			volumeReferences[volumeReference{name: AcornHelper}] = true
+		}
 		if volume.ContextDir != "" {
 			if app.Status.GetDevMode() {
 				volumeReferences[volumeReference{name: AcornHelper}] = true
@@ -402,7 +406,7 @@ func secretPodVolName(secretName string) string {
 	return strings.ReplaceAll(name.SafeConcatName("secret-", secretName), ".", "-")
 }
 
-func toVolumes(appInstance *v1.AppInstance, container v1.Container, interpolator *secrets.Interpolator, addWaitVolume bool) (result []corev1.Volume, _ error) {
+func toVolumes(appInstance *v1.AppInstance, container v1.Container, interpolator *secrets.Interpolator, addWaitVolume, addHelperVolume bool) (result []corev1.Volume, _ error) {
 	hasPorts := len(container.Ports) > 0
 	volumeReferences := map[volumeReference]bool{}
 	addVolumeReferencesForContainer(appInstance, volumeReferences, container)
@@ -430,7 +434,7 @@ func toVolumes(appInstance *v1.AppInstance, container v1.Container, interpolator
 		}
 
 		name, bind := toVolumeName(appInstance, volume.name)
-		if vr, ok := isEphemeral(appInstance, volume.name); ok && !bind {
+		if vr, ok := isEphemeral(appInstance, volume.name, addHelperVolume); ok && !bind {
 			result = append(result, corev1.Volume{
 				Name: sanitizeVolumeName(volume.name),
 				VolumeSource: corev1.VolumeSource{

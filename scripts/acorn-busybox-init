@@ -1,0 +1,2 @@
+#!/bin/sh
+cp -f /bin/busybox.static /.acorn/busybox
