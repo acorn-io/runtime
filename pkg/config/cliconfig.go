@@ -56,6 +56,7 @@ type CLIConfig struct {
 	ProjectAliases     map[string]string     `json:"projectAliases,omitempty"`
 	DefaultContext     string                `json:"defaultContext,omitempty"`
 	CurrentProject     string                `json:"currentProject,omitempty"`
+	LastProject        string                `json:"lastProject,omitempty"`
 	AcornConfigFile    string                `json:"acornConfig,omitempty"`
 
 	// ProjectURLs is used for testing to return EndpointURLs for remote projects
@@ -157,6 +158,7 @@ func ReadCLIConfig(acornConfigFile string, kubeconfigOnly bool) (*CLIConfig, err
 	if kubeconfigOnly {
 		result.DefaultContext = ""
 		result.CurrentProject = ""
+		result.LastProject = ""
 	}
 
 	return result, nil
@@ -177,6 +179,11 @@ func RemoveServer(cfg *CLIConfig, serverAddress string) error {
 	var modified bool
 	if strings.HasPrefix(cfg.CurrentProject, serverAddress) {
 		cfg.CurrentProject = ""
+		modified = true
+	}
+
+	if strings.HasPrefix(cfg.LastProject, serverAddress) {
+		cfg.LastProject = ""
 		modified = true
 	}
 
