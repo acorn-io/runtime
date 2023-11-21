@@ -237,7 +237,7 @@ func toContainers(app *v1.AppInstance, tag name.Reference, name string, containe
 	if addBusybox {
 		// Drop the static busybox binary into a shared volume so that we can use it in initContainers.
 		initContainers = append(initContainers, corev1.Container{
-			Name:            "acorn-helper-cp",
+			Name:            "acorn-helper-busybox",
 			Image:           system.DefaultImage(),
 			Command:         []string{"acorn-busybox-init"},
 			ImagePullPolicy: corev1.PullIfNotPresent,

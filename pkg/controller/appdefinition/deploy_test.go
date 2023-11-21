@@ -2,6 +2,8 @@ package appdefinition
 
 import (
 	"encoding/base64"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/acorn-io/baaah/pkg/router"
@@ -353,4 +355,49 @@ func TestUserContext(t *testing.T) {
 	require.Equal(t, int64(2000), *dep.Spec.Template.Spec.Containers[0].SecurityContext.RunAsGroup)
 	require.Equal(t, int64(3000), *dep.Spec.Template.Spec.Containers[1].SecurityContext.RunAsUser)
 	require.Equal(t, int64(4000), *dep.Spec.Template.Spec.Containers[1].SecurityContext.RunAsGroup)
+}
+
+func TestVolumePreload(t *testing.T) {
+	app := &v1.AppInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "app",
+			UID:  "123",
+		},
+		Status: v1.AppInstanceStatus{
+			AppSpec: v1.AppSpec{
+				Containers: map[string]v1.Container{
+					"test": {
+						Dirs: map[string]v1.VolumeMount{
+							"/a2/b/c": {
+								Volume:  "testvol",
+								SubPath: "foo",
+								Preload: true,
+							},
+							"/a1/b/c": {
+								Volume: "testvol2",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	objs := ToDeploymentsTest(t, app, testTag, nil)
+	dep := objs[1].(*appsv1.Deployment)
+
+	require.ElementsMatch(t, []corev1.VolumeMount{
+		{Name: "testvol", MountPath: "/a2/b/c", SubPath: "foo/data"}, // data subpath appended
+		{Name: "testvol2", MountPath: "/a1/b/c"},                     // no subPath at all
+	}, dep.Spec.Template.Spec.Containers[0].VolumeMounts, "volume mounts do not match")
+
+	require.Equal(t, 2, len(dep.Spec.Template.Spec.InitContainers)) // one for copying busybox, one for copying data
+	require.Equal(t, "acorn-helper-busybox", dep.Spec.Template.Spec.InitContainers[0].Name)
+	require.True(t, strings.HasPrefix(dep.Spec.Template.Spec.InitContainers[1].Name, "acorn-preload-dir-"), fmt.Sprintf("expected init container name to start with acorn-preload-dir, got %s", dep.Spec.Template.Spec.InitContainers[1].Name))
+	require.Equal(t, corev1.VolumeMount{
+		Name:      "testvol",
+		MountPath: "/dest",
+		SubPath:   "foo",
+	}, dep.Spec.Template.Spec.InitContainers[1].VolumeMounts[0])
+	require.True(t, strings.Contains(dep.Spec.Template.Spec.InitContainers[1].Args[0], "/a2/b/c /dest/data"), fmt.Sprintf("expected '/a2/b/c /dest/data' in initContainer args for cp, got %s", dep.Spec.Template.Spec.InitContainers[1].Args[0]))
 }

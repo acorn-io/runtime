@@ -190,3 +190,25 @@ func FuzzUserContextUnmarshalJSON(f *testing.F) {
 		}
 	})
 }
+
+func TestParseVolumeReference(t *testing.T) {
+	s, subPath, preload, err := parseVolumeReference("name")
+	require.NoError(t, err)
+	require.Equal(t, "name", s)
+	require.Empty(t, subPath)
+	require.False(t, preload)
+
+	_, subPath, preload, err = parseVolumeReference("volume://foo?preload=true&subPath=bar")
+	require.NoError(t, err)
+
+	require.Equal(t, "bar", subPath)
+	require.True(t, preload)
+
+	_, subPath, preload, err = parseVolumeReference("volume://foo?preload=false")
+	require.NoError(t, err)
+	require.Empty(t, subPath)
+	require.False(t, preload)
+
+	_, _, _, err = parseVolumeReference("volume://foo?preload=foo")
+	require.Error(t, err)
+}
