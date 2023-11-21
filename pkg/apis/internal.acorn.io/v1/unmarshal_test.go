@@ -198,9 +198,13 @@ func TestParseVolumeReference(t *testing.T) {
 	require.Empty(t, subPath)
 	require.False(t, preload)
 
+	_, subPath, preload, err = parseVolumeReference("volume://foo?subPath=bar")
+	require.NoError(t, err)
+	require.False(t, preload)
+	require.Equal(t, "bar", subPath)
+
 	_, subPath, preload, err = parseVolumeReference("volume://foo?preload=true&subPath=bar")
 	require.NoError(t, err)
-
 	require.Equal(t, "bar", subPath)
 	require.True(t, preload)
 

@@ -1429,9 +1429,13 @@ func parseVolumeReference(s string) (string, string, bool, error) {
 		subPath = u.Query().Get("sub-path")
 	}
 
-	preload, err := strconv.ParseBool(u.Query().Get("preload"))
-	if err != nil {
-		return "", "", false, fmt.Errorf("malformed ?preload value: %v", err)
+	preload := false
+	preloadStr := u.Query().Get("preload")
+	if preloadStr != "" {
+		preload, err = strconv.ParseBool(preloadStr)
+		if err != nil {
+			return "", "", false, fmt.Errorf("malformed ?preload value: %v", err)
+		}
 	}
 
 	return s, subPath, preload, nil
