@@ -31,6 +31,7 @@ import (
 	"github.com/acorn-io/z"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/rancher/wrangler/pkg/data/convert"
+	wname "github.com/rancher/wrangler/pkg/name"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
@@ -237,10 +238,9 @@ func toContainers(app *v1.AppInstance, tag name.Reference, name string, containe
 	if addBusybox {
 		// Drop the static busybox binary into a shared volume so that we can use it in initContainers.
 		initContainers = append(initContainers, corev1.Container{
-			Name:            "acorn-helper-busybox",
-			Image:           system.DefaultImage(),
-			Command:         []string{"acorn-busybox-init"},
-			ImagePullPolicy: corev1.PullIfNotPresent,
+			Name:    wname.SafeConcatName("acorn-helper-busybox", string(app.UID)),
+			Image:   system.DefaultImage(),
+			Command: []string{"acorn-busybox-init"},
 			VolumeMounts: []corev1.VolumeMount{
 				{
 					Name:      sanitizeVolumeName(AcornHelper),
@@ -258,7 +258,7 @@ func toContainers(app *v1.AppInstance, tag name.Reference, name string, containe
 			// Data will be copied to the data/ subdirectory and we'll drop a .preload-done file in the root to indicate that
 			// the copy has been completed (and should not be repeated).
 			initContainers = append(initContainers, corev1.Container{
-				Name:            "acorn-preload-dir-" + sanitizeVolumeName(src),
+				Name:            wname.SafeConcatName("acorn-preload-dir", sanitizeVolumeName(src), string(app.UID)),
 				Image:           newContainer.Image,
 				Command:         []string{AcornHelperBusyboxPath, "sh", "-c"},
 				ImagePullPolicy: corev1.PullIfNotPresent,
