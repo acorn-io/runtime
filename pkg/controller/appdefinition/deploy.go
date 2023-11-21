@@ -213,7 +213,7 @@ func hasContextDir(container v1.Container) bool {
 	return false
 }
 
-func toContainers(app *v1.AppInstance, tag name.Reference, name string, container v1.Container, interpolator *secrets.Interpolator, addWait, addCp bool) ([]corev1.Container, []corev1.Container) {
+func toContainers(app *v1.AppInstance, tag name.Reference, name string, container v1.Container, interpolator *secrets.Interpolator, addWait, addBusybox bool) ([]corev1.Container, []corev1.Container) {
 	var (
 		containers     []corev1.Container
 		initContainers []corev1.Container
@@ -234,7 +234,7 @@ func toContainers(app *v1.AppInstance, tag name.Reference, name string, containe
 		})
 	}
 
-	if addCp {
+	if addBusybox {
 		// Drop the static busybox binary into a shared volume so that we can use it in initContainers.
 		initContainers = append(initContainers, corev1.Container{
 			Name:            "acorn-helper-cp",
@@ -720,27 +720,27 @@ func getSecretAnnotations(req router.Request, appInstance *v1.AppInstance, conta
 
 func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Reference, name string, container v1.Container, pullSecrets *PullSecrets, interpolator *secrets.Interpolator) (*appsv1.Deployment, error) {
 	var (
-		stateful = isStateful(appInstance, container)
-		addWait  = !stateful && len(acornSleepBinary) > 0 && z.Dereference(container.Scale) > 1 && !appInstance.Status.GetDevMode()
-		addCp    = false
+		stateful   = isStateful(appInstance, container)
+		addWait    = !stateful && len(acornSleepBinary) > 0 && z.Dereference(container.Scale) > 1 && !appInstance.Status.GetDevMode()
+		addBusybox = false
 	)
 
 	for _, v := range container.Dirs {
 		if v.Preload {
-			addCp = true
+			addBusybox = true
 		}
 	}
 
 	interpolator = interpolator.ForContainer(name)
 
-	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator, addWait, addCp)
+	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator, addWait, addBusybox)
 
 	secretAnnotations, err := getSecretAnnotations(req, appInstance, container, interpolator)
 	if err != nil {
 		return nil, err
 	}
 
-	volumes, err := toVolumes(appInstance, container, interpolator, addWait, addCp)
+	volumes, err := toVolumes(appInstance, container, interpolator, addWait, addBusybox)
 	if err != nil {
 		return nil, err
 	}

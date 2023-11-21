@@ -40,13 +40,13 @@ func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSe
 		if err != nil {
 			return nil, err
 		}
-		addCp := false
+		addBusybox := false
 		for _, v := range jobDef.Dirs {
 			if v.Preload {
-				addCp = true
+				addBusybox = true
 			}
 		}
-		job, err := toJob(req, appInstance, pullSecrets, tag, jobName, jobDef, interpolator, addCp)
+		job, err := toJob(req, appInstance, pullSecrets, tag, jobName, jobDef, interpolator, addBusybox)
 		if err != nil {
 			return nil, err
 		}
@@ -91,7 +91,7 @@ func setSecretOutputVolume(containers []corev1.Container) (result []corev1.Conta
 	return
 }
 
-func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, name string, container v1.Container, interpolator *secrets.Interpolator, addCp bool) (kclient.Object, error) {
+func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, name string, container v1.Container, interpolator *secrets.Interpolator, addBusybox bool) (kclient.Object, error) {
 	interpolator = interpolator.ForJob(name)
 	jobEventName := jobs.GetEvent(name, appInstance)
 
@@ -106,7 +106,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 		return nil, nil
 	}
 
-	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator, false, addCp)
+	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator, false, addBusybox)
 
 	containers = append(containers, corev1.Container{
 		Name:            jobs.Helper,
@@ -120,7 +120,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 		return nil, err
 	}
 
-	volumes, err := toVolumes(appInstance, container, interpolator, false, addCp)
+	volumes, err := toVolumes(appInstance, container, interpolator, false, addBusybox)
 	if err != nil {
 		return nil, err
 	}
