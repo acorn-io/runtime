@@ -124,6 +124,7 @@ dockers:
       - scripts/acorn-job-helper-shutdown
       - scripts/ds-containerd-config-path-entry
       - scripts/setup-binfmt
+      - scripts/acorn-busybox-init
   - use: buildx
     goos: linux
     goarch: arm64
