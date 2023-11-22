@@ -184,7 +184,8 @@ func toNginxConf(routerName string, router v1.Router) (string, string) {
 		buf.WriteString(route.TargetServiceName)
 		buf.WriteString(":")
 		buf.WriteString(strconv.Itoa(port))
-		buf.WriteString(";\n}\n")
+		buf.WriteString(";\n  proxy_set_header X-Forwarded-Host $http_host;")
+		buf.WriteString("\n}\n")
 		if route.PathType == v1.PathTypePrefix && !strings.HasSuffix(route.Path, "/") {
 			buf.WriteString("location ")
 			buf.WriteString(route.Path)
@@ -194,7 +195,8 @@ func toNginxConf(routerName string, router v1.Router) (string, string) {
 			buf.WriteString(route.TargetServiceName)
 			buf.WriteString(":")
 			buf.WriteString(strconv.Itoa(port))
-			buf.WriteString(";\n}\n")
+			buf.WriteString(";\n  proxy_set_header X-Forwarded-Host $http_host;")
+			buf.WriteString("\n}\n")
 		}
 		if route.PathType == v1.PathTypePrefix && route.Path == "/" {
 			buf.WriteString("location ")
@@ -204,7 +206,8 @@ func toNginxConf(routerName string, router v1.Router) (string, string) {
 			buf.WriteString(route.TargetServiceName)
 			buf.WriteString(":")
 			buf.WriteString(strconv.Itoa(port))
-			buf.WriteString(";\n}\n")
+			buf.WriteString(";\n  proxy_set_header X-Forwarded-Host $http_host;")
+			buf.WriteString("\n}\n")
 		}
 	}
 	buf.WriteString("}\n")
