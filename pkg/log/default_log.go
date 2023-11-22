@@ -59,6 +59,8 @@ func (d *DefaultLoggerImpl) AppStatus(ready bool, msg string, app *apiv1.App) {
 }
 
 func (d *DefaultLoggerImpl) Container(timeStamp metav1.Time, containerName, line string) {
+	d.lock.Lock()
+	defer d.lock.Unlock()
 	color, ok := d.containerColors[containerName]
 	if !ok {
 		color = nextColor()
