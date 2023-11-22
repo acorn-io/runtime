@@ -339,7 +339,7 @@ func (i *Interpolator) serviceProperty(svc *v1.ServiceInstance, prop string, ext
 		}
 		return "", &ErrInterpolation{
 			ExpressionError: v1.ExpressionError{
-				Error: fmt.Sprintf("endpoint on service [%s] undefined", svc.Name),
+				Error: fmt.Sprintf("endpoint on service [%s] undefined, check that at least one port as marked as published", svc.Name),
 			},
 		}
 	case "address", "host", "hostname":

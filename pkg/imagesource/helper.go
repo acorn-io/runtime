@@ -159,6 +159,12 @@ func (i ImageSource) ResolveImageAndFile() (string, string, error) {
 		if isDir {
 			if st, err := os.Stat(filepath.Join(i.Image, "Acorndir")); err == nil && st.IsDir() {
 				i.File = filepath.Join(i.Image, "Acorndir")
+			} else if st, err := os.Stat(filepath.Join(i.Image, "Acornfile.d")); err == nil && st.IsDir() {
+				if _, err := os.Stat("Acornfile"); err == nil {
+					i.File = filepath.Join(i.Image, "Acornfile")
+				} else {
+					i.File = filepath.Join(i.Image, "Acornfile.d")
+				}
 			} else {
 				i.File = filepath.Join(i.Image, "Acornfile")
 			}
