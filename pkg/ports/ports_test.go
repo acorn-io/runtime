@@ -132,11 +132,36 @@ func TestCollectPorts(t *testing.T) {
 				{TargetPort: 7070, Port: 7000, Hostname: "myapp3.local"},
 			},
 		},
+		{
+			name: "same target ports, same ports, different protocols",
+			ports: []v1.PortDef{
+				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolTCP},
+				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolUDP},
+				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolHTTP},
+			},
+			expected: []v1.PortDef{
+				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolTCP},
+				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolUDP},
+				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolHTTP},
+			},
+		},
+		{
+			name: "same target ports, same ports, same protocol twice",
+			ports: []v1.PortDef{
+				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolTCP},
+				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolHTTP},
+				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolTCP},
+			},
+			expected: []v1.PortDef{
+				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolTCP},
+				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolHTTP},
+			},
+		},
 	}
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			seen := map[int32][]int32{}
+			seen := map[int32][]v1.PortDef{}
 			seenHostname := map[string]struct{}{}
 			assert.Equal(t, tt.expected, collectPorts(seen, seenHostname, tt.ports, false))
 		})
