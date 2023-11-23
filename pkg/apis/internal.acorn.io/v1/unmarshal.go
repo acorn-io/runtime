@@ -1396,7 +1396,7 @@ func parseVolumeDefinition(anonName, s string) (VolumeBinding, error) {
 	if u.Scheme == "ephemeral" {
 		result.Class = u.Scheme
 		if result.Volume == "" {
-			result.Volume = anonName
+			result.Volume = strings.ReplaceAll(anonName, "/", "-") // While a path-style name is OK in runtime, it breaks as resource name in manager
 		}
 	}
 
