@@ -137,24 +137,24 @@ func TestCollectPorts(t *testing.T) {
 			ports: []v1.PortDef{
 				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolTCP},
 				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolUDP},
-				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolHTTP},
+				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolHTTP2},
 			},
 			expected: []v1.PortDef{
 				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolTCP},
 				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolUDP},
-				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolHTTP},
+				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolHTTP2},
 			},
 		},
 		{
 			name: "same target ports, same ports, same protocol twice",
 			ports: []v1.PortDef{
 				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolTCP},
-				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolHTTP},
+				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolUDP},
 				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolTCP},
 			},
 			expected: []v1.PortDef{
 				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolTCP},
-				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolHTTP},
+				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolUDP},
 			},
 		},
 	}
