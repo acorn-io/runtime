@@ -247,6 +247,7 @@ type Scheduling struct {
 	Affinity          *corev1.Affinity            `json:"affinity,omitempty"`
 	Tolerations       []corev1.Toleration         `json:"tolerations,omitempty"`
 	PriorityClassName string                      `json:"priorityClassName,omitempty"`
+	RuntimeClassName  string                      `json:"runtimeClassName,omitempty"`
 }
 
 type Endpoint struct {

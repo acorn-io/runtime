@@ -14,6 +14,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
 	networkingv1 "k8s.io/api/networking/v1"
+	nodev1 "k8s.io/api/node/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	schedulingv1 "k8s.io/api/scheduling/v1"
@@ -45,6 +46,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 	errs = append(errs, policyv1.AddToScheme(scheme))
 	errs = append(errs, batchv1.AddToScheme(scheme))
 	errs = append(errs, networkingv1.AddToScheme(scheme))
+	errs = append(errs, nodev1.AddToScheme(scheme))
 	errs = append(errs, storagev1.AddToScheme(scheme))
 	errs = append(errs, apiregistrationv1.AddToScheme(scheme))
 	errs = append(errs, rbacv1.AddToScheme(scheme))

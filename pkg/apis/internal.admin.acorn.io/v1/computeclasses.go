@@ -52,6 +52,7 @@ type ProjectComputeClassInstance struct {
 	Memory            ComputeClassMemory  `json:"memory,omitempty"`
 	SupportedRegions  []string            `json:"supportedRegions,omitempty"`
 	PriorityClassName string              `json:"priorityClassName,omitempty"`
+	RuntimeClassName  string              `json:"runtimeClassName,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
