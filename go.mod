@@ -4,7 +4,7 @@ go 1.21.0
 
 replace (
 	cuelang.org/go => cuelang.org/go v0.4.3
-	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20220121014307-40bb9831756f+incompatible
+	github.com/docker/docker => github.com/docker/docker v20.10.27+incompatible
 	github.com/rancher/wrangler => github.com/acorn-io/wrangler v0.0.0-20230619194218-746dc7cf6a0c
 	k8s.io/client-go => k8s.io/client-go v0.27.3
 )
