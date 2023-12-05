@@ -152,6 +152,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 			Spec: corev1.PodSpec{
 				Affinity:                      appInstance.Status.Scheduling[name].Affinity,
 				Tolerations:                   appInstance.Status.Scheduling[name].Tolerations,
+				RuntimeClassName:              stringOrNilPtr(appInstance.Status.Scheduling[name].RuntimeClassName),
 				TerminationGracePeriodSeconds: z.Pointer[int64](5),
 				ImagePullSecrets:              pullSecrets.ForContainer(name, append(containers, initContainers...)),
 				EnableServiceLinks:            new(bool),
