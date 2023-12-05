@@ -44,9 +44,9 @@ status:
     status: "True"
     success: true
     type: scheduling
-  defaults: {}
   namespace: app-created-namespace
   observedGeneration: 1
+  resolvedOfferings: {}
   scheduling:
     left:
       requirements:

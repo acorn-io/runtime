@@ -12,7 +12,6 @@ import (
 	"github.com/acorn-io/runtime/pkg/controller/appstatus"
 	"github.com/acorn-io/runtime/pkg/controller/builder"
 	"github.com/acorn-io/runtime/pkg/controller/config"
-	"github.com/acorn-io/runtime/pkg/controller/defaults"
 	"github.com/acorn-io/runtime/pkg/controller/devsession"
 	"github.com/acorn-io/runtime/pkg/controller/eventinstance"
 	"github.com/acorn-io/runtime/pkg/controller/gc"
@@ -24,6 +23,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/controller/permissions"
 	"github.com/acorn-io/runtime/pkg/controller/pvc"
 	"github.com/acorn-io/runtime/pkg/controller/quota"
+	"github.com/acorn-io/runtime/pkg/controller/resolvedofferings"
 	"github.com/acorn-io/runtime/pkg/controller/scheduling"
 	"github.com/acorn-io/runtime/pkg/controller/secrets"
 	"github.com/acorn-io/runtime/pkg/controller/service"
@@ -76,7 +76,7 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 
 	// DeploySpec will create the namespace, so ensure it runs before anything that requires a namespace
 	appHasNamespace := appRouter.Middleware(appdefinition.RequireNamespace, appdefinition.IgnoreTerminatingNamespace, appdefinition.FilterLabelsAndAnnotationsConfig)
-	appHasNamespace.HandlerFunc(defaults.Calculate)
+	appHasNamespace.HandlerFunc(resolvedofferings.Calculate)
 	appHasNamespace.HandlerFunc(scheduling.Calculate)
 	appHasNamespace.HandlerFunc(quota.EnsureQuotaRequest)
 	appHasNamespace.HandlerFunc(quota.WaitForAllocation)
@@ -106,10 +106,10 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 
 	router.Type(&v1.ImageInstance{}).HandlerFunc(images.MigrateRemoteImages)
 
-	router.Type(&v1.BuilderInstance{}).HandlerFunc(defaults.SetDefaultRegion)
+	router.Type(&v1.BuilderInstance{}).HandlerFunc(resolvedofferings.SetDefaultRegion)
 	router.Type(&v1.BuilderInstance{}).HandlerFunc(builder.DeployBuilder)
 
-	router.Type(&v1.AcornImageBuildInstance{}).HandlerFunc(defaults.SetDefaultRegion)
+	router.Type(&v1.AcornImageBuildInstance{}).HandlerFunc(resolvedofferings.SetDefaultRegion)
 	router.Type(&v1.AcornImageBuildInstance{}).HandlerFunc(acornimagebuildinstance.MarkRecorded)
 
 	router.Type(&v1.ServiceInstance{}).HandlerFunc(gc.GCOrphans)

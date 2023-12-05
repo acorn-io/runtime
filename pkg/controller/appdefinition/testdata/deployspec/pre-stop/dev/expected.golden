@@ -321,7 +321,6 @@ status:
     status: "True"
     success: true
     type: defined
-  defaults: {}
   devSession:
     client:
       imageSource: {}
@@ -329,6 +328,7 @@ status:
     sessionStartTime: null
     sessionTimeoutSeconds: 60
   namespace: app-created-namespace
+  resolvedOfferings: {}
   staged:
     appImage:
       buildContext: {}

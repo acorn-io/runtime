@@ -34,12 +34,13 @@ status:
       bar:
         class: test-custom-class-request
         size: 6Gi
-  defaults:
+  resolvedOfferings:
     volumes:
       foo:
-        class: test-custom-class-default
-        size: 2Gi
-        accessModes: [ "readWriteMany" ]
+        class: test-custom-class
+        size: 3Gi
+        accessModes: [ "readWriteOnce" ]
       bar:
-        class: test-custom-class-default
-        accessModes: [ "readWriteMany" ]
+        class: test-custom-class
+        size: 6Gi
+        accessModes: [ "readWriteOnce" ]

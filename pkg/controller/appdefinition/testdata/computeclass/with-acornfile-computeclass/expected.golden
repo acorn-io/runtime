@@ -55,6 +55,7 @@ spec:
   template:
     metadata:
       annotations:
+        acorn.io/container-resolved-offerings: '{"memory":0}'
         acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"class":"sample-compute-class","image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null,"sidecars":{"left":{"image":"foo","metrics":{},"ports":[{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}}}'
         karpenter.sh/do-not-evict: "true"
       creationTimestamp: null
@@ -222,7 +223,7 @@ status:
     reason: Success
     status: "True"
     success: true
-    type: defaults
+    type: resolved-offerings
     reason: Success
     status: "True"
     success: true
@@ -231,13 +232,16 @@ status:
     status: "True"
     success: true
     type: defined
-  defaults:
-    memory:
-      "": 0
-      left: 1048576
-      oneimage: 1048576
   namespace: app-created-namespace
   observedGeneration: 1
+  resolvedOfferings:
+    containers:
+      "":
+        memory: 0
+      left:
+        memory: 1048576
+      oneimage:
+        memory: 1048576
   scheduling:
     left:
       requirements:

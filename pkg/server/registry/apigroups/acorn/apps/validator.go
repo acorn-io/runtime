@@ -258,7 +258,7 @@ func (s *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object)
 		}
 	}
 
-	if newParams.Spec.Region != oldParams.Spec.Region && newParams.Spec.Region != oldParams.Status.Defaults.Region {
+	if newParams.Spec.Region != oldParams.Spec.Region && newParams.Spec.Region != oldParams.Status.ResolvedOfferings.Region {
 		result = append(result, field.Invalid(field.NewPath("spec", "region"), newParams.Spec.Region, "cannot change region"))
 		return result
 	}
@@ -710,7 +710,7 @@ func validateVolumeClasses(ctx context.Context, c kclient.Client, namespace stri
 
 	var volClass apiv1.VolumeClass
 	for volName, vol := range appSpec.Volumes {
-		calculatedVolumeRequest := volume.CopyVolumeDefaults(vol, volumeBindings[volName], v1.VolumeDefault{})
+		calculatedVolumeRequest := volume.ResolveVolumeRequest(vol, volumeBindings[volName], v1.VolumeResolvedOffering{})
 		if calculatedVolumeRequest.Class != "" {
 			volClass = volumeClasses[calculatedVolumeRequest.Class]
 		} else if defaultVolumeClass != nil {

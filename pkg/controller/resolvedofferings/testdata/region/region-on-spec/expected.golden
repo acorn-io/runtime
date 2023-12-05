@@ -1,0 +1,45 @@
+`apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  creationTimestamp: null
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+  region: my-region
+status:
+  appImage:
+    buildContext: {}
+    id: test
+    imageData: {}
+    vcs: {}
+  appSpec:
+    containers:
+      container-name:
+        image: image-name
+        metrics: {}
+        probes: null
+  appStatus: {}
+  columns: {}
+  conditions:
+    reason: Success
+    status: "True"
+    success: true
+    type: resolved-offerings
+  namespace: app-created-namespace
+  observedGeneration: 1
+  resolvedOfferings:
+    containers:
+      "":
+        memory: 0
+      container-name:
+        memory: 0
+    region: my-region
+  staged:
+    appImage:
+      buildContext: {}
+      imageData: {}
+      vcs: {}
+  summary: {}
+`

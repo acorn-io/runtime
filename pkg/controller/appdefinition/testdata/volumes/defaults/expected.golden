@@ -177,14 +177,14 @@ status:
     status: "True"
     success: true
     type: defined
-  defaults:
+  namespace: app-created-namespace
+  resolvedOfferings:
     volumes:
       foo:
         accessModes:
         - readWriteOnce
         class: test-custom-class
         size: 3Gi
-  namespace: app-created-namespace
   staged:
     appImage:
       buildContext: {}

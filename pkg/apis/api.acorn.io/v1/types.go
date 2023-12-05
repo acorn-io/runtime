@@ -23,10 +23,7 @@ func (in *App) GetStopped() bool {
 }
 
 func (in *App) GetRegion() string {
-	if in.Spec.Region != "" {
-		return in.Spec.Region
-	}
-	return in.Status.Defaults.Region
+	return in.Status.ResolvedOfferings.Region
 }
 
 type Acornfile v1.AppSpec

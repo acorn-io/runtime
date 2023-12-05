@@ -151,24 +151,30 @@ func getVolumeClassNames(volumeClasses map[string]adminv1.ProjectVolumeClassInst
 	return typed.SortedKeys(storageClassName)
 }
 
-func CopyVolumeDefaults(volumeRequest v1.VolumeRequest, volumeBinding v1.VolumeBinding, volumeDefaults v1.VolumeDefault) v1.VolumeRequest {
+func ResolveVolumeRequest(volumeRequest v1.VolumeRequest, volumeBinding v1.VolumeBinding, resolvedVolume v1.VolumeResolvedOffering) v1.VolumeRequest {
+	// Order of precedence:
+	// 1. VolumeResolvedOffering - the previously resolved values for Class, Size, and AccessModes
+	// 2. VolumeBinding - the values set by the user in the app spec
+	// 3. VolumeRequest - the defaults as defined in the acorn image
+
 	bind := volumeBinding.Volume != ""
-	if volumeBinding.Class != "" {
+
+	if !bind && resolvedVolume.Class != "" {
+		volumeRequest.Class = resolvedVolume.Class
+	} else if volumeBinding.Class != "" {
 		volumeRequest.Class = volumeBinding.Class
-	} else if !bind && volumeRequest.Class == "" {
-		volumeRequest.Class = volumeDefaults.Class
 	}
 
-	if volumeBinding.Size != "" {
+	if !bind && resolvedVolume.Size != "" {
+		volumeRequest.Size = resolvedVolume.Size
+	} else if volumeBinding.Size != "" {
 		volumeRequest.Size = volumeBinding.Size
-	} else if !bind && volumeRequest.Size == "" {
-		volumeRequest.Size = volumeDefaults.Size
 	}
 
-	if len(volumeBinding.AccessModes) != 0 {
+	if len(resolvedVolume.AccessModes) != 0 {
+		volumeRequest.AccessModes = resolvedVolume.AccessModes
+	} else if len(volumeBinding.AccessModes) != 0 {
 		volumeRequest.AccessModes = volumeBinding.AccessModes
-	} else if len(volumeRequest.AccessModes) == 0 {
-		volumeRequest.AccessModes = volumeDefaults.AccessModes
 	}
 
 	return volumeRequest

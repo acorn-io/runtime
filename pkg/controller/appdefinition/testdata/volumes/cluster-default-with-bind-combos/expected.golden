@@ -140,7 +140,7 @@ metadata:
   namespace: app-created-namespace
 spec:
   accessModes:
-  - ReadWriteMany
+  - ReadWriteOnce
   resources:
     requests:
       storage: 6Gi
@@ -225,18 +225,19 @@ status:
     status: "True"
     success: true
     type: defined
-  defaults:
+  namespace: app-created-namespace
+  resolvedOfferings:
     volumes:
       bar:
         accessModes:
-        - readWriteMany
-        class: test-custom-class-default
+        - readWriteOnce
+        class: test-custom-class
+        size: 6Gi
       foo:
         accessModes:
-        - readWriteMany
-        class: test-custom-class-default
-        size: 2Gi
-  namespace: app-created-namespace
+        - readWriteOnce
+        class: test-custom-class
+        size: 3Gi
   staged:
     appImage:
       buildContext: {}

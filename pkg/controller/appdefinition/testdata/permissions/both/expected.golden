@@ -615,7 +615,6 @@ status:
     status: "True"
     success: true
     type: defined
-  defaults: {}
   namespace: app-created-namespace
   permissions:
   - rules:
@@ -650,6 +649,7 @@ status:
       verbs:
       - patch
     serviceName: twoimage
+  resolvedOfferings: {}
   staged:
     appImage:
       buildContext: {}

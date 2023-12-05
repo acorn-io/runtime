@@ -8,14 +8,17 @@ spec:
   image: test
   memory:
     "": 1048576 # 1Mi
-    oneimage:  2097152 # 2Mi
+    oneimage: 2097152 # 2Mi
 status:
   observedGeneration: 1
-  defaults:
-    memory:
-      "": 0
-      left: 0
-      oneimage: 0
+  resolvedOfferings:
+    containers:
+      "":
+        memory: 1048576
+      left:
+        memory: 2097152
+      oneimage:
+        memory: 2097152
   scheduling:
     oneimage:
       requirements:
@@ -55,7 +58,7 @@ status:
       reason: Success
       status: "True"
       success: true
-    - type: defaults
+    - type: resolved-offerings
       reason: Success
       status: "True"
       success: true

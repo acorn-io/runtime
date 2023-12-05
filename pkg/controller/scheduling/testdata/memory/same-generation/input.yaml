@@ -9,11 +9,14 @@ spec:
   memory:
     oneimage: 1048576 # 1Mi
 status:
-  defaults:
-    memory:
-      "": 0
-      left: 0
-      oneimage: 0
+  resolvedOfferings:
+    containers:
+      "":
+        memory: 0
+      left:
+        memory: 1048576
+      oneimage:
+        memory: 1048576
   # In this test, scheduling has already been set and should not get recalculated
   # since the generation is the same.
   scheduling:
