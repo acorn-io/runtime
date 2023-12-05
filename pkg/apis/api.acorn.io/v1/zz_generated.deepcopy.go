@@ -573,6 +573,11 @@ func (in *Config) DeepCopyInto(out *Config) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.AutoConfigureKarpenterDontEvictAnnotations != nil {
+		in, out := &in.AutoConfigureKarpenterDontEvictAnnotations, &out.AutoConfigureKarpenterDontEvictAnnotations
+		*out = new(bool)
+		**out = **in
+	}
 	if in.ControllerMemory != nil {
 		in, out := &in.ControllerMemory, &out.ControllerMemory
 		*out = new(string)
