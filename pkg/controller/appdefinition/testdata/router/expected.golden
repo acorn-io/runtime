@@ -66,7 +66,7 @@ spec:
         operator: Exists
       volumes:
       - configMap:
-          name: router-name-e9cec3df
+          name: router-name-30019cec
         name: conf
 status: {}
 
@@ -77,22 +77,25 @@ data:
     server {
     listen 8080;
     location = /foo {
-      proxy_pass http://foo-target:80;
+      set $backend_servers foo-target.app-created-namespace.svc.cluster.local;
+      proxy_pass http://$backend_servers:80;
       proxy_set_header X-Forwarded-Host $http_host;
     }
     location = /zzzz {
-      proxy_pass http://zzz-target:80;
+      set $backend_servers zzz-target.app-created-namespace.svc.cluster.local;
+      proxy_pass http://$backend_servers:80;
       proxy_set_header X-Forwarded-Host $http_host;
     }
     location /zzzz/ {
-      proxy_pass http://zzz-target:80;
+      set $backend_servers zzz-target.app-created-namespace.svc.cluster.local;
+      proxy_pass http://$backend_servers:80;
       proxy_set_header X-Forwarded-Host $http_host;
     }
     }
 kind: ConfigMap
 metadata:
   creationTimestamp: null
-  name: router-name-e9cec3df
+  name: router-name-30019cec
   namespace: app-created-namespace
 
 ---
