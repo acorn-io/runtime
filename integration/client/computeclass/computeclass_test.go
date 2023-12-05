@@ -30,6 +30,7 @@ func TestCreatingComputeClasses(t *testing.T) {
 		memory            adminv1.ComputeClassMemory
 		cpuScaler         float64
 		priorityClassName string
+		runtimeClassName  string
 		fail              bool
 	}{
 		{
@@ -57,6 +58,11 @@ func TestCreatingComputeClasses(t *testing.T) {
 			name:              "valid-only-priority-class",
 			priorityClassName: "system-cluster-critical",
 			fail:              false,
+		},
+		{
+			name:             "valid-only-runtime-class",
+			runtimeClassName: "alt-runtime",
+			fail:             false,
 		},
 		{
 			name:      "valid-values",
@@ -151,6 +157,7 @@ func TestCreatingComputeClasses(t *testing.T) {
 				CPUScaler:         tt.cpuScaler,
 				Memory:            tt.memory,
 				PriorityClassName: tt.priorityClassName,
+				RuntimeClassName:  tt.runtimeClassName,
 			}
 
 			// TODO - dry run
