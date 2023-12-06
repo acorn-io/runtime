@@ -10,6 +10,7 @@ import (
 	tl "github.com/acorn-io/runtime/pkg/tolerations"
 	"github.com/acorn-io/z"
 	corev1 "k8s.io/api/core/v1"
+	nodev1 "k8s.io/api/node/v1"
 	schedulingv1 "k8s.io/api/scheduling/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
@@ -78,7 +79,12 @@ func addScheduling(req router.Request, appInstance *v1.AppInstance, workloads ma
 
 		affinity, tolerations = Nodes(req, computeClass)
 
-		priorityClassName, err := PriorityClassName(req, computeClass)
+		priorityClassName, err := priorityClassName(req, computeClass)
+		if err != nil {
+			return err
+		}
+
+		runtimeClassName, err := runtimeClassName(req, computeClass)
 		if err != nil {
 			return err
 		}
@@ -97,6 +103,7 @@ func addScheduling(req router.Request, appInstance *v1.AppInstance, workloads ma
 			Affinity:          affinity,
 			Tolerations:       tolerations,
 			PriorityClassName: priorityClassName,
+			RuntimeClassName:  runtimeClassName,
 		}
 	}
 	return nil
@@ -111,7 +118,7 @@ func Nodes(req router.Request, computeClass *adminv1.ProjectComputeClassInstance
 }
 
 // PriorityClassName checks that a defined PriorityClass exists and returns the name of it
-func PriorityClassName(req router.Request, computeClass *adminv1.ProjectComputeClassInstance) (string, error) {
+func priorityClassName(req router.Request, computeClass *adminv1.ProjectComputeClassInstance) (string, error) {
 	if computeClass == nil || computeClass.PriorityClassName == "" {
 		return "", nil
 	}
@@ -123,6 +130,21 @@ func PriorityClassName(req router.Request, computeClass *adminv1.ProjectComputeC
 	}
 
 	return computeClass.PriorityClassName, nil
+}
+
+// RuntimeClassName checks that a defined RuntimeClass exists and returns the name of it
+func runtimeClassName(req router.Request, computeClass *adminv1.ProjectComputeClassInstance) (string, error) {
+	if computeClass == nil || computeClass.RuntimeClassName == "" {
+		return "", nil
+	}
+
+	// Verify that the RuntimeClass exists
+	runtimeClassName := &nodev1.RuntimeClass{}
+	if err := req.Client.Get(req.Ctx, router.Key("", computeClass.RuntimeClassName), runtimeClassName); err != nil {
+		return "", err
+	}
+
+	return computeClass.RuntimeClassName, nil
 }
 
 // ResourceRequirements determines the cpu and memory amount to be set for the limits/requests of the Pod

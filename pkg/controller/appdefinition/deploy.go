@@ -778,6 +778,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 					Affinity:                      appInstance.Status.Scheduling[name].Affinity,
 					Tolerations:                   appInstance.Status.Scheduling[name].Tolerations,
 					PriorityClassName:             appInstance.Status.Scheduling[name].PriorityClassName,
+					RuntimeClassName:              stringOrNilPtr(appInstance.Status.Scheduling[name].RuntimeClassName),
 					TerminationGracePeriodSeconds: z.Pointer[int64](10),
 					ImagePullSecrets:              pullSecrets.ForContainer(name, append(containers, initContainers...)),
 					EnableServiceLinks:            new(bool),
@@ -872,4 +873,11 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 	}
 
 	return result, nil
+}
+
+func stringOrNilPtr(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
 }
