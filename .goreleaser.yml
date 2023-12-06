@@ -125,6 +125,7 @@ dockers:
       - scripts/ds-containerd-config-path-entry
       - scripts/setup-binfmt
       - scripts/acorn-busybox-init
+      - scripts/40-copy-resolv-nameserver.sh
   - use: buildx
     goos: linux
     goarch: arm64
@@ -148,6 +149,7 @@ dockers:
       - scripts/ds-containerd-config-path-entry
       - scripts/setup-binfmt
       - scripts/acorn-busybox-init
+      - scripts/40-copy-resolv-nameserver.sh
 
 docker_manifests:
   - use: docker
