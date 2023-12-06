@@ -1,6 +1,7 @@
 package appdefinition
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"strconv"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/pdb"
 	"github.com/acorn-io/runtime/pkg/ports"
@@ -23,9 +25,14 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func toRouters(appInstance *v1.AppInstance) (result []kclient.Object, _ error) {
+func toRouters(ctx context.Context, c kclient.Client, appInstance *v1.AppInstance) (result []kclient.Object, _ error) {
+	cfg, err := config.Get(ctx, c)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Routers) {
-		routerObjects, err := toRouter(appInstance, entry.Key, entry.Value)
+		routerObjects, err := toRouter(appInstance, entry.Key, entry.Value, cfg.InternalClusterDomain)
 		if err != nil {
 			return nil, err
 		}
@@ -34,12 +41,12 @@ func toRouters(appInstance *v1.AppInstance) (result []kclient.Object, _ error) {
 	return result, nil
 }
 
-func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router) (result []kclient.Object, _ error) {
+func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router, internalClusterDomain string) (result []kclient.Object, _ error) {
 	if ports.IsLinked(appInstance, routerName) || len(router.Routes) == 0 {
 		return nil, nil
 	}
 
-	conf, confName := toNginxConf(routerName, router)
+	conf, confName := toNginxConf(internalClusterDomain, appInstance.Status.Namespace, routerName, router)
 
 	podLabels := routerLabels(appInstance, router, routerName, labels.AcornAppPublicName, publicname.Get(appInstance))
 	deploymentLabels := routerLabels(appInstance, router, routerName)
@@ -165,7 +172,7 @@ func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router) 
 	}, nil
 }
 
-func toNginxConf(routerName string, router v1.Router) (string, string) {
+func toNginxConf(internalClusterDomain, namespace, routerName string, router v1.Router) (string, string) {
 	buf := &strings.Builder{}
 	buf.WriteString("server {\nlisten 8080;\n")
 	for _, route := range router.Routes {
@@ -179,32 +186,38 @@ func toNginxConf(routerName string, router v1.Router) (string, string) {
 		buf.WriteString("location ")
 		buf.WriteString("= ")
 		buf.WriteString(route.Path)
-		buf.WriteString(" {\n  proxy_pass ")
-		buf.WriteString("http://")
+		buf.WriteString(" {\n  set $backend_servers ")
 		buf.WriteString(route.TargetServiceName)
-		buf.WriteString(":")
+		buf.WriteString(".")
+		buf.WriteString(namespace)
+		buf.WriteString(".")
+		buf.WriteString(internalClusterDomain)
+		buf.WriteString(";\n  proxy_pass http://$backend_servers:")
 		buf.WriteString(strconv.Itoa(port))
 		buf.WriteString(";\n  proxy_set_header X-Forwarded-Host $http_host;")
 		buf.WriteString("\n}\n")
 		if route.PathType == v1.PathTypePrefix && !strings.HasSuffix(route.Path, "/") {
 			buf.WriteString("location ")
 			buf.WriteString(route.Path)
-			buf.WriteString("/")
-			buf.WriteString(" {\n  proxy_pass ")
-			buf.WriteString("http://")
+			buf.WriteString("/ {\n  set $backend_servers ")
 			buf.WriteString(route.TargetServiceName)
-			buf.WriteString(":")
+			buf.WriteString(".")
+			buf.WriteString(namespace)
+			buf.WriteString(".")
+			buf.WriteString(internalClusterDomain)
+			buf.WriteString(";\n  proxy_pass http://$backend_servers:")
 			buf.WriteString(strconv.Itoa(port))
 			buf.WriteString(";\n  proxy_set_header X-Forwarded-Host $http_host;")
 			buf.WriteString("\n}\n")
 		}
 		if route.PathType == v1.PathTypePrefix && route.Path == "/" {
-			buf.WriteString("location ")
-			buf.WriteString("/")
-			buf.WriteString(" {\n  proxy_pass ")
-			buf.WriteString("http://")
+			buf.WriteString("location / {\n  set $backend_servers ")
 			buf.WriteString(route.TargetServiceName)
-			buf.WriteString(":")
+			buf.WriteString(".")
+			buf.WriteString(namespace)
+			buf.WriteString(".")
+			buf.WriteString(internalClusterDomain)
+			buf.WriteString(";\n  proxy_pass http://$backend_servers:")
 			buf.WriteString(strconv.Itoa(port))
 			buf.WriteString(";\n  proxy_set_header X-Forwarded-Host $http_host;")
 			buf.WriteString("\n}\n")

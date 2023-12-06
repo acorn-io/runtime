@@ -38,6 +38,7 @@ COPY --from=registry /bin/registry /usr/local/bin
 COPY --from=klipper-lb /usr/bin/entry /usr/local/bin/klipper-lb
 COPY ./scripts/ds-containerd-config-path-entry /usr/local/bin
 COPY ./scripts/setup-binfmt /usr/local/bin
+COPY ./scripts/40-copy-resolv-nameserver.sh /docker-entrypoint.d/
 COPY --from=helper /usr/local/bin/acorn-helper /usr/local/bin/
 COPY --from=loglevel /usr/local/bin/loglevel /usr/local/bin/
 VOLUME /var/lib/buildkit

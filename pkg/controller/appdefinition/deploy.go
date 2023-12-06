@@ -98,7 +98,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 	} else if len(objs) > 0 {
 		result = append(result, objs...)
 	}
-	if objs, err := toRouters(appInstance); err != nil {
+	if objs, err := toRouters(req.Ctx, req.Client, appInstance); err != nil {
 		return err
 	} else {
 		result = append(result, objs...)
