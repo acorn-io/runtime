@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 
 	"cuelang.org/go/cue/errors"
@@ -1380,8 +1381,8 @@ volumes: {
 	assert.Equal(t, v1.AccessModes{"readWriteMany", "readWriteOnce"}, appSpec.Volumes["uri"].AccessModes)
 	assert.Equal(t, v1.Quantity(""), appSpec.Volumes["uri-sub"].Size)
 	assert.Nil(t, appSpec.Volumes["uri-sub"].AccessModes)
-	assert.Equal(t, "ephemeral", appSpec.Volumes["s/left/var/anon-ephemeral-vol"].Class)
-	assert.Equal(t, "ephemeral", appSpec.Volumes["s/left/var/anon-ephemeral2-vol"].Class)
+	assert.Equal(t, "ephemeral", appSpec.Volumes["s-left-var-anon-ephemeral-vol"].Class)
+	assert.Equal(t, "ephemeral", appSpec.Volumes["s-left-var-anon-ephemeral2-vol"].Class)
 	assert.Equal(t, "ephemeral", appSpec.Volumes["eph"].Class)
 	assert.Len(t, typed.SortedKeys(appSpec.Volumes), 11)
 
@@ -1396,9 +1397,9 @@ volumes: {
 	assert.Equal(t, "", sidecar.Dirs["/var/uri-vol"].SubPath)
 	assert.Equal(t, "uri-sub", sidecar.Dirs["/var/uri-sub-vol"].Volume)
 	assert.Equal(t, "sub", sidecar.Dirs["/var/uri-sub-vol"].SubPath)
-	assert.Equal(t, filepath.Join("s", "left", "var", "anon-ephemeral-vol"), sidecar.Dirs["/var/anon-ephemeral-vol"].Volume)
+	assert.Equal(t, strings.ReplaceAll(filepath.Join("s", "left", "var", "anon-ephemeral-vol"), "/", "-"), sidecar.Dirs["/var/anon-ephemeral-vol"].Volume)
 	assert.Equal(t, "", sidecar.Dirs["/var/anon-ephemeral-vol"].SubPath)
-	assert.Equal(t, filepath.Join("s", "left", "var", "anon-ephemeral2-vol"), sidecar.Dirs["/var/anon-ephemeral2-vol"].Volume)
+	assert.Equal(t, strings.ReplaceAll(filepath.Join("s", "left", "var", "anon-ephemeral2-vol"), "/", "-"), sidecar.Dirs["/var/anon-ephemeral2-vol"].Volume)
 	assert.Equal(t, "", sidecar.Dirs["/var/anon-ephemeral2-vol"].SubPath)
 	assert.Equal(t, "eph", sidecar.Dirs["/var/named-ephemeral-vol"].Volume)
 	assert.Equal(t, "", sidecar.Dirs["/var/named-ephemeral-vol"].SubPath)
