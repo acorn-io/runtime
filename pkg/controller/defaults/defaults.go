@@ -30,12 +30,6 @@ func Calculate(req router.Request, resp router.Response) (err error) {
 		}
 	}()
 
-	// addVolumeClassDefaults should run everytime as the function itself will not overwrite any existing
-	// defaults. Effectively, this means that volume defaults only get set if they have not been set before.
-	if err = addVolumeClassDefaults(req.Ctx, req.Client, appInstance); err != nil {
-		return err
-	}
-
 	if appInstance.Generation != appInstance.Status.ObservedGeneration {
 		if err = calculate(req, appInstance); err != nil {
 			return err
@@ -52,6 +46,10 @@ func calculate(req router.Request, appInstance *internalv1.AppInstance) error {
 	}
 
 	if err = AddDefaultRegion(req.Ctx, req.Client, appInstance); err != nil {
+		return err
+	}
+
+	if err = addVolumeClassDefaults(req.Ctx, req.Client, appInstance); err != nil {
 		return err
 	}
 

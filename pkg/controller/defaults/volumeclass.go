@@ -37,38 +37,28 @@ func addVolumeClassDefaults(ctx context.Context, c kclient.Client, app *v1.AppIn
 	})
 
 	for name, vol := range app.Status.AppSpec.Volumes {
+		if _, alreadySet := app.Status.Defaults.Volumes[name]; alreadySet {
+			continue
+		}
+
 		volDefaults := app.Status.Defaults.Volumes[name]
 		vol = volume.CopyVolumeDefaults(vol, volumeBindings[name], volDefaults)
 
-		// This is a bit of a hack as we're migrating away from the VolumeSize field. Essentially,
-		// we want to ensure that app.Status.Volumes[name] always has a size set. If the VolumeSize
-		// field has been set in the past, we want to mirgrate that over to be set on app.Status.Volumes[name].
-		// There is another edge case where the Size field was set by a VolumeClass's default size. In this
-		// case we want to leave the Size field alone.
-		if app.Status.Defaults.VolumeSize != nil && volDefaults.Size == "" {
-			volDefaults.Size = v1.Quantity(app.Status.Defaults.VolumeSize.String())
+		if vol.Class == "" && defaultVolumeClass != nil {
+			volDefaults.Class = defaultVolumeClass.Name
+			vol.Class = volDefaults.Class
 		}
-
-		// If the Volume already has defaults, skip these steps. We don't want to overwrite
-		// default class or access modes for volumes as it can lead to unexpected behavior when
-		// volume classes are updated.
-		if _, alreadySet := app.Status.Defaults.Volumes[name]; !alreadySet {
-			if vol.Class == "" && defaultVolumeClass != nil {
-				volDefaults.Class = defaultVolumeClass.Name
-				vol.Class = volDefaults.Class
-			}
-			if len(vol.AccessModes) == 0 {
-				volDefaults.AccessModes = volumeClasses[vol.Class].AllowedAccessModes
-			}
-			if vol.Size == "" {
-				volDefaults.Size = volumeClasses[vol.Class].Size.Default
-				if volDefaults.Size == "" {
-					defaultSize, err := getDefaultVolumeSize(ctx, c)
-					if err != nil {
-						return err
-					}
-					volDefaults.Size = defaultSize
+		if len(vol.AccessModes) == 0 {
+			volDefaults.AccessModes = volumeClasses[vol.Class].AllowedAccessModes
+		}
+		if vol.Size == "" {
+			volDefaults.Size = volumeClasses[vol.Class].Size.Default
+			if volDefaults.Size == "" {
+				defaultSize, err := getDefaultVolumeSize(ctx, c)
+				if err != nil {
+					return err
 				}
+				volDefaults.Size = defaultSize
 			}
 		}
 

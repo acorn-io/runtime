@@ -8641,11 +8641,6 @@ func schema_pkg_apis_internalacornio_v1_Defaults(ref common.ReferenceCallback) c
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
-					"volumeSize": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
-						},
-					},
 					"volumes": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
@@ -8684,7 +8679,7 @@ func schema_pkg_apis_internalacornio_v1_Defaults(ref common.ReferenceCallback) c
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeDefault", "k8s.io/apimachinery/pkg/api/resource.Quantity"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeDefault"},
 	}
 }
 
