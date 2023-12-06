@@ -216,12 +216,6 @@ func collectPorts(seen map[int32][]v1.PortDef, seenHostnames map[string]struct{}
 			port.Port = port.TargetPort
 		}
 
-		protocolMatch := func(a, b v1.Protocol) bool {
-			return a == b ||
-				(a == v1.ProtocolHTTP && b == v1.ProtocolTCP) ||
-				(a == v1.ProtocolTCP && b == v1.ProtocolHTTP)
-		}
-
 		if seenPortDefs, ok := seen[port.Port]; ok {
 			discard := false
 			for _, p := range seenPortDefs {
@@ -230,8 +224,10 @@ func collectPorts(seen map[int32][]v1.PortDef, seenHostnames map[string]struct{}
 						// OK: Same port and target port (and potentially protocol) but different hostnames, so keep both
 						break
 					}
-					if protocolMatch(port.Protocol, p.Protocol) {
-						// NOT OK: Same port, target port, and protocol
+					if !(port.Protocol == v1.ProtocolUDP && p.Protocol != v1.ProtocolUDP ||
+						port.Protocol != v1.ProtocolUDP && p.Protocol == v1.ProtocolUDP) {
+						// NOT OK: Same port, target port, and protocol (variants of TCP are considered the same, i.e. TCP/HTTP/HTTP2)
+						// The only case that's OK is if one is UDP and the other is not (some variant of TCP)
 						discard = true
 						break
 					}
