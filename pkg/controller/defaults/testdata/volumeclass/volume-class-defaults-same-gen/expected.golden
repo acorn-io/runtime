@@ -30,10 +30,12 @@ status:
   appStatus: {}
   columns: {}
   conditions:
+  - error: true
+    message: 'cannot establish defaults because two defaults volume classes exist:
+      test-volume-class and test-volume-class-1'
     observedGeneration: 1
-    reason: Success
-    status: "True"
-    success: true
+    reason: Error
+    status: "False"
     type: defaults
   defaults: {}
   namespace: app-created-namespace
