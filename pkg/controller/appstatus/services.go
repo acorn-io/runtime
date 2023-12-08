@@ -2,7 +2,6 @@ package appstatus
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	name2 "github.com/acorn-io/baaah/pkg/name"
@@ -81,9 +80,7 @@ func (a *appStatusRenderer) readServices() error {
 			return err
 		} else {
 			s.Defined = s.Defined || !service.Status.HasService
-			s.UpToDate = service.Namespace != a.app.Status.Namespace ||
-				service.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
-			s.UpToDate = s.Defined && s.UpToDate && (s.ServiceAcornReady || s.LinkOverride != "" || serviceDef.External != "" || service.Annotations[labels.AcornConfigHashAnnotation] == hash)
+			s.UpToDate = s.Defined && (service.Namespace != a.app.Status.Namespace || s.ServiceAcornReady || s.LinkOverride != "" || serviceDef.External != "" || service.Annotations[labels.AcornConfigHashAnnotation] == hash)
 			s.Ready = (s.Ready || !service.Status.HasService) && s.UpToDate
 			if s.ServiceAcornName != "" {
 				s.Ready = s.Ready && s.ServiceAcornReady

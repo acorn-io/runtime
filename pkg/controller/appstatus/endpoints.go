@@ -204,7 +204,7 @@ func (a *appStatusRenderer) readEndpoints() error {
 	return nil
 }
 
-func ingressTLSHosts(ctx context.Context, client kclient.Client, app *v1.AppInstance) (map[string]interface{}, error) {
+func ingressTLSHosts(ctx context.Context, client kclient.Client, app *v1.AppInstance) (map[string]struct{}, error) {
 	ingresses := &networkingv1.IngressList{}
 	err := client.List(ctx, ingresses, &kclient.ListOptions{
 		Namespace: app.Status.Namespace,
@@ -217,12 +217,12 @@ func ingressTLSHosts(ctx context.Context, client kclient.Client, app *v1.AppInst
 		return nil, err
 	}
 
-	ingressTLSHosts := map[string]interface{}{}
+	ingressTLSHosts := map[string]struct{}{}
 	for _, ingress := range ingresses.Items {
 		if ingress.Spec.TLS != nil {
 			for _, tls := range ingress.Spec.TLS {
 				for _, host := range tls.Hosts {
-					ingressTLSHosts[host] = nil
+					ingressTLSHosts[host] = struct{}{}
 				}
 			}
 		}

@@ -286,7 +286,6 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 		}
 
 		ingress := &networkingv1.Ingress{
-			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      name.SafeConcatName(svc.Name, rules.name),
 				Namespace: svc.Namespace,
