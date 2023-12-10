@@ -157,9 +157,9 @@ func ResourceRequirements(req router.Request, app *v1.AppInstance, containerName
 	requirements := &corev1.ResourceRequirements{Limits: corev1.ResourceList{}, Requests: corev1.ResourceList{}}
 
 	var memDefault *int64
-	if val, ok := app.Status.ResolvedOfferings.Containers[containerName]; ok && val.Memory != nil {
+	if val := app.Status.ResolvedOfferings.Containers[containerName]; val.Memory != nil {
 		memDefault = val.Memory
-	} else if val, ok := app.Status.ResolvedOfferings.Containers[""]; ok && val.Memory != nil {
+	} else if val := app.Status.ResolvedOfferings.Containers[""]; val.Memory != nil {
 		memDefault = val.Memory
 	}
 

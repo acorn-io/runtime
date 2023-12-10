@@ -597,13 +597,21 @@ func containerAnnotation(container v1.Container) string {
 	return string(json)
 }
 
-func resolvedOfferingsAnnotation(appInstance *v1.AppInstance, container v1.Container) string {
+func resolvedOfferingsAnnotation(appInstance *v1.AppInstance, container v1.Container) (string, error) {
 	if resolved, exists := appInstance.Status.ResolvedOfferings.Containers[container.Name]; exists {
-		data, _ := convert.EncodeToMap(resolved)
-		j, _ := json.Marshal(data)
-		return string(j)
+		data, err := convert.EncodeToMap(resolved)
+		if err != nil {
+			return "", err
+		}
+
+		j, err := json.Marshal(data)
+		if err != nil {
+			return "", err
+		}
+
+		return string(j), nil
 	}
-	return ""
+	return "", nil
 }
 
 func podAnnotations(appInstance *v1.AppInstance, container v1.Container) map[string]string {
@@ -612,7 +620,8 @@ func podAnnotations(appInstance *v1.AppInstance, container v1.Container) map[str
 	}
 	addPrometheusAnnotations(annotations, container)
 
-	if offerings := resolvedOfferingsAnnotation(appInstance, container); offerings != "" {
+	offerings, err := resolvedOfferingsAnnotation(appInstance, container)
+	if err == nil && offerings != "" {
 		annotations[labels.AcornContainerResolvedOfferings] = offerings
 	}
 

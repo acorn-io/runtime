@@ -153,8 +153,8 @@ func getVolumeClassNames(volumeClasses map[string]adminv1.ProjectVolumeClassInst
 
 func ResolveVolumeRequest(volumeRequest v1.VolumeRequest, volumeBinding v1.VolumeBinding, resolvedVolume v1.VolumeResolvedOffering) v1.VolumeRequest {
 	// Order of precedence:
-	// 1. VolumeResolvedOffering - the previously resolved values for Class, Size, and AccessModes
-	// 2. VolumeBinding - the values set by the user in the app spec
+	// 1. VolumeBinding - the values set by the user in the app spec
+	// 2. VolumeResolvedOffering - the previously resolved values for Class, Size, and AccessModes
 	// 3. VolumeRequest - the defaults as defined in the acorn image
 
 	bind := volumeBinding.Volume != ""
@@ -171,7 +171,7 @@ func ResolveVolumeRequest(volumeRequest v1.VolumeRequest, volumeBinding v1.Volum
 		volumeRequest.Size = volumeBinding.Size
 	}
 
-	if len(resolvedVolume.AccessModes) != 0 {
+	if !bind && len(resolvedVolume.AccessModes) != 0 {
 		volumeRequest.AccessModes = resolvedVolume.AccessModes
 	} else if len(volumeBinding.AccessModes) != 0 {
 		volumeRequest.AccessModes = volumeBinding.AccessModes

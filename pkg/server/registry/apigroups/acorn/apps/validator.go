@@ -258,7 +258,7 @@ func (s *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object)
 		}
 	}
 
-	if newParams.Spec.Region != oldParams.Spec.Region && newParams.Spec.Region != oldParams.Status.ResolvedOfferings.Region {
+	if newParams.Spec.Region != "" && newParams.Spec.Region != oldParams.Status.ResolvedOfferings.Region {
 		result = append(result, field.Invalid(field.NewPath("spec", "region"), newParams.Spec.Region, "cannot change region"))
 		return result
 	}

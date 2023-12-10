@@ -63,7 +63,13 @@ func (in *AppInstance) GetRegion() string {
 }
 
 func (in *AppInstance) SetDefaultRegion(region string) {
-	in.Status.ResolvedOfferings.Region = region
+	if in.Status.ResolvedOfferings.Region == "" {
+		if in.Spec.Region != "" && in.Status.ResolvedOfferings.Region == "" {
+			in.Status.ResolvedOfferings.Region = in.Spec.Region
+		} else {
+			in.Status.ResolvedOfferings.Region = region
+		}
+	}
 }
 
 func (in *AppInstance) ShortID() string {
