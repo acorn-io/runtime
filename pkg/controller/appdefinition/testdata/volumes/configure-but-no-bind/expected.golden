@@ -129,7 +129,7 @@ metadata:
     acorn.io/app-namespace: app-namespace
     acorn.io/managed: "true"
     acorn.io/public-name: app-name.foo
-    acorn.io/volume-class: cli-class
+    acorn.io/volume-class: ""
     acorn.io/volume-name: foo
   name: foo
   namespace: app-created-namespace
@@ -138,8 +138,8 @@ spec:
   - ReadWriteOnce
   resources:
     requests:
-      storage: 20G
-  storageClassName: cli-class
+      storage: 10G
+  storageClassName: ""
 status: {}
 
 ---

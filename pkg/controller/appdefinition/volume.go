@@ -112,7 +112,7 @@ func LookupExistingPV(req router.Request, appInstance *v1.AppInstance, volumeNam
 }
 
 func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.Object, err error) {
-	volumeClasses, _, err := volume.GetVolumeClassInstances(req.Ctx, req.Client, appInstance.Namespace)
+	volumeClasses, defaultVolumeClass, err := volume.GetVolumeClassInstances(req.Ctx, req.Client, appInstance.Namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,10 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 			continue
 		}
 
-		volumeRequest = volume.ResolveVolumeRequest(volumeRequest, volumeBinding, appInstance.Status.ResolvedOfferings.Volumes[vol])
+		volumeRequest, err = volume.ResolveVolumeRequest(req.Ctx, req.Client, appInstance.Namespace, volumeRequest, volumeBinding, volumeClasses, defaultVolumeClass)
+		if err != nil {
+			return nil, err
+		}
 
 		pvc := corev1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{

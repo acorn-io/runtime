@@ -151,33 +151,49 @@ func getVolumeClassNames(volumeClasses map[string]adminv1.ProjectVolumeClassInst
 	return typed.SortedKeys(storageClassName)
 }
 
-func ResolveVolumeRequest(volumeRequest v1.VolumeRequest, volumeBinding v1.VolumeBinding, resolvedVolume v1.VolumeResolvedOffering) v1.VolumeRequest {
-	// Order of precedence:
-	// 1. VolumeBinding - the values set by the user in the app spec
-	// 2. VolumeResolvedOffering - the previously resolved values for Class, Size, and AccessModes
-	// 3. VolumeRequest - the defaults as defined in the acorn image
+func ResolveVolumeRequest(ctx context.Context, c client.Client, namespace string,
+	volumeRequest v1.VolumeRequest, volumeBinding v1.VolumeBinding,
+	volumeClasses map[string]adminv1.ProjectVolumeClassInstance, defaultVolumeClass *adminv1.ProjectVolumeClassInstance) (v1.VolumeRequest, error) {
 
-	bind := volumeBinding.Volume != ""
+	if volumeBinding.Volume != "" {
+		return volumeRequest, nil
+	}
 
-	if !bind && resolvedVolume.Class != "" {
-		volumeRequest.Class = resolvedVolume.Class
+	trueVolumeClass := defaultVolumeClass.DeepCopy()
+
+	if volumeRequest.Class != "" {
+		vc := volumeClasses[volumeRequest.Class]
+		trueVolumeClass = &vc
 	} else if volumeBinding.Class != "" {
-		volumeRequest.Class = volumeBinding.Class
+		vc := volumeClasses[volumeBinding.Class]
+		trueVolumeClass = &vc
+	} else if defaultVolumeClass != nil {
+		volumeRequest.Class = defaultVolumeClass.Name
 	}
 
-	if !bind && resolvedVolume.Size != "" {
-		volumeRequest.Size = resolvedVolume.Size
-	} else if volumeBinding.Size != "" {
-		volumeRequest.Size = volumeBinding.Size
+	if volumeRequest.Size == "" {
+		if volumeBinding.Size != "" {
+			volumeRequest.Size = volumeBinding.Size
+		} else if trueVolumeClass != nil {
+			volumeRequest.Size = trueVolumeClass.Size.Default
+		} else {
+			defaultSize, err := GetDefaultVolumeSize(ctx, c)
+			if err != nil {
+				return v1.VolumeRequest{}, err
+			}
+			volumeRequest.Size = defaultSize
+		}
 	}
 
-	if !bind && len(resolvedVolume.AccessModes) != 0 {
-		volumeRequest.AccessModes = resolvedVolume.AccessModes
-	} else if len(volumeBinding.AccessModes) != 0 {
-		volumeRequest.AccessModes = volumeBinding.AccessModes
+	if len(volumeRequest.AccessModes) == 0 {
+		if volumeBinding.AccessModes != nil {
+			volumeRequest.AccessModes = volumeBinding.AccessModes
+		} else if trueVolumeClass != nil {
+			volumeRequest.AccessModes = trueVolumeClass.AllowedAccessModes
+		}
 	}
 
-	return volumeRequest
+	return volumeRequest, nil
 }
 
 func FindDefaultStorageClass(ctx context.Context, c client.Reader) (string, error) {
@@ -193,4 +209,20 @@ func FindDefaultStorageClass(ctx context.Context, c client.Reader) (string, erro
 	}
 
 	return "", nil
+}
+
+func GetDefaultVolumeSize(ctx context.Context, c client.Client) (v1.Quantity, error) {
+	cfg, err := config.Get(ctx, c)
+	if err != nil {
+		return "", err
+	}
+
+	// If the default volume size is set in the config, use that. Otherwise use the
+	// package level default in internalv1.
+	defaultVolumeSize := v1.DefaultSizeQuantity
+	if cfg.VolumeSizeDefault != "" {
+		defaultVolumeSize = v1.Quantity(cfg.VolumeSizeDefault)
+	}
+
+	return defaultVolumeSize, nil
 }

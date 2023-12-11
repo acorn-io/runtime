@@ -17,6 +17,7 @@ import (
 	"github.com/acorn-io/namegenerator"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/autoupgrade"
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/computeclasses"
@@ -683,21 +684,11 @@ func validateVolumeClasses(ctx context.Context, c kclient.Client, namespace stri
 		return nil
 	}
 
-	var (
-		defaultRegion      = project.GetRegion()
-		volumeClassList    = new(apiv1.VolumeClassList)
-		defaultVolumeClass *apiv1.VolumeClass
-	)
-	if err := c.List(ctx, volumeClassList, kclient.InNamespace(namespace)); err != nil {
-		return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, fmt.Sprintf("error checking volume classes: %v", err))
-	}
+	defaultRegion := project.GetRegion()
 
-	volumeClasses := make(map[string]apiv1.VolumeClass, len(volumeClassList.Items))
-	for _, volumeClass := range volumeClassList.Items {
-		if volumeClass.Default {
-			defaultVolumeClass = volumeClass.DeepCopy()
-		}
-		volumeClasses[volumeClass.Name] = volumeClass
+	volumeClasses, defaultVolumeClass, err := volume.GetVolumeClassInstances(ctx, c, namespace)
+	if err != nil {
+		return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, fmt.Sprintf("error checking volume classes: %v", err))
 	}
 
 	volumeBindings := make(map[string]v1.VolumeBinding)
@@ -708,9 +699,12 @@ func validateVolumeClasses(ctx context.Context, c kclient.Client, namespace stri
 		volumeBindings[vol.Target] = vol
 	}
 
-	var volClass apiv1.VolumeClass
+	var volClass adminv1.ProjectVolumeClassInstance
 	for volName, vol := range appSpec.Volumes {
-		calculatedVolumeRequest := volume.ResolveVolumeRequest(vol, volumeBindings[volName], v1.VolumeResolvedOffering{})
+		calculatedVolumeRequest, err := volume.ResolveVolumeRequest(ctx, c, namespace, vol, volumeBindings[volName], volumeClasses, defaultVolumeClass)
+		if err != nil {
+			return field.Invalid(field.NewPath("spec", "volumes", volName), vol, err.Error())
+		}
 		if calculatedVolumeRequest.Class != "" {
 			volClass = volumeClasses[calculatedVolumeRequest.Class]
 		} else if defaultVolumeClass != nil {

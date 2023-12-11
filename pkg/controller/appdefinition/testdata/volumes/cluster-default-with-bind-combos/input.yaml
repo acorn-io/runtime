@@ -37,10 +37,9 @@ status:
   resolvedOfferings:
     volumes:
       foo:
-        class: test-custom-class
-        size: 3Gi
-        accessModes: [ "readWriteOnce" ]
+        class: test-custom-class-default
+        size: 2Gi
+        accessModes: [ "readWriteMany" ]
       bar:
-        class: test-custom-class
-        size: 6Gi
-        accessModes: [ "readWriteOnce" ]
+        class: test-custom-class-default
+        accessModes: [ "readWriteMany" ]

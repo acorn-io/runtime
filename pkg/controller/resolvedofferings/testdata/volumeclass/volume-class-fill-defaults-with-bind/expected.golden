@@ -49,8 +49,8 @@ status:
       foo:
         accessModes:
         - readWriteOnce
-        class: test-volume-class
-        size: 5Gi
+        class: default-test-volume-class
+        size: 2Gi
   staged:
     appImage:
       buildContext: {}
