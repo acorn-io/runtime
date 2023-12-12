@@ -151,10 +151,9 @@ func getVolumeClassNames(volumeClasses map[string]adminv1.ProjectVolumeClassInst
 	return typed.SortedKeys(storageClassName)
 }
 
-func ResolveVolumeRequest(ctx context.Context, c client.Client, namespace string, volumeRequest v1.VolumeRequest,
+func ResolveVolumeRequest(ctx context.Context, c client.Client, volumeRequest v1.VolumeRequest,
 	volumeBinding v1.VolumeBinding, volumeClasses map[string]adminv1.ProjectVolumeClassInstance,
 	defaultVolumeClass *adminv1.ProjectVolumeClassInstance, existingResolvedVolume v1.VolumeResolvedOffering) (v1.VolumeRequest, error) {
-
 	bind := volumeBinding.Volume != ""
 	trueVolumeClass := defaultVolumeClass.DeepCopy()
 

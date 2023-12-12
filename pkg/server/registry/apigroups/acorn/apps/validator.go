@@ -701,7 +701,7 @@ func validateVolumeClasses(ctx context.Context, c kclient.Client, namespace stri
 
 	var volClass adminv1.ProjectVolumeClassInstance
 	for volName, vol := range appSpec.Volumes {
-		calculatedVolumeRequest, err := volume.ResolveVolumeRequest(ctx, c, namespace, vol, volumeBindings[volName], volumeClasses, defaultVolumeClass, v1.VolumeResolvedOffering{})
+		calculatedVolumeRequest, err := volume.ResolveVolumeRequest(ctx, c, vol, volumeBindings[volName], volumeClasses, defaultVolumeClass, v1.VolumeResolvedOffering{})
 		if err != nil {
 			return field.Invalid(field.NewPath("spec", "volumes", volName), vol, err.Error())
 		}

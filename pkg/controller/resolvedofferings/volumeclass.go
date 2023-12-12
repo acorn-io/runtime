@@ -38,7 +38,7 @@ func resolveVolumeClasses(ctx context.Context, c kclient.Client, app *internalv1
 	})
 
 	for name, vol := range app.Status.AppSpec.Volumes {
-		vol, err = volume.ResolveVolumeRequest(ctx, c, app.Namespace, vol, volumeBindings[name], volumeClasses, defaultVolumeClass, app.Status.ResolvedOfferings.Volumes[name])
+		vol, err = volume.ResolveVolumeRequest(ctx, c, vol, volumeBindings[name], volumeClasses, defaultVolumeClass, app.Status.ResolvedOfferings.Volumes[name])
 		if err != nil {
 			return err
 		}

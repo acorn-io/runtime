@@ -126,7 +126,7 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 			continue
 		}
 
-		volumeRequest, err = volume.ResolveVolumeRequest(req.Ctx, req.Client, appInstance.Namespace, volumeRequest, volumeBinding, volumeClasses, defaultVolumeClass, appInstance.Status.ResolvedOfferings.Volumes[vol])
+		volumeRequest, err = volume.ResolveVolumeRequest(req.Ctx, req.Client, volumeRequest, volumeBinding, volumeClasses, defaultVolumeClass, appInstance.Status.ResolvedOfferings.Volumes[vol])
 		if err != nil {
 			return nil, err
 		}
