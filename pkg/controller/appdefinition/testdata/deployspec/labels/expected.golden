@@ -297,7 +297,7 @@ metadata:
     acorn.io/job-name: job-name
     acorn.io/managed: "true"
     acorn.io/public-name: app-name.job-name
-  name: job-name-job
+  name: job-name
   namespace: app-created-namespace
 spec:
   annotations:

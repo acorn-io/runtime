@@ -459,7 +459,7 @@ metadata:
     acorn.io/job-name: oneimage
     acorn.io/managed: "true"
     acorn.io/public-name: app-name.oneimage
-  name: oneimage-job
+  name: oneimage
   namespace: app-created-namespace
 spec:
   appName: app-name
@@ -494,7 +494,7 @@ metadata:
     acorn.io/job-name: twoimage
     acorn.io/managed: "true"
     acorn.io/public-name: app-name.twoimage
-  name: twoimage-job
+  name: twoimage
   namespace: app-created-namespace
 spec:
   appName: app-name

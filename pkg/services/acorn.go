@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/acorn-io/baaah/pkg/apply"
-	"github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/jobs"
@@ -125,7 +124,7 @@ func serviceNames(appInstance *v1.AppInstance) sets.Set[string] {
 		result.Insert(k)
 	}
 	for k := range appInstance.Status.AppSpec.Jobs {
-		result.Insert(jobServiceName(k))
+		result.Insert(k)
 	}
 	for k := range appInstance.Status.AppSpec.Routers {
 		result.Insert(k)
@@ -340,7 +339,7 @@ func forJobs(interpolator *secrets.Interpolator, appInstance *v1.AppInstance) (r
 
 		result = append(result, &v1.ServiceInstance{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      jobServiceName(jobName),
+				Name:      jobName,
 				Namespace: appInstance.Status.Namespace,
 				Labels: labels.Managed(appInstance,
 					labels.AcornPublicName, publicname.ForChild(appInstance, jobName),
@@ -540,8 +539,4 @@ func getUngranted(appInstance *v1.AppInstance, service *v1.ServiceInstance) []v1
 	}
 
 	return ungranted
-}
-
-func jobServiceName(jobName string) string {
-	return name.SafeConcatName(jobName, "job")
 }
