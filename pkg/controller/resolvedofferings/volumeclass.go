@@ -5,10 +5,11 @@ import (
 	"fmt"
 
 	"github.com/acorn-io/baaah/pkg/typed"
-	v1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/volume"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	corev1 "k8s.io/api/core/v1"
+	klabels "k8s.io/apimachinery/pkg/labels"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -50,17 +51,35 @@ func resolveVolumeClasses(ctx context.Context, c kclient.Client, app *internalv1
 
 		// If an existing volume is bound to this volume request, then find it and use its values as the resolved offerings
 		if volumeBindings[name].Volume != "" {
-			// try to find the volume
-			var boundVolume v1.Volume
-			if err := c.Get(ctx, kclient.ObjectKey{Namespace: app.Namespace, Name: volumeBindings[name].Volume}, &boundVolume); err != nil && !apierrors.IsNotFound(err) {
+			// Try to find the volume by public name first
+			var boundVolumeList corev1.PersistentVolumeList
+			if err := c.List(ctx, &boundVolumeList, &kclient.ListOptions{
+				LabelSelector: klabels.SelectorFromSet(map[string]string{
+					labels.AcornPublicName:   volumeBindings[name].Volume,
+					labels.AcornAppNamespace: app.Namespace,
+					labels.AcornManaged:      "true",
+				}),
+			}); err != nil {
 				return fmt.Errorf("error while looking for bound volume %s in namespace %s: %w", volumeBindings[name].Volume, app.Namespace, err)
+			} else if len(boundVolumeList.Items) == 0 {
+				// See if the user provided a PV name instead
+				var boundPV corev1.PersistentVolume
+				if err := c.Get(ctx, kclient.ObjectKey{Name: volumeBindings[name].Volume}, &boundPV); err != nil {
+					return fmt.Errorf("error while looking for bound volume %s in namespace %s: %w", volumeBindings[name].Volume, app.Namespace, err)
+				} else if boundPV.ObjectMeta.Labels[labels.AcornAppNamespace] != app.Namespace {
+					return fmt.Errorf("could not find volume %s in project %s", volumeBindings[name].Volume, app.Namespace)
+				}
+
+				boundVolumeList.Items = []corev1.PersistentVolume{boundPV}
 			}
 
-			resolvedVolume.AccessModes = boundVolume.Spec.AccessModes
-			resolvedVolume.Class = boundVolume.Spec.Class
-			resolvedVolume.Size, err = internalv1.ParseQuantity(boundVolume.Spec.Capacity.String())
-			if err != nil {
-				return err
+			// If we found the volume, then use its values as the resolved offerings
+			if len(boundVolumeList.Items) == 1 {
+				for _, a := range boundVolumeList.Items[0].Spec.AccessModes {
+					resolvedVolume.AccessModes = append(resolvedVolume.AccessModes, internalv1.AccessMode(a))
+				}
+				resolvedVolume.Class = boundVolumeList.Items[0].ObjectMeta.Labels[labels.AcornVolumeClass]
+				resolvedVolume.Size = internalv1.Quantity(boundVolumeList.Items[0].Spec.Capacity.Storage().String())
 			}
 		}
 
