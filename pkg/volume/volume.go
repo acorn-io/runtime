@@ -151,29 +151,29 @@ func getVolumeClassNames(volumeClasses map[string]adminv1.ProjectVolumeClassInst
 	return typed.SortedKeys(storageClassName)
 }
 
-func ResolveVolumeRequest(ctx context.Context, c client.Client, namespace string,
-	volumeRequest v1.VolumeRequest, volumeBinding v1.VolumeBinding,
-	volumeClasses map[string]adminv1.ProjectVolumeClassInstance, defaultVolumeClass *adminv1.ProjectVolumeClassInstance) (v1.VolumeRequest, error) {
+func ResolveVolumeRequest(ctx context.Context, c client.Client, namespace string, volumeRequest v1.VolumeRequest,
+	volumeBinding v1.VolumeBinding, volumeClasses map[string]adminv1.ProjectVolumeClassInstance,
+	defaultVolumeClass *adminv1.ProjectVolumeClassInstance, existingResolvedVolume v1.VolumeResolvedOffering) (v1.VolumeRequest, error) {
 
-	if volumeBinding.Volume != "" {
-		return volumeRequest, nil
-	}
-
+	bind := volumeBinding.Volume != ""
 	trueVolumeClass := defaultVolumeClass.DeepCopy()
 
-	if volumeRequest.Class != "" {
-		vc := volumeClasses[volumeRequest.Class]
-		trueVolumeClass = &vc
-	} else if volumeBinding.Class != "" {
+	if volumeBinding.Class != "" {
+		volumeRequest.Class = volumeBinding.Class
 		vc := volumeClasses[volumeBinding.Class]
 		trueVolumeClass = &vc
-	} else if defaultVolumeClass != nil {
+	} else if volumeRequest.Class != "" {
+		vc := volumeClasses[volumeRequest.Class]
+		trueVolumeClass = &vc
+	} else if !bind && defaultVolumeClass != nil {
 		volumeRequest.Class = defaultVolumeClass.Name
 	}
 
-	if volumeRequest.Size == "" {
-		if volumeBinding.Size != "" {
-			volumeRequest.Size = volumeBinding.Size
+	if volumeBinding.Size != "" {
+		volumeRequest.Size = volumeBinding.Size
+	} else if !bind && volumeRequest.Size == "" {
+		if existingResolvedVolume.Size != "" {
+			volumeRequest.Size = existingResolvedVolume.Size
 		} else if trueVolumeClass != nil {
 			volumeRequest.Size = trueVolumeClass.Size.Default
 		} else {
@@ -185,11 +185,21 @@ func ResolveVolumeRequest(ctx context.Context, c client.Client, namespace string
 		}
 	}
 
-	if len(volumeRequest.AccessModes) == 0 {
-		if volumeBinding.AccessModes != nil {
-			volumeRequest.AccessModes = volumeBinding.AccessModes
-		} else if trueVolumeClass != nil {
-			volumeRequest.AccessModes = trueVolumeClass.AllowedAccessModes
+	if len(volumeBinding.AccessModes) > 0 {
+		volumeRequest.AccessModes = volumeBinding.AccessModes
+	} else if !bind && len(volumeRequest.AccessModes) == 0 && trueVolumeClass != nil {
+		volumeRequest.AccessModes = trueVolumeClass.AllowedAccessModes
+	}
+
+	// If there is an existing VolumeResolvedOffering, and we are not binding to an already existing volume,
+	// then make sure that we continue using the same VolumeClass and AccessModes, since those cannot be
+	// changed on existing volumes
+	if !bind {
+		if existingResolvedVolume.Class != "" {
+			volumeRequest.Class = existingResolvedVolume.Class
+		}
+		if len(existingResolvedVolume.AccessModes) > 0 {
+			volumeRequest.AccessModes = existingResolvedVolume.AccessModes
 		}
 	}
 

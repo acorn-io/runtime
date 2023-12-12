@@ -140,7 +140,7 @@ metadata:
   namespace: app-created-namespace
 spec:
   accessModes:
-  - ReadWriteOnce
+  - ReadWriteMany
   resources:
     requests:
       storage: 6Gi
@@ -165,10 +165,10 @@ metadata:
   namespace: app-created-namespace
 spec:
   accessModes:
-  - ReadOnlyMany
+  - ReadWriteMany
   resources:
     requests:
-      storage: 6Gi
+      storage: 3Gi
   storageClassName: ""
 status: {}
 

@@ -5,8 +5,10 @@ import (
 	"fmt"
 
 	"github.com/acorn-io/baaah/pkg/typed"
+	v1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/volume"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -36,11 +38,30 @@ func resolveVolumeClasses(ctx context.Context, c kclient.Client, app *internalv1
 	})
 
 	for name, vol := range app.Status.AppSpec.Volumes {
-		vol, err = volume.ResolveVolumeRequest(ctx, c, app.Namespace, vol, volumeBindings[name], volumeClasses, defaultVolumeClass)
+		vol, err = volume.ResolveVolumeRequest(ctx, c, app.Namespace, vol, volumeBindings[name], volumeClasses, defaultVolumeClass, app.Status.ResolvedOfferings.Volumes[name])
+		if err != nil {
+			return err
+		}
 		resolvedVolume := internalv1.VolumeResolvedOffering{
 			AccessModes: vol.AccessModes,
 			Class:       vol.Class,
 			Size:        vol.Size,
+		}
+
+		// If an existing volume is bound to this volume request, then find it and use its values as the resolved offerings
+		if volumeBindings[name].Volume != "" {
+			// try to find the volume
+			var boundVolume v1.Volume
+			if err := c.Get(ctx, kclient.ObjectKey{Namespace: app.Namespace, Name: volumeBindings[name].Volume}, &boundVolume); err != nil && !apierrors.IsNotFound(err) {
+				return fmt.Errorf("error while looking for bound volume %s in namespace %s: %w", volumeBindings[name].Volume, app.Namespace, err)
+			}
+
+			resolvedVolume.AccessModes = boundVolume.Spec.AccessModes
+			resolvedVolume.Class = boundVolume.Spec.Class
+			resolvedVolume.Size, err = internalv1.ParseQuantity(boundVolume.Spec.Capacity.String())
+			if err != nil {
+				return err
+			}
 		}
 
 		// This is a bit of a hack as we're migrating away from the VolumeSize field. Essentially,
