@@ -44,13 +44,16 @@ status:
     reason: Error
     status: "False"
     type: scheduling
-  defaults:
-    memory:
-      "": 0
-      left: 0
-      oneimage: 0
   namespace: app-created-namespace
   observedGeneration: 1
+  resolvedOfferings:
+    containers:
+      "":
+        memory: 0
+      left:
+        memory: 0
+      oneimage:
+        memory: 0
   scheduling:
     left:
       requirements: {}

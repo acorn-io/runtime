@@ -61,6 +61,7 @@ const (
 	ProjectEnforcedQuotaAnnotation         = Prefix + "enforced-quota"
 	AcornPermissions                       = Prefix + "permissions"
 	AcornConfigHashAnnotation              = Prefix + "config-hash"
+	AcornContainerResolvedOfferings        = Prefix + "container-resolved-offerings"
 
 	IdentityPrefix                = "identity." + Prefix
 	AcornIdentityAccountServerURL = IdentityPrefix + "account-server-url"

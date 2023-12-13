@@ -597,11 +597,33 @@ func containerAnnotation(container v1.Container) string {
 	return string(json)
 }
 
+func resolvedOfferingsAnnotation(appInstance *v1.AppInstance, container v1.Container) (string, error) {
+	if resolved, exists := appInstance.Status.ResolvedOfferings.Containers[container.Name]; exists {
+		data, err := convert.EncodeToMap(resolved)
+		if err != nil {
+			return "", err
+		}
+
+		j, err := json.Marshal(data)
+		if err != nil {
+			return "", err
+		}
+
+		return string(j), nil
+	}
+	return "", nil
+}
+
 func podAnnotations(appInstance *v1.AppInstance, container v1.Container) map[string]string {
 	annotations := map[string]string{
 		labels.AcornContainerSpec: containerAnnotation(container),
 	}
 	addPrometheusAnnotations(annotations, container)
+
+	offerings, err := resolvedOfferingsAnnotation(appInstance, container)
+	if err == nil && offerings != "" {
+		annotations[labels.AcornContainerResolvedOfferings] = offerings
+	}
 
 	images := map[string]string{}
 	addImageAnnotations(images, appInstance, container)

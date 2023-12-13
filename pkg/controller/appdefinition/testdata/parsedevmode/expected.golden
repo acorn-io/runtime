@@ -38,12 +38,12 @@ status:
     status: "True"
     success: true
     type: parsed
-  defaults: {}
   devSession:
     client:
       imageSource: {}
     sessionRenewTime: null
     sessionStartTime: null
+  resolvedOfferings: {}
   staged:
     appImage:
       buildContext: {}

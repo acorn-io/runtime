@@ -27,7 +27,7 @@ func TestCheckStatus(t *testing.T) {
 	}
 	assert.False(t, called, "router handler call unexpected")
 
-	condition.Setter(appInstance, resp, v1.AppInstanceConditionDefaults).Success()
+	condition.Setter(appInstance, resp, v1.AppInstanceConditionResolvedOfferings).Success()
 	condition.Setter(appInstance, resp, v1.AppInstanceConditionScheduling).Success()
 	condition.Setter(appInstance, resp, v1.AppInstanceConditionQuota).Success()
 

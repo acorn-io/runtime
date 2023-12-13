@@ -45,13 +45,16 @@ status:
     status: "True"
     success: true
     type: scheduling
-  defaults:
-    memory:
-      "": 0
-      left: 1048576
-      oneimage: 1048576
   namespace: app-created-namespace
   observedImageDigest: foo
+  resolvedOfferings:
+    containers:
+      "":
+        memory: 0
+      left:
+        memory: 1048576
+      oneimage:
+        memory: 1048576
   scheduling:
     left:
       requirements:

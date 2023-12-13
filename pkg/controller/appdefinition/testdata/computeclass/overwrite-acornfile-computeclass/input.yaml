@@ -34,11 +34,14 @@ status:
         requests:
           cpu: 1m
           memory: 1Mi
-  defaults:
-    memory:
-      "": 0 # 1Mi
-      left: 1048576 # 1Mi
-      oneimage: 1048576 # 1Mi
+  resolvedOfferings:
+    containers:
+      "":
+        memory: 0 # 1Mi
+      left:
+        memory: 1048576 # 1Mi
+      oneimage:
+        memory: 1048576 # 1Mi
   namespace: app-created-namespace
   appImage:
     id: test
@@ -62,7 +65,7 @@ status:
           context: "."
         class: sample-compute-class-01
   conditions:
-    - type: defaults
+    - type: resolved-offerings
       reason: Success
       status: "True"
       success: true

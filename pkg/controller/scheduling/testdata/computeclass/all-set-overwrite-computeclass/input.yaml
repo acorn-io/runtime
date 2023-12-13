@@ -11,11 +11,14 @@ spec:
     oneimage: sample-compute-class-01 # 2Mi
 status:
   observedGeneration: 1
-  defaults:
-    memory:
-      "": 0
-      left: 2097152 # 2Mi
-      oneimage:  2097152 # 2Mi
+  resolvedOfferings:
+    containers:
+      "":
+        memory: 0
+      left:
+        memory: 2097152 # 2Mi
+      oneimage:
+        memory: 2097152 # 2Mi
   namespace: app-created-namespace
   appImage:
     id: test
