@@ -31,7 +31,7 @@ ACORNS:
                 },
                 "appSpec": {},
                 "appStatus": {},
-                "resolvedOfferings": {},
+                "defaults": {},
                 "summary": {}
             }
         }

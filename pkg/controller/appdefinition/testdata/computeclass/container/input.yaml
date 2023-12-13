@@ -35,14 +35,11 @@ status:
           cpu: 1m
           memory: 1Mi
   namespace: app-created-namespace
-  resolvedOfferings:
-    containers:
-      "":
-        memory: 0
-      left:
-        memory: 1048576 # 1Mi
-      oneimage:
-        memory: 1048576 # 1Mi
+  defaults:
+    memory:
+      "": 0
+      left: 1048576 # 1Mi
+      oneimage: 1048576 # 1Mi
   appImage:
     id: test
   appSpec:
@@ -64,7 +61,7 @@ status:
           dockerfile: "Dockerfile"
           context: "."
   conditions:
-    - type: resolved-offerings
+    - type: defaults
       reason: Success
       status: "True"
       success: true

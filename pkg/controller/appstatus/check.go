@@ -9,7 +9,7 @@ func CheckStatus(h router.Handler) router.Handler {
 	return router.HandlerFunc(func(req router.Request, resp router.Response) error {
 		appInstance := req.Object.(*v1.AppInstance)
 		conditionsToCheck := []string{
-			v1.AppInstanceConditionResolvedOfferings,
+			v1.AppInstanceConditionDefaults,
 			v1.AppInstanceConditionScheduling,
 			v1.AppInstanceConditionQuota,
 		}

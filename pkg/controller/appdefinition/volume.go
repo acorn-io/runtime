@@ -19,6 +19,7 @@ import (
 	name2 "github.com/rancher/wrangler/pkg/name"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -112,7 +113,7 @@ func LookupExistingPV(req router.Request, appInstance *v1.AppInstance, volumeNam
 }
 
 func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.Object, err error) {
-	volumeClasses, defaultVolumeClass, err := volume.GetVolumeClassInstances(req.Ctx, req.Client, appInstance.Namespace)
+	volumeClasses, _, err := volume.GetVolumeClassInstances(req.Ctx, req.Client, appInstance.Namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -126,10 +127,7 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 			continue
 		}
 
-		volumeRequest, err = volume.ResolveVolumeRequest(req.Ctx, req.Client, volumeRequest, volumeBinding, volumeClasses, defaultVolumeClass, appInstance.Status.ResolvedOfferings.Volumes[vol])
-		if err != nil {
-			return nil, err
-		}
+		volumeRequest = volume.CopyVolumeDefaults(volumeRequest, volumeBinding, appInstance.Status.Defaults.Volumes[vol])
 
 		pvc := corev1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
@@ -199,7 +197,16 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 			pvc.Spec.VolumeName = pvName
 
 			if volumeRequest.Size == "" {
-				pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.DefaultSize
+				// If the volumeRequest does not have a size set, then we need to determine what default to use. If status.Defaults.Volumes has this
+				// volume set, then we use that. Otherwise, we use v1 package level default size.
+				defaultSize := *v1.DefaultSize
+				if defaultVolume, hasDefaultSet := appInstance.Status.Defaults.Volumes[vol]; hasDefaultSet {
+					defaultSize, err = resource.ParseQuantity(string(defaultVolume.Size))
+					if err != nil {
+						return nil, fmt.Errorf("failed to parse default volume size %q for volume %q: %w", defaultVolume.Size, vol, err)
+					}
+				}
+				pvc.Spec.Resources.Requests[corev1.ResourceStorage] = defaultSize
 			} else {
 				pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.MustParseResourceQuantity(volumeRequest.Size)
 			}

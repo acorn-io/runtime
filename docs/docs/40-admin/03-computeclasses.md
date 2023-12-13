@@ -40,7 +40,6 @@ affinity: # The same affinity fields for Pods
             operator: In
             values:
             - bar
-supportedRegions: ["local"] # should always be set to ["local"]
 ```
 
 If `memory.min`, `memory.max`, `memory.values`, `affinity`, and `tolerations` are not given, then there are no scheduling rules for workloads using the compute class.

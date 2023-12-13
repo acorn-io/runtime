@@ -134,7 +134,7 @@ metadata:
     acorn.io/app-namespace: app-namespace
     acorn.io/managed: "true"
     acorn.io/public-name: app-name.bar
-    acorn.io/volume-class: ""
+    acorn.io/volume-class: test-custom-class
     acorn.io/volume-name: bar
   name: bar
   namespace: app-created-namespace
@@ -144,7 +144,7 @@ spec:
   resources:
     requests:
       storage: 6Gi
-  storageClassName: ""
+  storageClassName: custom-class
 status: {}
 
 ---
@@ -159,17 +159,17 @@ metadata:
     acorn.io/app-namespace: app-namespace
     acorn.io/managed: "true"
     acorn.io/public-name: app-name.foo
-    acorn.io/volume-class: ""
+    acorn.io/volume-class: test-custom-class
     acorn.io/volume-name: foo
   name: foo
   namespace: app-created-namespace
 spec:
   accessModes:
-  - ReadWriteMany
+  - ReadWriteOnce
   resources:
     requests:
       storage: 3Gi
-  storageClassName: ""
+  storageClassName: custom-class
 status: {}
 
 ---
@@ -225,8 +225,7 @@ status:
     status: "True"
     success: true
     type: defined
-  namespace: app-created-namespace
-  resolvedOfferings:
+  defaults:
     volumes:
       bar:
         accessModes:
@@ -237,6 +236,7 @@ status:
         - readWriteMany
         class: test-custom-class-default
         size: 2Gi
+  namespace: app-created-namespace
   staged:
     appImage:
       buildContext: {}

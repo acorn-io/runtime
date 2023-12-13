@@ -9,14 +9,11 @@ spec:
   computeClass:
     oneimage: sample-compute-class
 status:
-  resolvedOfferings:
-    containers:
-      "":
-        memory: 0
-      left:
-        memory: 1048576 # 1Mi
-      oneimage:
-        memory: 1048576 # 1Mi
+  defaults:
+    memory:
+      "": 0
+      left: 1048576 # 1Mi
+      oneimage: 1048576 # 1Mi
   # In this test, scheduling has already been set and should not get recalculated
   # since the generation is the same.
   scheduling:
@@ -46,6 +43,7 @@ status:
   namespace: app-created-namespace
   appImage:
     id: test
+    defaults:
   appSpec:
     containers:
       oneimage:

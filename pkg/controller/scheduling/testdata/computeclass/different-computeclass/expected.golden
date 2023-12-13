@@ -47,16 +47,13 @@ status:
     status: "True"
     success: true
     type: scheduling
+  defaults:
+    memory:
+      "": 0
+      oneimage: 2097152
+      twoimage: 1048576
   namespace: app-created-namespace
   observedGeneration: 1
-  resolvedOfferings:
-    containers:
-      "":
-        memory: 0
-      oneimage:
-        memory: 2097152
-      twoimage:
-        memory: 1048576
   scheduling:
     oneimage:
       affinity:

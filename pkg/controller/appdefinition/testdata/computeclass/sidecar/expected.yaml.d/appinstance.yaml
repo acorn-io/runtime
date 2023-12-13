@@ -9,10 +9,9 @@ spec:
   computeClass:
     left: sample-compute-class
 status:
-  resolvedOfferings:
-    containers:
-      left:
-        memory: 1048576 # 1Mi
+  defaults:
+    memory:
+      left: 1048576 # 1Mi
   namespace: app-created-namespace
   appImage:
     id: test
@@ -35,7 +34,7 @@ status:
           dockerfile: "Dockerfile"
           context: "."
   conditions:
-    - type: resolved-offerings
+    - type: defaults
       reason: Success
       status: "True"
       success: true

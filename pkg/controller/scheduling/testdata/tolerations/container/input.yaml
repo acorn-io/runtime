@@ -11,6 +11,7 @@ status:
   namespace: app-created-namespace
   appImage:
     id: test
+    defaults:
   appSpec:
     containers:
       oneimage:

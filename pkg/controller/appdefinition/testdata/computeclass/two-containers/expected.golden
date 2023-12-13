@@ -69,7 +69,6 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-resolved-offerings: '{"memory":0}'
         acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
         karpenter.sh/do-not-evict: "true"
       creationTimestamp: null
@@ -187,7 +186,6 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-resolved-offerings: '{"memory":0}'
         acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
         karpenter.sh/do-not-evict: "true"
       creationTimestamp: null
@@ -359,7 +357,7 @@ status:
     reason: Success
     status: "True"
     success: true
-    type: resolved-offerings
+    type: defaults
     reason: Success
     status: "True"
     success: true
@@ -368,16 +366,13 @@ status:
     status: "True"
     success: true
     type: defined
+  defaults:
+    memory:
+      "": 0
+      oneimage: 1048576
+      twoimage: 0
   namespace: app-created-namespace
   observedGeneration: 1
-  resolvedOfferings:
-    containers:
-      "":
-        memory: 0
-      oneimage:
-        memory: 1048576
-      twoimage:
-        memory: 0
   scheduling:
     oneimage:
       affinity:
