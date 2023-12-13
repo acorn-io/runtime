@@ -52,20 +52,17 @@ type AppInstance struct {
 }
 
 func (in *AppInstance) HasRegion(region string) bool {
-	return in.Status.ResolvedOfferings.Region == region || in.Spec.Region == region
+	return in.Status.ResolvedOfferings.Region == region
 }
 
 func (in *AppInstance) GetRegion() string {
-	if in.Status.ResolvedOfferings.Region != "" {
-		return in.Status.ResolvedOfferings.Region
-	}
-	return in.Spec.Region
+	return in.Status.ResolvedOfferings.Region
 }
 
 func (in *AppInstance) SetDefaultRegion(region string) {
 	if in.Spec.Region != "" {
 		in.Status.ResolvedOfferings.Region = in.Spec.Region
-	} else {
+	} else if in.Status.ResolvedOfferings.Region == "" {
 		in.Status.ResolvedOfferings.Region = region
 	}
 }
