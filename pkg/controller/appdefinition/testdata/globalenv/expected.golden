@@ -189,7 +189,7 @@ status:
   appSpec: {}
   appStatus: {}
   columns: {}
-  resolvedOfferings: {}
+  defaults: {}
   staged:
     appImage:
       buildContext: {}
@@ -239,8 +239,8 @@ status:
     status: "True"
     success: true
     type: defined
+  defaults: {}
   namespace: app-created-namespace
-  resolvedOfferings: {}
   staged:
     appImage:
       buildContext: {}

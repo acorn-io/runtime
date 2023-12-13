@@ -9,10 +9,9 @@ spec:
   computeClass:
     left: sample-compute-class
 status:
-  resolvedOfferings:
-    containers:
-      left:
-        memory: 1048576 # 1Mi
+  defaults:
+    memory:
+      left: 1048576 # 1Mi
   namespace: app-created-namespace
   appImage:
     id: test

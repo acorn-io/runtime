@@ -179,7 +179,7 @@ func addStorage(req router.Request, appInstance *v1.AppInstance, quotaRequest *a
 		case "0":
 			continue
 		case "":
-			sizeQuantity = resolvedVolumeSize(appInstance, name)
+			sizeQuantity = defaultVolumeSize(appInstance, name)
 		default:
 			parsedQuantity, err := resource.ParseQuantity(string(size))
 			if err != nil {
@@ -202,17 +202,17 @@ func addStorage(req router.Request, appInstance *v1.AppInstance, quotaRequest *a
 	return nil
 }
 
-// resolvedVolumeSize determines the size of the specified volume. If the volume has a resolved size set
-// on the status.ResolvedOfferings.Volumes, it uses that. Otherwise, it uses the default size in the v1 package.
-func resolvedVolumeSize(appInstance *v1.AppInstance, name string) resource.Quantity {
+// defaultVolumeSize determines the default size of the specified volume. If the volume has a default size set
+// on the status.Defaults.Volumes, it uses that. Otherwise, it uses the default size set on the status.Defaults.VolumeSize.
+func defaultVolumeSize(appInstance *v1.AppInstance, name string) resource.Quantity {
 	// Use the v1.DefaultSize if the appInstance doesn't have a default size set on the status.
 	result := *v1.DefaultSize // Safe to dereference because it is statically set in the v1 package.
 
-	// If the volume has a default size set on status.ResolvedOfferings.Volumes, use that.
-	if resolvedVolume, set := appInstance.Status.ResolvedOfferings.Volumes[name]; set {
+	// If the volume has a default size set on status.Defaults.Volumes, use that.
+	if defaultVolume, set := appInstance.Status.Defaults.Volumes[name]; set {
 		// We do not expect this to ever fail because VolumeClasses have their sizes validated. However,
 		// if it does fail, we'll just use the default size instead.
-		if parsedQuantity, err := resource.ParseQuantity(string(resolvedVolume.Size)); err == nil {
+		if parsedQuantity, err := resource.ParseQuantity(string(defaultVolume.Size)); err == nil {
 			result = parsedQuantity
 		}
 	}

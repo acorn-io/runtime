@@ -34,7 +34,7 @@ status:
       bar:
         class: test-custom-class-request
         size: 6Gi
-  resolvedOfferings:
+  defaults:
     volumes:
       foo:
         class: test-custom-class-default

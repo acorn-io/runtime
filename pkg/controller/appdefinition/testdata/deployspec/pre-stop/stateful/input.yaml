@@ -23,7 +23,7 @@ status:
           protocol: http
     volumes:
       foo: {}
-  resolvedOfferings:
+  defaults:
     volumes:
       foo:
         class: test-custom-class

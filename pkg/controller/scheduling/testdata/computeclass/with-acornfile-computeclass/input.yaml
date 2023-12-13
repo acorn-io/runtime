@@ -8,14 +8,11 @@ spec:
   image: test
 status:
   observedGeneration: 1
-  resolvedOfferings:
-    containers:
-      "":
-        memory: 0 # 1Mi
-      left:
-        memory: 1048576 # 1Mi
-      oneimage:
-        memory: 1048576 # 1Mi
+  defaults:
+    memory:
+      "": 0 # 1Mi
+      left: 1048576 # 1Mi
+      oneimage: 1048576 # 1Mi
   namespace: app-created-namespace
   appImage:
     id: test

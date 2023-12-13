@@ -19,7 +19,7 @@ status:
             volume: foo
     volumes:
       foo: {}
-  resolvedOfferings:
+  defaults:
     volumes:
       foo:
         class: test-custom-class

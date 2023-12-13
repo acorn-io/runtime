@@ -39,9 +39,7 @@ status:
       volume-name:
         accessModes:
         - readWriteOnce
-  resolvedOfferings:
+  defaults:
     volumes:
       volume-name:
         size: 1Gi
-        accessModes:
-        - readWriteOnce
