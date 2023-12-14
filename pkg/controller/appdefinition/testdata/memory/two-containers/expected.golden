@@ -363,6 +363,7 @@ status:
       oneimage: 0
   namespace: app-created-namespace
   observedGeneration: 1
+  resolvedOfferings: {}
   scheduling:
     oneimage:
       requirements:

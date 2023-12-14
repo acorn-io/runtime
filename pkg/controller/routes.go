@@ -24,6 +24,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/controller/permissions"
 	"github.com/acorn-io/runtime/pkg/controller/pvc"
 	"github.com/acorn-io/runtime/pkg/controller/quota"
+	"github.com/acorn-io/runtime/pkg/controller/resolvedofferings"
 	"github.com/acorn-io/runtime/pkg/controller/scheduling"
 	"github.com/acorn-io/runtime/pkg/controller/secrets"
 	"github.com/acorn-io/runtime/pkg/controller/service"
@@ -77,6 +78,7 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	// DeploySpec will create the namespace, so ensure it runs before anything that requires a namespace
 	appHasNamespace := appRouter.Middleware(appdefinition.RequireNamespace, appdefinition.IgnoreTerminatingNamespace, appdefinition.FilterLabelsAndAnnotationsConfig)
 	appHasNamespace.HandlerFunc(defaults.Calculate)
+	appHasNamespace.HandlerFunc(resolvedofferings.Calculate)
 	appHasNamespace.HandlerFunc(scheduling.Calculate)
 	appHasNamespace.HandlerFunc(quota.EnsureQuotaRequest)
 	appHasNamespace.HandlerFunc(quota.WaitForAllocation)

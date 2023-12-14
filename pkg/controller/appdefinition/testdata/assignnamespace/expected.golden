@@ -21,6 +21,7 @@ status:
     type: namespace
   defaults: {}
   namespace: default-1234567890ab
+  resolvedOfferings: {}
   staged:
     appImage:
       buildContext: {}
@@ -52,6 +53,7 @@ status:
     type: namespace
   defaults: {}
   namespace: default-1234567890ab
+  resolvedOfferings: {}
   staged:
     appImage:
       buildContext: {}

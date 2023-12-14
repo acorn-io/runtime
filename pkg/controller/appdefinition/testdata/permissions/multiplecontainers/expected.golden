@@ -646,6 +646,7 @@ status:
       verbs:
       - patch
     serviceName: twoimage
+  resolvedOfferings: {}
   staged:
     appImage:
       buildContext: {}
