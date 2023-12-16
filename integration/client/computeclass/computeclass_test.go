@@ -9,7 +9,9 @@ import (
 	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/client"
 	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,6 +30,7 @@ func TestCreatingComputeClasses(t *testing.T) {
 	checks := []struct {
 		name              string
 		memory            adminv1.ComputeClassMemory
+		resources         corev1.ResourceRequirements
 		cpuScaler         float64
 		priorityClassName string
 		runtimeClassName  string
@@ -37,6 +40,21 @@ func TestCreatingComputeClasses(t *testing.T) {
 			name: "valid-only-max",
 			memory: adminv1.ComputeClassMemory{
 				Max: "512Mi",
+			},
+			fail: false,
+		},
+		{
+			name: "valid-custom-resources",
+			memory: adminv1.ComputeClassMemory{
+				Max: "512Mi",
+			},
+			resources: corev1.ResourceRequirements{
+				Limits: corev1.ResourceList{
+					"mygpu/nvidia": resource.MustParse("1"),
+				},
+				Requests: corev1.ResourceList{
+					"mygpu/nvidia": resource.MustParse("1"),
+				},
 			},
 			fail: false,
 		},
@@ -144,6 +162,26 @@ func TestCreatingComputeClasses(t *testing.T) {
 			},
 			fail: true,
 		},
+		// // Raise error to avoid conflicts with
+		// // the "first class" fields for memory and cpu scaling
+		// {
+		// 	name: "invalid-custom-resources-limits",
+		// 	resources: corev1.ResourceRequirements{
+		// 		Limits: corev1.ResourceList{
+		// 			"cpu": resource.MustParse("1"),
+		// 		},
+		// 	},
+		// 	fail: true,
+		// },
+		// {
+		// 	name: "invalid-custom-resources-requests",
+		// 	resources: corev1.ResourceRequirements{
+		// 		Requests: corev1.ResourceList{
+		// 			"memory": resource.MustParse("1"),
+		// 		},
+		// 	},
+		// 	fail: true,
+		// },
 	}
 
 	for _, tt := range checks {
@@ -156,6 +194,7 @@ func TestCreatingComputeClasses(t *testing.T) {
 				},
 				CPUScaler:         tt.cpuScaler,
 				Memory:            tt.memory,
+				Resources:         &tt.resources,
 				PriorityClassName: tt.priorityClassName,
 				RuntimeClassName:  tt.runtimeClassName,
 			}

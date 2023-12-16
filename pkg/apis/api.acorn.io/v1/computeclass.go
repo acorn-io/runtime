@@ -2,6 +2,7 @@ package v1
 
 import (
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -11,10 +12,11 @@ type ComputeClass struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
-	Memory           v1.ComputeClassMemory `json:"memory,omitempty"`
-	Description      string                `json:"description,omitempty"`
-	Default          bool                  `json:"default"`
-	SupportedRegions []string              `json:"supportedRegions,omitempty"`
+	Memory           v1.ComputeClassMemory        `json:"memory,omitempty"`
+	Resources        *corev1.ResourceRequirements `json:"resources,omitempty"`
+	Description      string                       `json:"description,omitempty"`
+	Default          bool                         `json:"default"`
+	SupportedRegions []string                     `json:"supportedRegions,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

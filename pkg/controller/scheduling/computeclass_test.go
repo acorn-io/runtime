@@ -57,6 +57,10 @@ func TestPriorityClass(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/priority-class", Calculate)
 }
 
+func TestGenericResourcesComputeClass(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/generic-resources", Calculate)
+}
+
 func TestTwoCCCDefaultsShouldError(t *testing.T) {
 	harness, input, err := tester.FromDir(scheme.Scheme, "testdata/computeclass/two-ccc-defaults-should-error")
 	if err != nil {

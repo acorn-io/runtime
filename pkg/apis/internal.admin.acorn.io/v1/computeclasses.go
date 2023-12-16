@@ -44,15 +44,16 @@ type ClusterComputeClassInstanceList struct {
 type ProjectComputeClassInstance struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
-	Description       string              `json:"description,omitempty"`
-	CPUScaler         float64             `json:"cpuScaler,omitempty"`
-	Default           bool                `json:"default"`
-	Affinity          *corev1.Affinity    `json:"affinity,omitempty"`
-	Tolerations       []corev1.Toleration `json:"tolerations,omitempty"`
-	Memory            ComputeClassMemory  `json:"memory,omitempty"`
-	SupportedRegions  []string            `json:"supportedRegions,omitempty"`
-	PriorityClassName string              `json:"priorityClassName,omitempty"`
-	RuntimeClassName  string              `json:"runtimeClassName,omitempty"`
+	Description       string                       `json:"description,omitempty"`
+	CPUScaler         float64                      `json:"cpuScaler,omitempty"`
+	Default           bool                         `json:"default"`
+	Affinity          *corev1.Affinity             `json:"affinity,omitempty"`
+	Tolerations       []corev1.Toleration          `json:"tolerations,omitempty"`
+	Memory            ComputeClassMemory           `json:"memory,omitempty"`
+	SupportedRegions  []string                     `json:"supportedRegions,omitempty"`
+	PriorityClassName string                       `json:"priorityClassName,omitempty"`
+	RuntimeClassName  string                       `json:"runtimeClassName,omitempty"`
+	Resources         *corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
