@@ -47,6 +47,7 @@ status:
   defaults: {}
   namespace: app-created-namespace
   observedGeneration: 1
+  resolvedOfferings: {}
   scheduling:
     left:
       requirements:

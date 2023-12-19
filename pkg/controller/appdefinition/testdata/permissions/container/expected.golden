@@ -336,6 +336,7 @@ status:
       verbs:
       - patch
     serviceName: oneimage
+  resolvedOfferings: {}
   staged:
     appImage:
       buildContext: {}

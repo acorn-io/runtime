@@ -133,6 +133,7 @@ status:
   appStatus: {}
   columns: {}
   defaults: {}
+  resolvedOfferings: {}
   staged:
     appImage:
       buildContext: {}
@@ -214,6 +215,7 @@ status:
     type: defined
   defaults: {}
   namespace: app-created-namespace
+  resolvedOfferings: {}
   staged:
     appImage:
       buildContext: {}

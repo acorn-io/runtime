@@ -52,6 +52,7 @@ status:
     success: true
     type: parsed
   defaults: {}
+  resolvedOfferings: {}
   staged:
     appImage:
       buildContext: {}

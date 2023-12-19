@@ -236,6 +236,11 @@ func TestProjectUpdateValidation(t *testing.T) {
 							Spec: v1.AppInstanceSpec{
 								Region: "my-region",
 							},
+							Status: v1.AppInstanceStatus{
+								ResolvedOfferings: v1.ResolvedOfferings{
+									Region: "my-region",
+								},
+							},
 						},
 					},
 				},
@@ -271,6 +276,11 @@ func TestProjectUpdateValidation(t *testing.T) {
 							},
 							Spec: v1.AppInstanceSpec{
 								Region: "my-region",
+							},
+							Status: v1.AppInstanceStatus{
+								ResolvedOfferings: v1.ResolvedOfferings{
+									Region: "my-region",
+								},
 							},
 						},
 					},
@@ -312,6 +322,11 @@ func TestProjectUpdateValidation(t *testing.T) {
 							},
 							Spec: v1.AppInstanceSpec{
 								Region: "my-other-region",
+							},
+							Status: v1.AppInstanceStatus{
+								ResolvedOfferings: v1.ResolvedOfferings{
+									Region: "my-other-region",
+								},
 							},
 						},
 					},
@@ -397,7 +412,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 								Namespace: "my-project",
 							},
 							Status: v1.AppInstanceStatus{
-								Defaults: v1.Defaults{
+								ResolvedOfferings: v1.ResolvedOfferings{
 									Region: "my-other-region",
 								},
 							},
@@ -446,6 +461,11 @@ func TestProjectUpdateValidation(t *testing.T) {
 							Spec: v1.AppInstanceSpec{
 								Region: "my-other-region",
 							},
+							Status: v1.AppInstanceStatus{
+								ResolvedOfferings: v1.ResolvedOfferings{
+									Region: "my-other-region",
+								},
+							},
 						},
 					},
 				},
@@ -488,6 +508,11 @@ func TestProjectUpdateValidation(t *testing.T) {
 							Spec: v1.AppInstanceSpec{
 								Region: "my-other-region",
 							},
+							Status: v1.AppInstanceStatus{
+								ResolvedOfferings: v1.ResolvedOfferings{
+									Region: "my-other-region",
+								},
+							},
 						},
 						{
 							ObjectMeta: metav1.ObjectMeta{
@@ -496,6 +521,11 @@ func TestProjectUpdateValidation(t *testing.T) {
 							},
 							Spec: v1.AppInstanceSpec{
 								Region: "my-region",
+							},
+							Status: v1.AppInstanceStatus{
+								ResolvedOfferings: v1.ResolvedOfferings{
+									Region: "my-region",
+								},
 							},
 						},
 					},
@@ -539,6 +569,11 @@ func TestProjectUpdateValidation(t *testing.T) {
 							Spec: v1.AppInstanceSpec{
 								Region: "my-other-region",
 							},
+							Status: v1.AppInstanceStatus{
+								ResolvedOfferings: v1.ResolvedOfferings{
+									Region: "my-other-region",
+								},
+							},
 						},
 					},
 				},
@@ -578,6 +613,11 @@ func TestProjectUpdateValidation(t *testing.T) {
 							},
 							Spec: v1.AppInstanceSpec{
 								Region: "my-other-region",
+							},
+							Status: v1.AppInstanceStatus{
+								ResolvedOfferings: v1.ResolvedOfferings{
+									Region: "my-other-region",
+								},
 							},
 						},
 					},

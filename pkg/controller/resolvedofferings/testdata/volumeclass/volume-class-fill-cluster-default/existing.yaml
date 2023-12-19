@@ -1,0 +1,51 @@
+---
+kind: ClusterVolumeClassInstance
+apiVersion: internal.admin.acorn.io/v1
+metadata:
+  name: test-volume-class
+description: Just a simple test volume class
+default: true
+storageClassName: test-storage-class
+size:
+  min: 1Gi
+  max: 10Gi
+  default: 3Gi
+allowedAccessModes: ["readWriteOnce"]
+---
+kind: ClusterVolumeClassInstance
+apiVersion: internal.admin.acorn.io/v1
+metadata:
+  name: test-volume-class-inactive
+description: Just a simple test volume class
+default: true
+inactive: true
+storageClassName: test-storage-class-inactive
+size:
+  min: 2Gi
+  max: 20Gi
+  default: 2Gi
+allowedAccessModes: ["readWriteOnce"]
+---
+kind: ProjectVolumeClassInstance
+apiVersion: internal.admin.acorn.io/v1
+metadata:
+  name: test-project-volume-class
+  namespace: app-namespace
+description: Just a simple project test volume class
+default: false
+storageClassName: test-storage-class
+size:
+  min: 1Gi
+  max: 10Gi
+  default: 2Gi
+allowedAccessModes: ["readWriteOnce", "readOnlyMany"]
+---
+kind: ProjectInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-namespace
+spec: {}
+status:
+  defaultRegion: local
+  supportedRegions:
+    - local

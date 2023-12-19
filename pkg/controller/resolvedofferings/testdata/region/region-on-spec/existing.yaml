@@ -1,0 +1,9 @@
+kind: ProjectInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-namespace
+spec: {}
+status:
+  defaultRegion: local
+  supportedRegions:
+    - local

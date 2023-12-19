@@ -388,6 +388,7 @@ status:
       twoimage: 1048576
   namespace: app-created-namespace
   observedGeneration: 1
+  resolvedOfferings: {}
   scheduling:
     oneimage:
       affinity:

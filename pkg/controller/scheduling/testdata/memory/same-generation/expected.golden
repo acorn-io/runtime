@@ -50,6 +50,7 @@ status:
       left: 0
       oneimage: 0
   namespace: app-created-namespace
+  resolvedOfferings: {}
   scheduling:
     left:
       requirements: {}

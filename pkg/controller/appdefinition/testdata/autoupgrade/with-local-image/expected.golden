@@ -23,6 +23,7 @@ status:
     type: image-pull
   defaults: {}
   namespace: app-created-namespace
+  resolvedOfferings: {}
   staged:
     appImage:
       buildContext: {}

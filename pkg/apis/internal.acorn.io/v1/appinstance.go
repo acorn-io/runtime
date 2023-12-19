@@ -15,6 +15,7 @@ type AppInstanceCondition string
 var (
 	AppInstanceConditionDefined             = "defined"
 	AppInstanceConditionDefaults            = "defaults"
+	AppInstanceConditionResolvedOfferings   = "resolved-offerings"
 	AppInstanceConditionScheduling          = "scheduling"
 	AppInstanceConditionNamespace           = "namespace"
 	AppInstanceConditionParsed              = "parsed"
@@ -210,6 +211,7 @@ type AppInstanceStatus struct {
 	Scheduling                map[string]Scheduling   `json:"scheduling,omitempty"`
 	Conditions                []Condition             `json:"conditions,omitempty"`
 	Defaults                  Defaults                `json:"defaults,omitempty"`
+	ResolvedOfferings         ResolvedOfferings       `json:"resolvedOfferings,omitempty"`
 	Summary                   CommonSummary           `json:"summary,omitempty"`
 	Permissions               []Permissions           `json:"permissions,omitempty"`               // Permissions given to this appInstance (only containers within, not nested Acorns/Services)
 	DeniedConsumerPermissions []Permissions           `json:"deniedConsumerPermissions,omitempty"` // Permissions given to this appInstance by a consumed service, which it is not authorized to have
@@ -240,6 +242,25 @@ type VolumeDefault struct {
 	Class       string      `json:"class,omitempty"`
 	Size        Quantity    `json:"size,omitempty"`
 	AccessModes AccessModes `json:"accessModes,omitempty"`
+}
+
+type ResolvedOfferings struct {
+	Volumes    map[string]VolumeResolvedOffering    `json:"volumes,omitempty"`
+	VolumeSize *resource.Quantity                   `json:"volumeSize,omitempty"`
+	Containers map[string]ContainerResolvedOffering `json:"containers,omitempty"`
+	Region     string                               `json:"region,omitempty"`
+}
+
+type VolumeResolvedOffering struct {
+	Class       string      `json:"class,omitempty"`
+	Size        Quantity    `json:"size,omitempty"`
+	AccessModes AccessModes `json:"accessModes,omitempty"`
+}
+
+type ContainerResolvedOffering struct {
+	Class     string   `json:"class,omitempty"`
+	Memory    *int64   `json:"memory,omitempty"`
+	CPUScaler *float64 `json:"cpuScaler,omitempty"`
 }
 
 type Scheduling struct {

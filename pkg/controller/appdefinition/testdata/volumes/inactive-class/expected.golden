@@ -185,6 +185,7 @@ status:
         class: test-custom-class
         size: 3Gi
   namespace: app-created-namespace
+  resolvedOfferings: {}
   staged:
     appImage:
       buildContext: {}

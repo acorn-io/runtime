@@ -54,6 +54,7 @@ status:
     region: local
   namespace: app-created-namespace
   observedGeneration: 1
+  resolvedOfferings: {}
   staged:
     appImage:
       buildContext: {}
