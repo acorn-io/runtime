@@ -36,6 +36,7 @@ status:
         memory: 0
       container-name:
         memory: 0
+    region: my-region
   staged:
     appImage:
       buildContext: {}

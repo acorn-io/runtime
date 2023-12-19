@@ -58,6 +58,7 @@ status:
         class: sample-compute-class
         cpuScaler: 0.25
         memory: 1048576
+    region: local
   staged:
     appImage:
       buildContext: {}

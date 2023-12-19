@@ -56,6 +56,7 @@ status:
         memory: 1048576
       oneimage:
         memory: 1048576
+    region: local
   staged:
     appImage:
       buildContext: {}

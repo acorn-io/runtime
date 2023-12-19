@@ -7,8 +7,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/config"
 )
 
-// Calculate is a handler that sets the resolved offerings for an AppInstance to its status if
-// and only if its generation is different from its observedGeneration.
+// Calculate is a handler that sets the resolved offerings for an AppInstance to its status.
 //
 // This is necessary because querying for resolved offerings will result in all running
 // AppInstances using that default to redeploy when a default changes. By
@@ -30,8 +29,7 @@ func Calculate(req router.Request, resp router.Response) (err error) {
 		}
 	}()
 
-	// resolveVolumeClasses should run everytime as the function itself will not overwrite any existing
-	// information. Effectively, this means that volume class info only gets set if it have not been set before.
+	// resolveVolumeClasses is idempotent and will only set volume class info if it is not already present.
 	if err = resolveVolumeClasses(req.Ctx, req.Client, appInstance); err != nil {
 		return err
 	}
@@ -52,7 +50,7 @@ func calculate(req router.Request, appInstance *internalv1.AppInstance) error {
 	}
 
 	if appInstance != nil {
-		if err = AddDefaultRegion(req.Ctx, req.Client, *appInstance); err != nil {
+		if err = AddDefaultRegion(req.Ctx, req.Client, appInstance); err != nil {
 			return err
 		}
 	}

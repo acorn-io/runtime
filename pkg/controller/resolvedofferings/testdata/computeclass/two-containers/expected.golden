@@ -57,6 +57,7 @@ status:
         memory: 1048576
       twoimage:
         memory: 0
+    region: local
   staged:
     appImage:
       buildContext: {}

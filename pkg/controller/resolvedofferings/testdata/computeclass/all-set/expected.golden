@@ -55,6 +55,7 @@ status:
         memory: 0
       oneimage:
         memory: 0
+    region: local
   staged:
     appImage:
       buildContext: {}

@@ -37,4 +37,5 @@ status:
       reason: Error
       status: "False"
       type: resolved-offerings
-  resolvedOfferings: {}
+  resolvedOfferings:
+    region: local

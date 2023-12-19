@@ -7,7 +7,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func AddDefaultRegion(ctx context.Context, c client.Client, app v1.AppInstance) error {
+func AddDefaultRegion(ctx context.Context, c client.Client, app *v1.AppInstance) error {
 	if app.GetRegion() == "" {
 		project := new(v1.ProjectInstance)
 		if err := c.Get(ctx, client.ObjectKey{Name: app.GetNamespace()}, project); err != nil {
