@@ -241,6 +241,7 @@ status:
       oneimage: 1048576
   namespace: app-created-namespace
   observedGeneration: 1
+  resolvedOfferings: {}
   scheduling:
     left:
       requirements:
