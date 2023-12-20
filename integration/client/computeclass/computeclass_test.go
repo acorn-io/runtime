@@ -162,26 +162,6 @@ func TestCreatingComputeClasses(t *testing.T) {
 			},
 			fail: true,
 		},
-		// // Raise error to avoid conflicts with
-		// // the "first class" fields for memory and cpu scaling
-		// {
-		// 	name: "invalid-custom-resources-limits",
-		// 	resources: corev1.ResourceRequirements{
-		// 		Limits: corev1.ResourceList{
-		// 			"cpu": resource.MustParse("1"),
-		// 		},
-		// 	},
-		// 	fail: true,
-		// },
-		// {
-		// 	name: "invalid-custom-resources-requests",
-		// 	resources: corev1.ResourceRequirements{
-		// 		Requests: corev1.ResourceList{
-		// 			"memory": resource.MustParse("1"),
-		// 		},
-		// 	},
-		// 	fail: true,
-		// },
 	}
 
 	for _, tt := range checks {

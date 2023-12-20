@@ -23,9 +23,11 @@ status:
                 - bar
       requirements:
         limits:
+          gpu-vendor.example/example-limit: 1
           memory: 1Mi
         requests:
           cpu: 1m
+          gpu-vendor.example/example-limit: 1
           memory: 1Mi
     left:
       requirements:

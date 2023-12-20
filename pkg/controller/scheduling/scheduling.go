@@ -71,10 +71,8 @@ func addScheduling(req router.Request, appInstance *v1.AppInstance, workloads ma
 
 		for sidecarName, sidecarContainer := range container.Sidecars {
 			// disable extra resource indication (GPU et al. for sidecars)
-			if computeClass != nil {
-				if computeClass.Resources != nil {
-					computeClass.Resources = &corev1.ResourceRequirements{Limits: corev1.ResourceList{}, Requests: corev1.ResourceList{}}
-				}
+			if computeClass != nil && computeClass.Resources != nil {
+				computeClass.Resources = &corev1.ResourceRequirements{}
 			}
 			sidecarRequirements, err := ResourceRequirements(req, appInstance, sidecarName, sidecarContainer, computeClass)
 			if err != nil {
@@ -161,14 +159,12 @@ func ResourceRequirements(req router.Request, app *v1.AppInstance, containerName
 	}
 
 	requirements := &corev1.ResourceRequirements{Limits: corev1.ResourceList{}, Requests: corev1.ResourceList{}}
-	if computeClass != nil {
-		if computeClass.Resources != nil {
-			if computeClass.Resources.Requests != nil {
-				requirements.Requests = computeClass.Resources.Requests
-			}
-			if computeClass.Resources.Limits != nil {
-				requirements.Limits = computeClass.Resources.Limits
-			}
+	if computeClass != nil && computeClass.Resources != nil {
+		if computeClass.Resources.Requests != nil {
+			requirements.Requests = computeClass.Resources.Requests
+		}
+		if computeClass.Resources.Limits != nil {
+			requirements.Limits = computeClass.Resources.Limits
 		}
 	}
 

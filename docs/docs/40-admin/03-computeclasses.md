@@ -24,6 +24,11 @@ memory:
   values: # Specific values that are only allowed to be used. Default must be included in these values and max/min cannot be set.
   - 1.5Gi
 cpuScaler: 1 # This is used as a ratio of how many VCPUs to schedule per Gibibyte of memory. In this case it is 1 to 1.
+resources: # The same resources fields for Pods: memory and CPU values will be overwritten by memory and cpuScaler fields
+  limits:
+    gpu-vendor.example/example-limit: 1
+  requests:
+    gpu-vendor.example/example-request: 1
 priorityClassName: foo # The priority class to use for Pods
 runtimeClassName: bar # The runtime class name to use for Pods
 tolerations: # The same toleration fields for Pods
@@ -43,7 +48,7 @@ affinity: # The same affinity fields for Pods
 supportedRegions: ["local"] # should always be set to ["local"]
 ```
 
-If `memory.min`, `memory.max`, `memory.values`, `affinity`, and `tolerations` are not given, then there are no scheduling rules for workloads using the compute class.
+If `memory.min`, `memory.max`, `memory.values`, `resources`, `affinity`, and `tolerations` are not given, then there are no scheduling rules for workloads using the compute class.
 
 ## Cluster Compute Classes
 
