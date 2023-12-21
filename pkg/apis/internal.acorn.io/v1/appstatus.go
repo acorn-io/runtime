@@ -10,6 +10,7 @@ type AppStatus struct {
 	Permissions []Permissions `json:"permissions,omitempty"`
 
 	Containers map[string]ContainerStatus `json:"containers,omitempty"`
+	Functions  map[string]ContainerStatus `json:"functions,omitempty"`
 	Jobs       map[string]JobStatus       `json:"jobs,omitempty"`
 	Volumes    map[string]VolumeStatus    `json:"volumes,omitempty"`
 	Secrets    map[string]SecretStatus    `json:"secrets,omitempty"`
@@ -183,6 +184,7 @@ const (
 	DependencyService   = DependencyType("service")
 	DependencyJob       = DependencyType("job")
 	DependencyContainer = DependencyType("container")
+	DependencyFunction  = DependencyType("function")
 )
 
 func (in JobStatus) GetCommonStatus() CommonStatus {

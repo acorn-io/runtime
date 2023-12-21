@@ -295,6 +295,7 @@ func getImageContainers(c client.Client, ctx context.Context, image apiv1.Image)
 	imageData := imgDetails.AppImage.ImageData
 
 	imageContainers = append(imageContainers, newImageContainerList(image, imageData.Containers)...)
+	imageContainers = append(imageContainers, newImageContainerList(image, imageData.Functions)...)
 	imageContainers = append(imageContainers, newImageContainerList(image, imageData.Jobs)...)
 
 	return imageContainers, nil

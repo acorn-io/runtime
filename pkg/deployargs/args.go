@@ -43,6 +43,13 @@ func Usage(app *v1.AppSpec) func() {
 			fmt.Println(strings.Join(maps.Keys(app.Containers), ", "))
 		}
 
+		if len(app.Functions) == 0 {
+			fmt.Println("Functions: <none>")
+		} else {
+			fmt.Print("Functions: ")
+			fmt.Println(strings.Join(maps.Keys(app.Functions), ", "))
+		}
+
 		var ports []string
 		for containerName, container := range app.Containers {
 			for _, port := range container.Ports {

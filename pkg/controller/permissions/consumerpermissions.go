@@ -6,7 +6,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/config"
-	imagerules "github.com/acorn-io/runtime/pkg/imagerules"
+	"github.com/acorn-io/runtime/pkg/imagerules"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/profiles"
 	"github.com/acorn-io/runtime/pkg/ref"
@@ -53,6 +53,14 @@ func collectConsumerPermissions(ctx context.Context, client kclient.Client, app 
 
 	for containerName, containerDef := range app.Status.AppSpec.Containers {
 		consumerPerms, err := GetConsumerPermissions(ctx, client, app, containerName, containerDef)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, consumerPerms)
+	}
+
+	for functionName, functionDef := range app.Status.AppSpec.Functions {
+		consumerPerms, err := GetConsumerPermissions(ctx, client, app, functionName, functionDef)
 		if err != nil {
 			return nil, err
 		}

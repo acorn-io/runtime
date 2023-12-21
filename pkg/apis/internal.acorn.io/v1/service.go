@@ -54,6 +54,7 @@ type ServiceInstanceSpec struct {
 	Address         string            `json:"address,omitempty"`
 	Ports           Ports             `json:"ports,omitempty"`
 	Container       string            `json:"container,omitempty"`
+	Function        string            `json:"function,omitempty"`
 	Job             string            `json:"job,omitempty"`
 	ContainerLabels map[string]string `json:"containerLabels,omitempty"`
 	Secrets         []string          `json:"secrets,omitempty"`

@@ -55,6 +55,19 @@ let types: {
 		sidecars?: Sidecars
 	}
 
+	Function: {
+		ContainerCommon
+		NameDescription
+		Metadata
+
+		match "consumes": string || [string]
+		match "dirs|directories": {
+			string: FunctionDir
+		}
+		sidecars?:    Sidecars
+		inputSchema?: schema
+	}
+
 	JobEventName: enum("create", "update", "stop", "delete")
 
 	Job: {
@@ -197,25 +210,29 @@ let types: {
 	FileContent: string !~ "^secret://" || string =~ "^secret://[a-z][-a-z0-9.]*/[a-z][-a-z0-9]*(.onchange=(redeploy|no-action)|.mode=[0-7]{3,4})*$" || FileSpec
 
 	ContainerBase: {
-		files?: {
-			string: FileContent
-		}
+		ContainerCommon
 		match "dirs|directories": {
-			string: Dir
+			string: ContainerDir
 		}
-		// 1 or both of image or build is required
-		image?:                                   string
-		build?:                                   string || Build
-		entrypoint?:                              string || [string]
-		match "command|cmd":                      string || [string]
-		match "env|environment":                  EnvVars
-		match "work[dD]ir|working[dD]ir":         string
 		match "interactive|tty|stdin":            bool
 		ports?:                                   PortSingle || [Port] || PortMap
 		match "probes|probe":                     Probes
 		match "depends[oO]n|depends_on|consumes": string || [string]
-		match "mem|memory":                       int
-		user?:                                    User
+	}
+
+	ContainerCommon: {
+		files?: {
+			string: FileContent
+		}
+		// 1 or both of image or build is required
+		image?:                           string
+		build?:                           string || Build
+		entrypoint?:                      string || [string]
+		match "command|cmd":              string || [string]
+		match "env|environment":          EnvVars
+		match "work[dD]ir|working[dD]ir": string
+		match "mem|memory":               int
+		user?:                            User
 		permissions?: {
 			rules: [RuleSpec]
 			clusterRules?: [ClusterRuleSpec]
@@ -230,7 +247,8 @@ let types: {
 	ContextDirRef:  string =~ "^\\./.*$"
 	SecretRef:      string =~ "^secret://[a-z][-a-z0-9.]*(.onchange=(redeploy|no-action))?$"
 
-	Dir: ShortVolumeRef || VolumeRef || EphemeralRef || ContextDirRef || SecretRef
+	FunctionDir:  EphemeralRef || ContextDirRef || SecretRef
+	ContainerDir: ShortVolumeRef || VolumeRef || FunctionDir
 
 	PortSingle: (int > 0 && int < 65536) || PortRegexp
 	Port:       (int > 0 && int < 65536) || PortRegexp || PortSpec
@@ -453,6 +471,21 @@ let types: {
 		}
 	}
 
+	Model: {
+		name:    string
+		params?: object
+	}
+
+	Assistant: {
+		ScopedMetadata
+		NameDescription
+
+		prompts:      string || [string]
+		model?:       string || Model
+		tools:        string || [string]
+		inputSchema?: schema
+	}
+
 	RouteTargetName: "^[a-z][-a-z0-9]*(:[0-9]+)?$"
 
 	PathName: "^/.*$"
@@ -492,6 +525,12 @@ let types: {
 		}
 		services?: {
 			match "\(DNSNamePattern)": Service
+		}
+		assistants?: {
+			match "\(DNSNamePattern)": Assistant
+		}
+		functions?: {
+			match "\(DNSNamePattern)": Function
 		}
 
 		readme?: string

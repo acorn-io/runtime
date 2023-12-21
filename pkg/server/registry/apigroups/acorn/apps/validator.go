@@ -804,6 +804,12 @@ func (s *Validator) getWorkloads(details *apiv1.ImageDetails) (map[string]v1.Con
 			result[sidecarWorkload] = sidecarContainer
 		}
 	}
+	for workload, function := range details.AppSpec.Functions {
+		result[workload] = function
+		for sidecarWorkload, sidecarContainer := range function.Sidecars {
+			result[sidecarWorkload] = sidecarContainer
+		}
+	}
 	for workload, container := range details.AppSpec.Jobs {
 		result[workload] = container
 	}

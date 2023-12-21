@@ -32,8 +32,14 @@ func serviceEndpoints(ctx context.Context, c kclient.Client, app *v1.AppInstance
 
 	endpointSet := map[string]v1.Endpoint{}
 	for _, service := range serviceList.Items {
-		containerName := service.Labels[labels.AcornContainerName]
-		if containerName == "" {
+		targetName := service.Labels[labels.AcornContainerName]
+		if targetName == "" {
+			targetName = service.Labels[labels.AcornJobName]
+		}
+		if targetName == "" {
+			targetName = service.Labels[labels.AcornFunctionName]
+		}
+		if targetName == "" {
 			continue
 		}
 
@@ -70,7 +76,7 @@ func serviceEndpoints(ctx context.Context, c kclient.Client, app *v1.AppInstance
 							// so that we can use this hack to match the ports.
 							if ingressPort.Port == port.Port || ingressPort.Port == port.NodePort {
 								ep := v1.Endpoint{
-									Target:     containerName,
+									Target:     targetName,
 									TargetPort: port.TargetPort.IntVal,
 									Address:    fmt.Sprintf("%s:%d", ingress.Hostname, ingressPort.Port),
 									Protocol:   portProtocol,
@@ -80,7 +86,7 @@ func serviceEndpoints(ctx context.Context, c kclient.Client, app *v1.AppInstance
 						}
 					} else {
 						ep := v1.Endpoint{
-							Target:     containerName,
+							Target:     targetName,
 							TargetPort: port.TargetPort.IntVal,
 							Address:    fmt.Sprintf("%s:%d", ingress.Hostname, portNum),
 							Protocol:   protocol,
@@ -89,7 +95,7 @@ func serviceEndpoints(ctx context.Context, c kclient.Client, app *v1.AppInstance
 					}
 				} else if ingress.IP != "" {
 					ep := v1.Endpoint{
-						Target:     containerName,
+						Target:     targetName,
 						TargetPort: port.TargetPort.IntVal,
 						Address:    fmt.Sprintf("%s:%d", ingress.IP, port.Port),
 						Protocol:   protocol,
@@ -100,7 +106,7 @@ func serviceEndpoints(ctx context.Context, c kclient.Client, app *v1.AppInstance
 
 			if len(service.Status.LoadBalancer.Ingress) == 0 {
 				ep := v1.Endpoint{
-					Target:     containerName,
+					Target:     targetName,
 					TargetPort: port.TargetPort.IntVal,
 					Address:    fmt.Sprintf("<Pending Ingress>:%d", port.Port),
 					Protocol:   protocol,

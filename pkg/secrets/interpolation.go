@@ -64,6 +64,7 @@ type Interpolator struct {
 	errs          *[]error
 	namespace     string
 	containerName string
+	functionName  string
 	jobName       string
 	serviceName   string
 }
@@ -94,6 +95,7 @@ func (i *Interpolator) ForJob(jobName string) *Interpolator {
 	cp.jobName = jobName
 	cp.containerName = ""
 	cp.serviceName = ""
+	cp.functionName = ""
 	return &cp
 }
 
@@ -102,6 +104,16 @@ func (i *Interpolator) ForContainer(containerName string) *Interpolator {
 	cp.jobName = ""
 	cp.serviceName = ""
 	cp.containerName = containerName
+	cp.functionName = ""
+	return &cp
+}
+
+func (i *Interpolator) ForFunction(functionName string) *Interpolator {
+	cp := *i
+	cp.jobName = ""
+	cp.serviceName = ""
+	cp.containerName = ""
+	cp.functionName = functionName
 	return &cp
 }
 
@@ -110,6 +122,7 @@ func (i *Interpolator) ForService(serviceName string) *Interpolator {
 	cp.jobName = ""
 	cp.serviceName = serviceName
 	cp.containerName = ""
+	cp.functionName = ""
 	return &cp
 }
 
@@ -120,6 +133,8 @@ func (i *Interpolator) Incomplete() bool {
 		return i.incomplete[i.containerName]
 	} else if i.serviceName != "" {
 		return i.incomplete[i.serviceName]
+	} else if i.functionName != "" {
+		return i.incomplete[i.functionName]
 	}
 	return len(i.incomplete) > 0
 }
@@ -500,6 +515,11 @@ func (i *Interpolator) saveError(err error) {
 		c := i.app.Status.AppStatus.Containers[i.containerName]
 		c.ExpressionErrors = append(c.ExpressionErrors, exprError)
 		i.app.Status.AppStatus.Containers[i.containerName] = c
+	} else if i.functionName != "" {
+		i.incomplete[i.functionName] = true
+		c := i.app.Status.AppStatus.Functions[i.functionName]
+		c.ExpressionErrors = append(c.ExpressionErrors, exprError)
+		i.app.Status.AppStatus.Functions[i.functionName] = c
 	} else if i.jobName != "" {
 		i.incomplete[i.jobName] = true
 		c := i.app.Status.AppStatus.Jobs[i.jobName]
@@ -519,6 +539,9 @@ func (i *Interpolator) saveError(err error) {
 func (i *Interpolator) getContainerOrJobName() string {
 	if i.containerName != "" {
 		return i.containerName
+	}
+	if i.functionName != "" {
+		return i.functionName
 	}
 	return i.jobName
 }

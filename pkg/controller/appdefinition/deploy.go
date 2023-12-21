@@ -98,6 +98,11 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 	} else if len(objs) > 0 {
 		result = append(result, objs...)
 	}
+	if objs, err := ToFunctions(req, appInstance, tag, pullSecrets, interpolator); err != nil {
+		return err
+	} else {
+		result = append(result, objs...)
+	}
 	if objs, err := toRouters(req.Ctx, req.Client, appInstance); err != nil {
 		return err
 	} else {
@@ -527,6 +532,10 @@ func toContainer(app *v1.AppInstance, tag name.Reference, containerName string, 
 	return containerObject
 }
 
+func functionAnnotations(appInstance *v1.AppInstance, container v1.Container, name string) map[string]string {
+	return labels.GatherScoped(name, v1.LabelTypeFunction, appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations)
+}
+
 func containerAnnotations(appInstance *v1.AppInstance, container v1.Container, name string) map[string]string {
 	return labels.GatherScoped(name, v1.LabelTypeContainer, appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations)
 }
@@ -561,6 +570,12 @@ func addInterpolationLabels(result map[string]string, interpolator *secrets.Inte
 	return result, nil
 }
 
+func functionLabels(appInstance *v1.AppInstance, container v1.Container, name string, interpolator *secrets.Interpolator, kv ...string) (map[string]string, error) {
+	labelMap := labels.GatherScoped(name, v1.LabelTypeFunction, appInstance.Status.AppSpec.Labels, container.Labels, appInstance.Spec.Labels)
+	result := mergeFuncLabels(labelMap, appInstance, name, append([]string{labels.AcornAppPublicName, publicname.Get(appInstance)}, kv...)...)
+	return addInterpolationLabels(result, interpolator)
+}
+
 func containerLabels(appInstance *v1.AppInstance, container v1.Container, name string, interpolator *secrets.Interpolator, kv ...string) (map[string]string, error) {
 	labelMap := labels.GatherScoped(name, v1.LabelTypeContainer, appInstance.Status.AppSpec.Labels, container.Labels, appInstance.Spec.Labels)
 	result := mergeConLabels(labelMap, appInstance, name, append([]string{labels.AcornAppPublicName, publicname.Get(appInstance)}, kv...)...)
@@ -576,12 +591,21 @@ func routerSelectorMatchLabels(appInstance *v1.AppInstance, name string, kv ...s
 	return mergeRouterLabels(make(map[string]string), appInstance, name, kv...)
 }
 
+func selectorMatchLabelsFunc(appInstance *v1.AppInstance, name string, kv ...string) map[string]string {
+	return mergeFuncLabels(make(map[string]string), appInstance, name, kv...)
+}
+
 func selectorMatchLabels(appInstance *v1.AppInstance, name string, kv ...string) map[string]string {
 	return mergeConLabels(make(map[string]string), appInstance, name, kv...)
 }
 
 func mergeRouterLabels(labelMap map[string]string, appInstance *v1.AppInstance, name string, kv ...string) map[string]string {
 	kv = append([]string{labels.AcornRouterName, name}, kv...)
+	return labels.Merge(labelMap, labels.Managed(appInstance, kv...))
+}
+
+func mergeFuncLabels(labelMap map[string]string, appInstance *v1.AppInstance, name string, kv ...string) map[string]string {
+	kv = append([]string{labels.AcornFunctionName, name}, kv...)
 	return labels.Merge(labelMap, labels.Managed(appInstance, kv...))
 }
 
@@ -740,6 +764,87 @@ func getSecretAnnotations(req router.Request, appInstance *v1.AppInstance, conta
 	return result, nil
 }
 
+func toFunctionDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Reference, name string, container v1.Container, pullSecrets *PullSecrets, interpolator *secrets.Interpolator) (*appsv1.Deployment, error) {
+	interpolator = interpolator.ForFunction(name)
+
+	container.Ports = ports.FunctionPortDefs(false)
+	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator, false, false)
+
+	secretAnnotations, err := getSecretAnnotations(req, appInstance, container, interpolator)
+	if err != nil {
+		return nil, err
+	}
+
+	volumes, err := toVolumes(appInstance, container, interpolator, false, false)
+	if err != nil {
+		return nil, err
+	}
+
+	podLabels, err := functionLabels(appInstance, container, name, interpolator)
+	if err != nil {
+		return nil, err
+	}
+	deploymentLabels, err := functionLabels(appInstance, container, name, interpolator)
+	if err != nil {
+		return nil, err
+	}
+	matchLabels := selectorMatchLabelsFunc(appInstance, name)
+
+	deploymentAnnotations := functionAnnotations(appInstance, container, name)
+
+	dep := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        name,
+			Namespace:   appInstance.Status.Namespace,
+			Labels:      deploymentLabels,
+			Annotations: typed.Concat(deploymentAnnotations, getDependencyAnnotations(appInstance, name, container.Dependencies), secretAnnotations, map[string]string{labels.AcornConfigHashAnnotation: appInstance.Status.AppStatus.Functions[name].ConfigHash}),
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: container.Scale,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: matchLabels,
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels:      podLabels,
+					Annotations: typed.Concat(deploymentAnnotations, podAnnotations(appInstance, container), secretAnnotations),
+				},
+				Spec: corev1.PodSpec{
+					Affinity:           appInstance.Status.Scheduling[name].Affinity,
+					Tolerations:        appInstance.Status.Scheduling[name].Tolerations,
+					PriorityClassName:  appInstance.Status.Scheduling[name].PriorityClassName,
+					RuntimeClassName:   stringOrNilPtr(appInstance.Status.Scheduling[name].RuntimeClassName),
+					ImagePullSecrets:   pullSecrets.ForContainer(name, append(containers, initContainers...)),
+					EnableServiceLinks: new(bool),
+					Containers:         containers,
+					InitContainers:     initContainers,
+					Volumes:            volumes,
+					ServiceAccountName: name,
+				},
+			},
+		},
+	}
+
+	if appInstance.Spec.Stop != nil && *appInstance.Spec.Stop {
+		dep.Spec.Replicas = new(int32)
+	} else {
+		interpolator.AddMissingAnnotations(appInstance.GetStopped(), dep.Annotations)
+	}
+
+	// Set karpenter do-not-evict annotation if scale is nil or 1. This prevents karpenter from evicting the pod if deployment is not running with more than 1 replica.
+	if dep.Spec.Replicas == nil || *dep.Spec.Replicas == 1 {
+		cfg, err := config.Get(req.Ctx, req.Client)
+		if err != nil {
+			return nil, err
+		}
+		if z.Dereference(cfg.AutoConfigureKarpenterDontEvictAnnotations) {
+			dep.Spec.Template.Annotations["karpenter.sh/do-not-evict"] = "true"
+		}
+	}
+
+	return dep, nil
+}
+
 func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Reference, name string, container v1.Container, pullSecrets *PullSecrets, interpolator *secrets.Interpolator) (*appsv1.Deployment, error) {
 	var (
 		stateful   = isStateful(appInstance, container)
@@ -839,6 +944,39 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 	}
 
 	return dep, nil
+}
+
+func ToFunctions(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, secrets *secrets.Interpolator) (result []kclient.Object, _ error) {
+	for _, functionName := range typed.SortedKeys(appInstance.Status.AppSpec.Functions) {
+		functionDef := appInstance.Status.AppSpec.Functions[functionName]
+		if ports.IsLinked(appInstance, functionName) {
+			continue
+		}
+		functionDef, err := augmentContainerWithConsumerInfo(req.Ctx, req.Client, appInstance.Status.Namespace, functionDef)
+		if err != nil {
+			return nil, err
+		}
+		dep, err := toFunctionDeployment(req, appInstance, tag, functionName, functionDef, pullSecrets, secrets)
+		if err != nil {
+			return nil, err
+		}
+
+		perms := v1.FindPermission(functionName, appInstance.Status.Permissions)
+		sa, err := toServiceAccount(req, dep.GetName(), dep.GetLabels(), dep.GetAnnotations(), appInstance, perms)
+		if err != nil {
+			return nil, err
+		}
+		if perms.HasRules() {
+			perms, err := toPermissions(req.Ctx, req.Client, perms, dep.GetLabels(), dep.GetAnnotations(), appInstance)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, perms...)
+		}
+		result = append(result, sa, dep, pdb.ToPodDisruptionBudget(dep))
+	}
+
+	return result, nil
 }
 
 func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, secrets *secrets.Interpolator) (result []kclient.Object, _ error) {

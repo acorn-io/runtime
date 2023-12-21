@@ -39,6 +39,12 @@ func findImageInImageData(imageData v1.ImagesData, imageKey string) (string, boo
 			return s.Image, ok
 		}
 		return c.Image, true
+	} else if c, ok := imageData.Functions[containerName]; ok {
+		if sidecarName != "" {
+			s, ok := c.Sidecars[sidecarName]
+			return s.Image, ok
+		}
+		return c.Image, true
 	} else if i, ok := imageData.Images[imageKey]; ok {
 		return i.Image, true
 	} else if j, ok := imageData.Jobs[containerName]; ok {
@@ -170,6 +176,20 @@ func GetImageReferenceForServiceName(svcName string, appSpec *v1.AppSpec, imageD
 		// Only fall back to this check if there are no build records available, or this was a old build
 		// that didn't record build with a context dir properly
 		if !ok && notDirectReference(containerDef, imageData) {
+			return findImageInImageData(imageData, svcName)
+		}
+		return result, ok
+	} else if functionDef, ok := appSpec.Functions[containerName]; ok {
+		if sidecarName != "" {
+			functionDef, ok = functionDef.Sidecars[sidecarName]
+			if !ok {
+				return "", false
+			}
+		}
+		result, ok := findContainerImage(imageData, functionDef.Image, functionDef.Build)
+		// Only fall back to this check if there are no build records available, or this was a old build
+		// that didn't record build with a context dir properly
+		if !ok && notDirectReference(functionDef, imageData) {
 			return findImageInImageData(imageData, svcName)
 		}
 		return result, ok

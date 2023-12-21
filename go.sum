@@ -109,14 +109,14 @@ github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d h1:licZJFw2RwpH
 github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d/go.mod h1:asat636LX7Bqt5lYEZ27JNDcqxfjdBQuJ/MM4CN/Lzo=
 github.com/acomagu/bufpipe v1.0.4 h1:e3H4WUzM3npvo5uv95QuJM3cQspFNtFBzvJ2oNjKIDQ=
 github.com/acomagu/bufpipe v1.0.4/go.mod h1:mxdxdup/WdsKVreO5GpW4+M/1CE2sMG4jeGJ2sYmHc4=
-github.com/acorn-io/aml v0.0.0-20231122062516-f2ffb1e58cbd h1:VfEyBeMeEXaz0R7KPZxkU9QKIfFuBWempchm4OAUXTU=
-github.com/acorn-io/aml v0.0.0-20231122062516-f2ffb1e58cbd/go.mod h1:jImvyZGYOReKDJEEjS2SLjvVAEFcXFMA7OPQ96l1JYA=
+github.com/acorn-io/aml v0.0.0-20231221034445-53c14e08c5ab h1:Xd/y9RIZ6XZTg4968sTR1XxNxxgne+3UVjXF7y6wdus=
+github.com/acorn-io/aml v0.0.0-20231221034445-53c14e08c5ab/go.mod h1:z/Tz4f5dWHj/F5THru0+IQBIq31Xq06S5b7YpPkV7K0=
 github.com/acorn-io/aml/cli v0.0.0-20231113171943-4844e2f3e1a2 h1:CtflOEPAvtpALuC3SM1WApsfTuECXcDuq25E3fZaPdg=
 github.com/acorn-io/aml/cli v0.0.0-20231113171943-4844e2f3e1a2/go.mod h1:D4tWmJlLdsmMbQ/MI4T+Tj4j2PjgTAdde2QDGkeWH20=
 github.com/acorn-io/aml/legacy v0.0.0-20230929081514-1e9f3394432e h1:W67DG9AcoNvBwIOR9OFUCZlSJBaHuvM2kXQ2+C6EnLk=
 github.com/acorn-io/aml/legacy v0.0.0-20230929081514-1e9f3394432e/go.mod h1:XnJZSZq/tG/jWPE/tmm2zy90gOZrJRIaOyKpoMulxfE=
-github.com/acorn-io/baaah v0.0.0-20231009165317-af2b68361b8a h1:0bHfiYUw4ojXCUfGHUPmRewrgJ/EpLQ4BaR4yEy8BC4=
-github.com/acorn-io/baaah v0.0.0-20231009165317-af2b68361b8a/go.mod h1:1KSGxZt0E2MDedJESKUUYtxCwsJ3A+xZiw2QD8cVbjU=
+github.com/acorn-io/baaah v0.0.0-20231221034928-dfcf962a9d5b h1:2k0eAzaBBmvEcC0Adqvl0rg/GpUgQxlJLvIPQFztgCI=
+github.com/acorn-io/baaah v0.0.0-20231221034928-dfcf962a9d5b/go.mod h1:1KSGxZt0E2MDedJESKUUYtxCwsJ3A+xZiw2QD8cVbjU=
 github.com/acorn-io/cmd v0.0.0-20230929053520-ebe1b9879b38 h1:oJMGvI702ZW5L0JjJfGV9ekzU2IqqTGjmAQl4gkO6Ro=
 github.com/acorn-io/cmd v0.0.0-20230929053520-ebe1b9879b38/go.mod h1:bo9ONX4kagbQmXcG4bnfoK53MBFFtbUZ5fR7s9NfS+M=
 github.com/acorn-io/mink v0.0.0-20230804175412-8d121aae112c h1:3equCG9oMf2I5iDZxllb41jmNNSTiIpU3IegCHBtVyk=
@@ -347,8 +347,8 @@ github.com/frankban/quicktest v1.14.4/go.mod h1:4ptaffx2x8+WTWXmUCuVU6aPUX1/Mz7z
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/fsnotify/fsnotify v1.4.9/go.mod h1:znqG4EE+3YCdAaPaxE2ZRY/06pZUdp0tY4IgpuI1SZQ=
 github.com/fsnotify/fsnotify v1.5.4/go.mod h1:OVB6XrOHzAwXMpEM7uPOzcehqUV2UqJxmVXmkdnm1bU=
-github.com/fsnotify/fsnotify v1.6.0 h1:n+5WquG0fcWoWp6xPWfHdbskMCQaFnG6PfBrh1Ky4HY=
-github.com/fsnotify/fsnotify v1.6.0/go.mod h1:sl3t1tCWJFWoRz9R8WJCbQihKKwmorjAbSClcnxKAGw=
+github.com/fsnotify/fsnotify v1.7.0 h1:8JEhPFa5W2WU7YfeZzPNqzMP6Lwt7L2715Ggo0nosvA=
+github.com/fsnotify/fsnotify v1.7.0/go.mod h1:40Bi/Hjc2AVfZrqy+aj+yEI+/bRxZnMJyTJwOpGvigM=
 github.com/fujiwara/shapeio v1.0.0 h1:xG5D9oNqCSUUbryZ/jQV3cqe1v2suEjwPIcEg1gKM8M=
 github.com/fujiwara/shapeio v1.0.0/go.mod h1:LmEmu6L/8jetyj1oewewFb7bZCNRwE7wLCUNzDLaLVA=
 github.com/gabriel-vasile/mimetype v1.4.2 h1:w5qFW6JKBz9Y393Y4q372O9A7cUSequkh1Q7OhCmWKU=
@@ -1349,7 +1349,6 @@ golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10/go.mod h1:oPkhp1MJrh7nUepCBc
 golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220829200755-d48e67d00261/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220906165534-d0df966e6959/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
-golang.org/x/sys v0.0.0-20220908164124-27713097b956/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.2.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.3.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.5.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=

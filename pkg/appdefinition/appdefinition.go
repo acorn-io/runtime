@@ -272,6 +272,7 @@ func (a *AppDefinition) decode(out any) error {
 func (a *AppDefinition) imagesData() (result v1.ImagesData) {
 	for _, imageData := range a.imageDatas {
 		result.Containers = typed.Concat(result.Containers, imageData.Containers)
+		result.Functions = typed.Concat(result.Functions, imageData.Functions)
 		result.Jobs = typed.Concat(result.Jobs, imageData.Jobs)
 		result.Images = typed.Concat(result.Images, imageData.Images)
 		result.Acorns = typed.Concat(result.Acorns, imageData.Acorns)
@@ -307,6 +308,23 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 			}
 		}
 		spec.Containers[containerName] = conSpec
+	}
+
+	for functionName, conSpec := range spec.Functions {
+		if image, ok := GetImageReferenceForServiceName(functionName, spec, imagesData); ok {
+			conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, image)
+		} else {
+			return nil, fmt.Errorf("failed to find image for function [%s] in Acornfile"+messageSuffix, functionName)
+		}
+		for sidecarName, sidecarSpec := range conSpec.Sidecars {
+			if image, ok := GetImageReferenceForServiceName(functionName+"."+sidecarName, spec, imagesData); ok {
+				sidecarSpec.Image, sidecarSpec.Build = assignImage(sidecarSpec.Image, sidecarSpec.Build, image)
+				conSpec.Sidecars[sidecarName] = sidecarSpec
+			} else {
+				return nil, fmt.Errorf("failed to find image for sidecar [%s] in function [%s] in Acornfile"+messageSuffix, sidecarName, functionName)
+			}
+		}
+		spec.Functions[functionName] = conSpec
 	}
 
 	for containerName, conSpec := range spec.Jobs {
@@ -420,6 +438,7 @@ func (a *AppDefinition) WatchFiles(cwd string) (result []string, _ error) {
 	}
 
 	addContainerFiles(fileSet, spec.Containers, cwd)
+	addContainerFiles(fileSet, spec.Functions, cwd)
 	addContainerFiles(fileSet, spec.Jobs, cwd)
 	addFiles(fileSet, spec.Images, cwd)
 	addAcorns(fileSet, spec.Services, cwd)
