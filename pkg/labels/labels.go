@@ -31,6 +31,7 @@ const (
 	AcornSecretSourceName                  = Prefix + "secret-source-name"
 	AcornSecretGenerated                   = Prefix + "secret-generated"
 	AcornContainerName                     = Prefix + "container-name"
+	AcornFunctionName                      = Prefix + "function-name"
 	AcornRouterName                        = Prefix + "router-name"
 	AcornJobName                           = Prefix + "job-name"
 	AcornAppImage                          = Prefix + "app-image"
@@ -157,6 +158,18 @@ func FilterUserDefined(appInstance *v1.AppInstance, allowedLabels, allowedAnnota
 		c.Labels = filter(c.Labels, allowedLabels)
 		c.Annotations = filter(c.Annotations, allowedAnnotations)
 		appInstance.Status.AppSpec.Containers[key] = c
+	}
+
+	for key, c := range appInstance.Status.AppSpec.Functions {
+		c.Labels = filter(c.Labels, allowedLabels)
+		c.Annotations = filter(c.Annotations, allowedAnnotations)
+		appInstance.Status.AppSpec.Functions[key] = c
+	}
+
+	for key, c := range appInstance.Status.AppSpec.Functions {
+		c.Labels = filter(c.Labels, allowedLabels)
+		c.Annotations = filter(c.Annotations, allowedAnnotations)
+		appInstance.Status.AppSpec.Functions[key] = c
 	}
 
 	for key, j := range appInstance.Status.AppSpec.Jobs {

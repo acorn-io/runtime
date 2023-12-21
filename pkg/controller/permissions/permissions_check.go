@@ -164,6 +164,7 @@ func CheckPermissions(req router.Request, _ router.Response) error {
 func GetAppScopedPermissions(app *v1.AppInstance, appSpec *v1.AppSpec) []v1.Permissions {
 	// ServiceNames of the current app level (i.e. not nested Acorns/Services)
 	svcnames := maps.Keys(appSpec.Containers)
+	svcnames = append(svcnames, maps.Keys(appSpec.Functions)...)
 	svcnames = append(svcnames, maps.Keys(appSpec.Jobs)...)
 	svcnames = append(svcnames, maps.Keys(appSpec.Services)...)
 

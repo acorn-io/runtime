@@ -177,6 +177,7 @@ func getNested(ctx context.Context, c kclient.Client, namespace, image string, a
 // getPermissions extracts requested permissions from all containers, jobs, services and nested acorns in the app
 func getPermissions(appSpec *v1.AppSpec) (result []v1.Permissions) {
 	result = append(result, containerPermissions(appSpec.Containers)...)
+	result = append(result, containerPermissions(appSpec.Functions)...)
 	result = append(result, containerPermissions(appSpec.Jobs)...)
 	result = append(result, servicePermissions(appSpec.Services)...)
 	result = append(result, acornPermissions(appSpec.Acorns)...)

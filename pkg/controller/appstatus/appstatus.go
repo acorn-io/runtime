@@ -39,6 +39,15 @@ func resetHandlerControlledFields(app *v1.AppInstance) {
 		app.Status.AppStatus.Containers[name] = status
 	}
 
+	for name, status := range app.Status.AppStatus.Functions {
+		// If the app is being updated, then set the containers to not ready so that the controller will run them again and the
+		// dependency status will be set correctly.
+		status.Ready = status.Ready && appUpToDate
+		status.ExpressionErrors = nil
+		status.Dependencies = nil
+		app.Status.AppStatus.Functions[name] = status
+	}
+
 	for name, status := range app.Status.AppStatus.Jobs {
 		status.ExpressionErrors = nil
 		status.Dependencies = nil
@@ -79,6 +88,10 @@ func PrepareStatus(req router.Request, _ router.Response) error {
 
 	if app.Status.AppStatus.Containers == nil {
 		app.Status.AppStatus.Containers = map[string]v1.ContainerStatus{}
+	}
+
+	if app.Status.AppStatus.Functions == nil {
+		app.Status.AppStatus.Functions = map[string]v1.ContainerStatus{}
 	}
 
 	if app.Status.AppStatus.Jobs == nil {
@@ -124,6 +137,7 @@ func SetStatus(req router.Request, _ router.Response) error {
 	status := app.Status.AppStatus
 
 	setCondition(app, v1.AppInstanceConditionContainers, status.Containers)
+	setCondition(app, v1.AppInstanceConditionFunctions, status.Functions)
 	setCondition(app, v1.AppInstanceConditionJobs, status.Jobs)
 	setCondition(app, v1.AppInstanceConditionVolumes, status.Volumes)
 	setCondition(app, v1.AppInstanceConditionServices, status.Services)
@@ -208,6 +222,7 @@ func setCondition[T commonStatusGetter](obj kclient.Object, conditionName string
 
 func setMessages(app *v1.AppInstance) {
 	setContainerMessages(app)
+	setFunctionMessages(app)
 	setJobMessages(app)
 	setVolumeMessages(app)
 	setServiceMessages(app)
@@ -224,6 +239,10 @@ func Get(ctx context.Context, c kclient.Client, app *v1.AppInstance) (v1.AppStat
 	}
 
 	if err := render.readContainers(); err != nil {
+		return v1.AppStatus{}, err
+	}
+
+	if err := render.readFunctions(); err != nil {
 		return v1.AppStatus{}, err
 	}
 

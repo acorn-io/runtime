@@ -30,6 +30,14 @@ func getDependencyAnnotations(app *v1.AppInstance, containerOrJobName string, de
 				}
 			}
 		}
+		for function := range app.Status.AppSpec.Functions {
+			if dep.TargetName == function {
+				depStatus[dep.TargetName] = v1.DependencyStatus{
+					Ready:          app.Status.AppStatus.Functions[dep.TargetName].Ready,
+					DependencyType: v1.DependencyFunction,
+				}
+			}
+		}
 		for job := range app.Status.AppSpec.Jobs {
 			if dep.TargetName == job {
 				depStatus[dep.TargetName] = v1.DependencyStatus{
@@ -71,6 +79,14 @@ func getDependencyAnnotations(app *v1.AppInstance, containerOrJobName string, de
 			app.Status.AppStatus.Containers = map[string]v1.ContainerStatus{}
 		}
 		app.Status.AppStatus.Containers[containerOrJobName] = s
+	} else if _, ok := app.Status.AppSpec.Functions[containerOrJobName]; ok {
+		s := app.Status.AppStatus.Functions[containerOrJobName]
+		s.Dependencies = depStatus
+
+		if app.Status.AppStatus.Functions == nil {
+			app.Status.AppStatus.Functions = map[string]v1.ContainerStatus{}
+		}
+		app.Status.AppStatus.Functions[containerOrJobName] = s
 	} else if _, ok = app.Status.AppSpec.Jobs[containerOrJobName]; ok {
 		s := app.Status.AppStatus.Jobs[containerOrJobName]
 		s.Dependencies = depStatus

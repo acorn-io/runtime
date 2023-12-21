@@ -123,6 +123,9 @@ func serviceNames(appInstance *v1.AppInstance) sets.Set[string] {
 	for k := range appInstance.Status.AppSpec.Containers {
 		result.Insert(k)
 	}
+	for k := range appInstance.Status.AppSpec.Functions {
+		result.Insert(k)
+	}
 	for k := range appInstance.Status.AppSpec.Jobs {
 		result.Insert(k)
 	}
@@ -301,6 +304,47 @@ func forContainers(interpolator *secrets.Interpolator, appInstance *v1.AppInstan
 	return
 }
 
+func forFunctions(appInstance *v1.AppInstance) (result []kclient.Object) {
+	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Functions) {
+		functionName, function := entry.Key, entry.Value
+
+		if ports2.IsLinked(appInstance, functionName) {
+			continue
+		}
+
+		ports := ports2.FunctionPortDefs(false)
+
+		result = append(result, &v1.ServiceInstance{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      functionName,
+				Namespace: appInstance.Status.Namespace,
+				Labels: labels.Managed(appInstance,
+					labels.AcornPublicName, publicname.ForChild(appInstance, functionName),
+					labels.AcornFunctionName, functionName),
+				Annotations: map[string]string{
+					labels.AcornAppGeneration:        strconv.FormatInt(appInstance.Generation, 10),
+					labels.AcornConfigHashAnnotation: appInstance.Status.AppStatus.Containers[functionName].ConfigHash,
+				},
+			},
+			Spec: v1.ServiceInstanceSpec{
+				AppName:      appInstance.Name,
+				AppNamespace: appInstance.Namespace,
+				PublishMode:  publishMode(appInstance),
+				Publish:      ports2.PortPublishForService(functionName, appInstance.Spec.Publish),
+				Labels: labels.Merge(labels.Managed(appInstance, labels.AcornFunctionName, functionName),
+					labels.GatherScoped(functionName, v1.LabelTypeFunction,
+						appInstance.Status.AppSpec.Labels, function.Labels, appInstance.Spec.Labels)),
+				Annotations: labels.GatherScoped(functionName, v1.LabelTypeFunction,
+					appInstance.Status.AppSpec.Annotations, function.Annotations, appInstance.Spec.Annotations),
+				Ports:    ports,
+				Function: functionName,
+			},
+		})
+	}
+
+	return
+}
+
 func forJobs(interpolator *secrets.Interpolator, appInstance *v1.AppInstance) (result []kclient.Object) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Jobs) {
 		jobName, job := entry.Key, entry.Value
@@ -457,6 +501,7 @@ func ToAcornServices(ctx context.Context, c kclient.Client, interpolator *secret
 	result = append(result, objs...)
 	result = append(result, forAcorns(appInstance)...)
 	result = append(result, forContainers(interpolator, appInstance)...)
+	result = append(result, forFunctions(appInstance)...)
 	result = append(result, forJobs(interpolator, appInstance)...)
 
 	routers, err := forRouters(appInstance)

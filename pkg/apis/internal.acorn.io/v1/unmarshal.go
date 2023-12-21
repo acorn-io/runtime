@@ -430,6 +430,11 @@ func checkForDuplicateNames(in *AppSpec) error {
 			return err
 		}
 	}
+	for name := range in.Functions {
+		if err := addName(names, name, "function"); err != nil {
+			return err
+		}
+	}
 	for name := range in.Jobs {
 		if err := addName(names, name, "job"); err != nil {
 			return err
@@ -452,6 +457,11 @@ func checkForDuplicateNames(in *AppSpec) error {
 	}
 	for name := range in.Images {
 		if err := addName(names, name, "image"); err != nil {
+			return err
+		}
+	}
+	for name := range in.Assistants {
+		if err := addName(names, name, "assistant"); err != nil {
 			return err
 		}
 	}
@@ -499,6 +509,19 @@ func addImpliedResources(in *AppSpec) error {
 		for sidecarName, s := range c.Sidecars {
 			impliedSecretsForContainer(in, s)
 			if err := impliedVolumesForContainer(in, containerName, sidecarName, s); err != nil {
+				return err
+			}
+		}
+	}
+
+	for functionName, c := range in.Functions {
+		impliedSecretsForContainer(in, c)
+		if err := impliedVolumesForContainer(in, functionName, "", c); err != nil {
+			return err
+		}
+		for sidecarName, s := range c.Sidecars {
+			impliedSecretsForContainer(in, s)
+			if err := impliedVolumesForContainer(in, functionName, sidecarName, s); err != nil {
 				return err
 			}
 		}
@@ -681,13 +704,13 @@ func (c containerAliases) SetContainer(dst Container) Container {
 		dst.Dirs = c.Directories
 	}
 	if len(c.DependsOn) > 0 {
-		dst.Dependencies = c.DependsOn
+		dst.Dependencies = append(dst.Dependencies, c.DependsOn...)
 	}
 	if len(c.DependsOnUnderscore) > 0 {
-		dst.Dependencies = c.DependsOnUnderscore
+		dst.Dependencies = append(dst.Dependencies, c.DependsOnUnderscore...)
 	}
 	if len(c.Consumes) > 0 {
-		dst.Dependencies = c.Consumes
+		dst.Dependencies = append(dst.Dependencies, c.Consumes...)
 	}
 	if c.Memory != nil {
 		dst.Memory = c.Memory
@@ -734,6 +757,22 @@ func (in *Acorn) UnmarshalJSON(data []byte) error {
 	a = alias.SetAcorn(a)
 	*in = a
 	return nil
+}
+
+func (in *Prompts) UnmarshalJSON(data []byte) error {
+	*in = Prompts{}
+
+	if isString(data) {
+		s, err := parseString(data)
+		if err != nil {
+			return err
+		}
+		*in = append(*in, s)
+		return nil
+	}
+
+	type prompts Prompts
+	return json.Unmarshal(data, (*prompts)(in))
 }
 
 func (in *Container) UnmarshalJSON(data []byte) error {

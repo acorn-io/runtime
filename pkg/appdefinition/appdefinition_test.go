@@ -3060,6 +3060,33 @@ func TestNestedScopedLabels(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestFunction(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`functions: foo: {
+		image: "foo:latest"
+	}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		errors.Print(os.Stderr, err, nil)
+		t.Fatal(err)
+	}
+
+	autogold.Expect(v1.Container{
+		Image: "foo:latest",
+	}).Equal(t, appSpec.Functions["foo"])
+
+	_, err = NewAppDefinition([]byte(`functions: foo: {
+		image: "foo:latest"
+	}
+	containers: foo: {
+			image: "foo:latest"
+	}`))
+	autogold.Expect("duplicate name [foo] used by [container] and [function]").Equal(t, err.Error())
+}
+
 func TestUserContext(t *testing.T) {
 	appImage, err := NewAppDefinition([]byte(`containers: foo: {
 		image: "foo:latest"

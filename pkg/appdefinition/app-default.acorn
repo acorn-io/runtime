@@ -1,10 +1,10 @@
 
 args: {
-	dev: false
+	dev:         false
 	autoUpgrade: false
 }
 
 profiles: {
-	devMode: dev: true
+	devMode: dev:             true
 	autoUpgrade: autoUpgrade: true
 }

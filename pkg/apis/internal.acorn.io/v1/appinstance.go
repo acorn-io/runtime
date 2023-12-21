@@ -24,6 +24,7 @@ var (
 	AppInstanceConditionSecrets             = "secrets"
 	AppInstanceConditionServices            = "services"
 	AppInstanceConditionContainers          = "containers"
+	AppInstanceConditionFunctions           = "functions"
 	AppInstanceConditionJobs                = "jobs"
 	AppInstanceConditionAcorns              = "acorns"
 	AppInstanceConditionRouters             = "routers"

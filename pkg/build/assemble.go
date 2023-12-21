@@ -129,6 +129,11 @@ func digestOnly(imageData v1.ImagesData) (result v1.ImagesData, err error) {
 		return
 	}
 
+	result.Functions, err = digestOnlyContainers(imageData.Functions)
+	if err != nil {
+		return
+	}
+
 	result.Jobs, err = digestOnlyContainers(imageData.Jobs)
 	if err != nil {
 		return
@@ -146,6 +151,12 @@ func digestOnly(imageData v1.ImagesData) (result v1.ImagesData, err error) {
 
 func allImages(data v1.ImagesData, opts []remote.Option) (result []mutate.IndexAddendum, _ error) {
 	remoteImages, err := containerImages(data.Containers, opts)
+	if err != nil {
+		return nil, err
+	}
+	result = append(result, remoteImages...)
+
+	remoteImages, err = containerImages(data.Functions, opts)
 	if err != nil {
 		return nil, err
 	}

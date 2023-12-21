@@ -19,6 +19,15 @@ var (
 	}
 )
 
+func FunctionPortDefs(publish bool) []v1.PortDef {
+	return []v1.PortDef{{
+		Publish:    publish,
+		Port:       80,
+		Protocol:   v1.ProtocolHTTP,
+		TargetPort: 8080,
+	}}
+}
+
 func CopyServicePorts(ports []corev1.ServicePort) (result []corev1.ServicePort) {
 	for _, port := range ports {
 		port.NodePort = 0

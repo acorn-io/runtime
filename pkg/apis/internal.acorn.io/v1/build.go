@@ -63,6 +63,7 @@ type BuilderSpec struct {
 	Readme     string                               `json:"readme,omitempty"`
 	Services   map[string]AcornBuilderSpec          `json:"services,omitempty"`
 	Containers map[string]ContainerImageBuilderSpec `json:"containers,omitempty"`
+	Functions  map[string]ContainerImageBuilderSpec `json:"functions,omitempty"`
 	Jobs       map[string]ContainerImageBuilderSpec `json:"jobs,omitempty"`
 	Images     map[string]ImageBuilderSpec          `json:"images,omitempty"`
 	Acorns     map[string]AcornBuilderSpec          `json:"acorns,omitempty"`

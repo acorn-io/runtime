@@ -326,6 +326,12 @@ func fromSpec(ctx *buildContext, spec v1.BuilderSpec) (v1.ImagesData, error) {
 	}
 	data.Builds = append(data.Builds, builds...)
 
+	data.Functions, builds, err = buildContainers(ctx, buildCache, spec.Functions)
+	if err != nil {
+		return data, err
+	}
+	data.Builds = append(data.Builds, builds...)
+
 	data.Jobs, builds, err = buildContainers(ctx, buildCache, spec.Jobs)
 	if err != nil {
 		return data, err

@@ -162,7 +162,10 @@ func linkedVolume(app *v1.AppInstance, name string) string {
 }
 
 func (a *appStatusRenderer) volumeIsUsed(volumeName string) bool {
-	for _, container := range append(maps.Values(a.app.Status.AppSpec.Containers), maps.Values(a.app.Status.AppSpec.Jobs)...) {
+	containers := append(maps.Values(a.app.Status.AppSpec.Containers), maps.Values(a.app.Status.AppSpec.Jobs)...)
+	containers = append(containers, maps.Values(a.app.Status.AppSpec.Functions)...)
+
+	for _, container := range containers {
 		for _, mount := range container.Dirs {
 			if mount.Volume == volumeName {
 				return true

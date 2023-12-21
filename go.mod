@@ -12,10 +12,10 @@ replace (
 require (
 	cuelang.org/go v0.6.0
 	github.com/AlecAivazis/survey/v2 v2.3.6
-	github.com/acorn-io/aml v0.0.0-20231122062516-f2ffb1e58cbd
+	github.com/acorn-io/aml v0.0.0-20231221034445-53c14e08c5ab
 	github.com/acorn-io/aml/cli v0.0.0-20231113171943-4844e2f3e1a2
 	github.com/acorn-io/aml/legacy v0.0.0-20230929081514-1e9f3394432e
-	github.com/acorn-io/baaah v0.0.0-20231009165317-af2b68361b8a
+	github.com/acorn-io/baaah v0.0.0-20231221034928-dfcf962a9d5b
 	github.com/acorn-io/mink v0.0.0-20230804175412-8d121aae112c
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
 	github.com/acorn-io/z v0.0.0-20230714155009-a770ecbbdc45
@@ -142,7 +142,7 @@ require (
 	github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
-	github.com/fsnotify/fsnotify v1.6.0 // indirect
+	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/fujiwara/shapeio v1.0.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect

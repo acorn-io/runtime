@@ -9,46 +9,42 @@ import (
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/ports"
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
-	klabels "k8s.io/apimachinery/pkg/labels"
-	"k8s.io/kubectl/pkg/util/deployment"
-	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (a *appStatusRenderer) readContainers() error {
+func (a *appStatusRenderer) readFunctions() error {
 	var (
 		isTransitioning bool
-		existingStatus  = a.app.Status.AppStatus.Containers
+		existingStatus  = a.app.Status.AppStatus.Functions
 	)
 
 	// reset state
-	a.app.Status.AppStatus.Containers = make(map[string]v1.ContainerStatus, len(a.app.Status.AppSpec.Containers))
+	a.app.Status.AppStatus.Functions = make(map[string]v1.ContainerStatus, len(a.app.Status.AppSpec.Functions))
 
-	summary, err := a.getReplicasSummary(labels.AcornContainerName)
+	summary, err := a.getReplicasSummary(labels.AcornFunctionName)
 	if err != nil {
 		return err
 	}
 
-	for containerName, containerDef := range a.app.Status.AppSpec.Containers {
+	for functionName, functionDef := range a.app.Status.AppSpec.Functions {
 		var cs v1.ContainerStatus
-		summary := summary[containerName]
+		summary := summary[functionName]
 
-		cs.Defined = ports.IsLinked(a.app, containerName)
-		cs.LinkOverride = ports.LinkService(a.app, containerName)
+		cs.Defined = ports.IsLinked(a.app, functionName)
+		cs.LinkOverride = ports.LinkService(a.app, functionName)
 		cs.ErrorMessages = append(cs.ErrorMessages, summary.ErrorMessages...)
-		cs.ExpressionErrors = existingStatus[containerName].ExpressionErrors
-		cs.Dependencies = existingStatus[containerName].Dependencies
+		cs.ExpressionErrors = existingStatus[functionName].ExpressionErrors
+		cs.Dependencies = existingStatus[functionName].Dependencies
 		cs.TransitioningMessages = append(cs.TransitioningMessages, summary.TransitioningMessages...)
 		cs.MaxReplicaRestartCount = summary.MaxReplicaRestartCount
-		hash, err := configHash(containerDef)
+		hash, err := configHash(functionDef)
 		if err != nil {
 			return err
 		}
 		cs.ConfigHash = hash
 
 		dep := appsv1.Deployment{}
-		err = a.c.Get(a.ctx, router.Key(a.app.Status.Namespace, containerName), &dep)
+		err = a.c.Get(a.ctx, router.Key(a.app.Status.Namespace, functionName), &dep)
 		if apierror.IsNotFound(err) {
 			// do nothing
 		} else if err != nil {
@@ -62,7 +58,7 @@ func (a *appStatusRenderer) readContainers() error {
 			cs.UpToDateReplicaCount = dep.Status.UpdatedReplicas
 
 			if cs.UpToDate && cs.ReadyReplicaCount == cs.DesiredReplicaCount && cs.UpToDateReplicaCount >= cs.DesiredReplicaCount {
-				cs.Ready, err = a.isDeploymentReady(&dep, labels.AcornContainerName)
+				cs.Ready, err = a.isDeploymentReady(&dep, labels.AcornFunctionName)
 				if err != nil {
 					return err
 				}
@@ -72,7 +68,7 @@ func (a *appStatusRenderer) readContainers() error {
 		if cs.LinkOverride != "" {
 			var err error
 			cs.UpToDate = true
-			cs.Ready, cs.Defined, err = a.isServiceReady(containerName)
+			cs.Ready, cs.Defined, err = a.isServiceReady(functionName)
 			if err != nil {
 				return err
 			}
@@ -82,13 +78,13 @@ func (a *appStatusRenderer) readContainers() error {
 			isTransitioning = true
 		}
 
-		a.app.Status.AppStatus.Containers[containerName] = cs
+		a.app.Status.AppStatus.Functions[functionName] = cs
 	}
 
 	a.app.Status.AppStatus.Stopped = false
 	if !isTransitioning && a.app.GetStopped() {
 		allZero := true
-		for _, v := range a.app.Status.AppStatus.Containers {
+		for _, v := range a.app.Status.AppStatus.Functions {
 			if v.DesiredReplicaCount != 0 {
 				allZero = false
 				break
@@ -102,8 +98,8 @@ func (a *appStatusRenderer) readContainers() error {
 	return nil
 }
 
-func setContainerMessages(app *v1.AppInstance) {
-	for containerName, cs := range app.Status.AppStatus.Containers {
+func setFunctionMessages(app *v1.AppInstance) {
+	for functionName, cs := range app.Status.AppStatus.Functions {
 		addExpressionErrors(&cs.CommonStatus, cs.ExpressionErrors)
 
 		// Not ready if we have any error messages
@@ -151,62 +147,10 @@ func setContainerMessages(app *v1.AppInstance) {
 				cs.Messages = append(cs.Messages, fmt.Sprintf("%d running replicas", cs.RunningReplicaCount))
 			}
 			if cs.MaxReplicaRestartCount > 0 {
-				cs.Messages = append(cs.Messages, fmt.Sprintf("%d container restarts", cs.MaxReplicaRestartCount))
+				cs.Messages = append(cs.Messages, fmt.Sprintf("%d function restarts", cs.MaxReplicaRestartCount))
 			}
 		}
 
-		app.Status.AppStatus.Containers[containerName] = cs
+		app.Status.AppStatus.Functions[functionName] = cs
 	}
-}
-
-func (a *appStatusRenderer) isDeploymentReady(dep *appsv1.Deployment, labelNameForSelection string) (bool, error) {
-	available := false
-	for _, cond := range dep.Status.Conditions {
-		if cond.Type == "Available" && cond.Status == corev1.ConditionTrue {
-			available = true
-			break
-		}
-	}
-
-	if !available {
-		return false, nil
-	}
-
-	if dep.Annotations[labels.AcornAppGeneration] != strconv.Itoa(int(a.app.Generation)) ||
-		dep.Status.ObservedGeneration != dep.Generation ||
-		dep.Status.Replicas != dep.Status.ReadyReplicas ||
-		dep.Status.Replicas != dep.Status.UpdatedReplicas {
-		return false, nil
-	}
-
-	reps := &appsv1.ReplicaSetList{}
-	err := a.c.List(a.ctx, reps, &kclient.ListOptions{
-		LabelSelector: klabels.SelectorFromSet(map[string]string{
-			labels.AcornAppName:      a.app.Name,
-			labels.AcornAppNamespace: a.app.Namespace,
-			labelNameForSelection:    dep.Labels[labelNameForSelection],
-		}),
-		Namespace: a.app.Status.Namespace,
-	})
-	if err != nil {
-		return false, nil
-	}
-
-	for _, rep := range reps.Items {
-		if rep.Annotations[deployment.RevisionAnnotation] == dep.Annotations[deployment.RevisionAnnotation] &&
-			rep.Generation == rep.Status.ObservedGeneration &&
-			rep.Status.Replicas == rep.Status.ReadyReplicas &&
-			rep.Status.Replicas == rep.Status.AvailableReplicas {
-			return true, nil
-		}
-	}
-
-	return false, nil
-}
-
-func replicas(replicas *int32) int32 {
-	if replicas == nil {
-		return 1
-	}
-	return *replicas
 }

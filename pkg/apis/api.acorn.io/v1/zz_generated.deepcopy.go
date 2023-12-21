@@ -6,6 +6,7 @@
 package v1
 
 import (
+	jsonschema "github.com/acorn-io/aml/pkg/jsonschema"
 	internal_acorn_iov1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -93,6 +94,13 @@ func (in *Acornfile) DeepCopyInto(out *Acornfile) {
 			(*out)[key] = *val.DeepCopy()
 		}
 	}
+	if in.Functions != nil {
+		in, out := &in.Functions, &out.Functions
+		*out = make(map[string]internal_acorn_iov1.Container, len(*in))
+		for key, val := range *in {
+			(*out)[key] = *val.DeepCopy()
+		}
+	}
 	if in.Jobs != nil {
 		in, out := &in.Jobs, &out.Jobs
 		*out = make(map[string]internal_acorn_iov1.Container, len(*in))
@@ -138,6 +146,13 @@ func (in *Acornfile) DeepCopyInto(out *Acornfile) {
 	if in.Services != nil {
 		in, out := &in.Services, &out.Services
 		*out = make(map[string]internal_acorn_iov1.Service, len(*in))
+		for key, val := range *in {
+			(*out)[key] = *val.DeepCopy()
+		}
+	}
+	if in.Assistants != nil {
+		in, out := &in.Assistants, &out.Assistants
+		*out = make(map[string]internal_acorn_iov1.Assistant, len(*in))
 		for key, val := range *in {
 			(*out)[key] = *val.DeepCopy()
 		}
@@ -1059,6 +1074,11 @@ func (in *EmbeddedContainer) DeepCopyInto(out *EmbeddedContainer) {
 		for key, val := range *in {
 			(*out)[key] = *val.DeepCopy()
 		}
+	}
+	if in.InputSchema != nil {
+		in, out := &in.InputSchema, &out.InputSchema
+		*out = new(jsonschema.Schema)
+		(*in).DeepCopyInto(*out)
 	}
 }
 

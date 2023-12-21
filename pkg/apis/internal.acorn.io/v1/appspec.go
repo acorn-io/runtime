@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/acorn-io/aml/pkg/jsonschema"
 	"golang.org/x/exp/slices"
 	rbacv1 "k8s.io/api/rbac/v1"
 )
@@ -665,6 +666,9 @@ type Container struct {
 
 	// Sidecars are not available on sidecars
 	Sidecars map[string]Container `json:"sidecars,omitempty"`
+
+	// InputSchema is only available on function
+	InputSchema *jsonschema.Schema `json:"inputSchema,omitempty"`
 }
 
 type Image struct {
@@ -682,6 +686,7 @@ type AppSpec struct {
 	Info        string                   `json:"info,omitempty"`
 	Icon        string                   `json:"icon,omitempty"`
 	Containers  map[string]Container     `json:"containers,omitempty"`
+	Functions   map[string]Container     `json:"functions,omitempty"`
 	Jobs        map[string]Container     `json:"jobs,omitempty"`
 	Images      map[string]Image         `json:"images,omitempty"`
 	Volumes     map[string]VolumeRequest `json:"volumes,omitempty"`
@@ -689,7 +694,20 @@ type AppSpec struct {
 	Acorns      map[string]Acorn         `json:"acorns,omitempty"`
 	Routers     map[string]Router        `json:"routers,omitempty"`
 	Services    map[string]Service       `json:"services,omitempty"`
+	Assistants  map[string]Assistant     `json:"assistants,omitempty"`
 }
+
+type Assistant struct {
+	Labels       map[string]string  `json:"labels,omitempty"`
+	Annotations  map[string]string  `json:"annotations,omitempty"`
+	Name         string             `json:"name,omitempty"`
+	Description  string             `json:"description,omitempty"`
+	Prompts      Prompts            `json:"prompts,omitempty"`
+	Dependencies Dependencies       `json:"tools,omitempty"`
+	InputSchema  *jsonschema.Schema `json:"inputSchema,omitempty"`
+}
+
+type Prompts []string
 
 type Route struct {
 	Path              string   `json:"path,omitempty"`
