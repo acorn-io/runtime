@@ -40,10 +40,7 @@ type Controller struct {
 }
 
 func New(ctx context.Context) (*Controller, error) {
-	if err := crds.Create(ctx, scheme.Scheme, v1.SchemeGroupVersion); err != nil {
-		return nil, err
-	}
-	if err := crds.Create(ctx, scheme.Scheme, adminv1.SchemeGroupVersion); err != nil {
+	if err := crds.Create(ctx, scheme.Scheme, v1.SchemeGroupVersion, adminv1.SchemeGroupVersion); err != nil {
 		return nil, err
 	}
 

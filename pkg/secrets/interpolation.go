@@ -241,6 +241,19 @@ func (i *Interpolator) GetProjectName() (string, error) {
 	return name, nil
 }
 
+func (i *Interpolator) GetRegion() (string, error) {
+	if region := i.app.GetRegion(); region != "" {
+		return region, nil
+	}
+
+	project := &v1.ProjectInstance{}
+	if err := i.client.Get(i.ctx, router.Key("", i.app.Namespace), project); err != nil {
+		return "", err
+	}
+
+	return project.Status.DefaultRegion, nil
+}
+
 func (i *Interpolator) resolveApp(keyName string) (string, bool, error) {
 	switch strings.ToLower(keyName) {
 	case "name":
@@ -270,6 +283,9 @@ func (i *Interpolator) resolveApp(keyName string) (string, bool, error) {
 	case "externalid":
 		externalID, err := i.getExternalID()
 		return externalID, true, err
+	case "region":
+		region, err := i.GetRegion()
+		return region, true, err
 	}
 	return "", false, nil
 }
