@@ -51,7 +51,7 @@ status:
   resolvedOfferings:
     containers:
       "":
-        memory: 0
+        memory: 1048576
       left:
         memory: 2097152
       oneimage:

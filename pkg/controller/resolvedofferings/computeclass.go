@@ -51,6 +51,15 @@ func resolveComputeClasses(req router.Request, cfg *apiv1.Config, appInstance *v
 		}
 	}
 
+	// Check to see if the user overrode the memory for all containers
+	if appInstance.Spec.Memory[""] != nil {
+		appInstance.Status.ResolvedOfferings.Containers[""] = v1.ContainerResolvedOffering{
+			Memory:    appInstance.Spec.Memory[""],
+			CPUScaler: appInstance.Status.ResolvedOfferings.Containers[""].CPUScaler,
+			Class:     appInstance.Status.ResolvedOfferings.Containers[""].Class,
+		}
+	}
+
 	// Set the compute class info for each container and job individually
 	if err := resolveComputeClass(req, appInstance, cfg.WorkloadMemoryDefault, cc, defaultCC, appInstance.Status.AppSpec.Containers); err != nil {
 		return err
@@ -91,10 +100,12 @@ func resolveComputeClass(req router.Request, appInstance *v1.AppInstance, config
 
 		memory := configDefault // set to global default first, then check the higher priority values
 
-		if containerMemoryOverride := appInstance.Spec.Memory[name]; containerMemoryOverride != nil { // runtime-level overrides from the user
-			memory = containerMemoryOverride
+		if appInstance.Spec.Memory[name] != nil { // runtime-level overrides from the user
+			memory = appInstance.Spec.Memory[name]
 		} else if container.Memory != nil { // defaults in the acorn image
 			memory = container.Memory
+		} else if appInstance.Spec.Memory[""] != nil { // runtime-level overrides from the user for all containers in the app
+			memory = appInstance.Spec.Memory[""]
 		} else if cc != nil { // defaults from compute class
 			parsedMemory, err := computeclasses.ParseComputeClassMemory(cc.Memory)
 			if err != nil {
