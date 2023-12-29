@@ -132,6 +132,30 @@ func TestCollectPorts(t *testing.T) {
 				{TargetPort: 7070, Port: 7000, Hostname: "myapp3.local"},
 			},
 		},
+		// same port mappings on different hostnames
+		{
+			name: "same target ports, same ports, different hostnames",
+			ports: []v1.PortDef{
+				{TargetPort: 8080, Port: 8080, Hostname: "myapp.local"},
+				{TargetPort: 8080, Port: 8080, Hostname: "myapp2.local"},
+			},
+			expected: []v1.PortDef{
+				{TargetPort: 8080, Port: 8080, Hostname: "myapp.local"},
+				{TargetPort: 8080, Port: 8080, Hostname: "myapp2.local"},
+			},
+		},
+		{
+			name: "same target ports, same ports, different protocols, different hostnames - tcp twice ",
+			ports: []v1.PortDef{
+				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolTCP, Hostname: "myapp.local"},
+				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolUDP, Hostname: "myapp2.local"},
+				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolHTTP2, Hostname: "myapp3.local"},
+			},
+			expected: []v1.PortDef{
+				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolTCP, Hostname: "myapp.local"},
+				{TargetPort: 8080, Port: 8080, Protocol: v1.ProtocolUDP, Hostname: "myapp2.local"},
+			},
+		},
 		{
 			name: "same target ports, same ports, different protocols - tcp twice",
 			ports: []v1.PortDef{
