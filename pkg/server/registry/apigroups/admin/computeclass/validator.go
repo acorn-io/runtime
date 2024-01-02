@@ -45,13 +45,9 @@ func (s *ProjectValidator) Validate(ctx context.Context, obj runtime.Object) (re
 
 	for _, resource := range invalidResources {
 		if _, specified := cc.Resources.Requests[resource]; specified {
-			return append(
-				result,
-				field.Invalid(field.NewPath(fmt.Sprintf("spec.resources.requests%s", string(resource))), cc.Default, fmt.Sprintf("Cannot specifiy spec.resources.requests.%s. Use explicit spec.cpuScaler and spec.memory instead", string(resource))))
+			return append(result, field.Invalid(field.NewPath(fmt.Sprintf("spec.resources.requests%s", string(resource))), cc.Default, fmt.Sprintf("Cannot specifiy spec.resources.requests.%s. Use explicit spec.cpuScaler and spec.memory instead", string(resource))))
 		}
-	}
 
-	for _, resource := range invalidResources {
 		if _, specified := cc.Resources.Limits[resource]; specified {
 			return append(result, field.Invalid(field.NewPath(fmt.Sprintf("spec.resources.limits%s", string(resource))), cc.Default, fmt.Sprintf("Cannot specifiy spec.resources.limits.%s. Use explicit spec.cpuScaler and spec.memory instead", string(resource))))
 		}
@@ -100,9 +96,7 @@ func (s *ClusterValidator) Validate(ctx context.Context, obj runtime.Object) (re
 		if _, specified := cc.Resources.Requests[resource]; specified {
 			return append(result, field.Invalid(field.NewPath(fmt.Sprintf("spec.resources.requests%s", string(resource))), cc.Default, fmt.Sprintf("Cannot specifiy spec.resources.requests.%s. Use explicit spec.cpuScaler and spec.memory instead", string(resource))))
 		}
-	}
 
-	for _, resource := range invalidResources {
 		if _, specified := cc.Resources.Limits[resource]; specified {
 			return append(result, field.Invalid(field.NewPath(fmt.Sprintf("spec.resources.limits%s", string(resource))), cc.Default, fmt.Sprintf("Cannot specifiy spec.resources.limits.%s. Use explicit spec.cpuScaler and spec.memory instead", string(resource))))
 		}
