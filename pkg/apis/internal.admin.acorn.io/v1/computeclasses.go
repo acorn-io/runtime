@@ -65,8 +65,9 @@ type ProjectComputeClassInstanceList struct {
 }
 
 type ComputeClassMemory struct {
-	Min     string   `json:"min,omitempty"`
-	Max     string   `json:"max,omitempty"`
-	Default string   `json:"default,omitempty"`
-	Values  []string `json:"values,omitempty"`
+	Min           string   `json:"min,omitempty"`
+	Max           string   `json:"max,omitempty"`
+	Default       string   `json:"default,omitempty"`
+	RequestScalar float64  `json:"requestScalar,omitempty"`
+	Values        []string `json:"values,omitempty"`
 }

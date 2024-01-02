@@ -46,7 +46,7 @@ func ValidateMemory(memSpec MemoryMap, containerName string, container Container
 		memMaximum = *specMemMaximum
 	}
 
-	// Determine which memory should be used to set the resource limit/requests. Gets set
+	// Determine which memory should be used to set the resource limit. Gets set
 	// 4 ways: User setting a specific workload, user setting all workloads, Acornfile, or
 	// from the apiv1.Config default.
 	memBytes, errType := memDefault, ErrInvalidDefaultMemory
@@ -80,7 +80,7 @@ func ValidateMemory(memSpec MemoryMap, containerName string, container Container
 					errType, defaultQuantity, maxQuantity)
 			}
 		} else if memBytes == 0 {
-			// For bytes, 0 is viewed as the maximum allowed memory". As such,
+			// For bytes, 0 is viewed as the maximum allowed memory. As such,
 			// update to the current maximum.
 			memBytes = memMaximum
 		}
