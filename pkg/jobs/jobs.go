@@ -11,6 +11,7 @@ import (
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/appdefinition"
 	"github.com/acorn-io/runtime/pkg/encryption/nacl"
+	"github.com/acorn-io/z"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/utils/strings/slices"
@@ -138,7 +139,7 @@ func GetEvent(jobName string, appInstance *v1.AppInstance) string {
 	if !appInstance.DeletionTimestamp.IsZero() {
 		return "delete"
 	}
-	if appInstance.Spec.Stop != nil && *appInstance.Spec.Stop {
+	if z.Dereference(appInstance.Spec.Stop) {
 		return "stop"
 	}
 	if (appInstance.Generation <= 1 || slices.Contains(appInstance.Status.AppSpec.Jobs[jobName].Events, "create")) && !appInstance.Status.AppStatus.Jobs[jobName].CreateEventSucceeded {
