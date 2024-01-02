@@ -59,6 +59,24 @@ func TestCreatingComputeClasses(t *testing.T) {
 			fail: false,
 		},
 		{
+			name: "invalid-custom-resources-limits",
+			resources: corev1.ResourceRequirements{
+				Limits: corev1.ResourceList{
+					"cpu": resource.MustParse("1"),
+				},
+			},
+			fail: true,
+		},
+		{
+			name: "invalid-custom-resources-requests",
+			resources: corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					"memory": resource.MustParse("1"),
+				},
+			},
+			fail: true,
+		},
+		{
 			name: "valid-only-min",
 			memory: adminv1.ComputeClassMemory{
 				Min: "512Mi",
