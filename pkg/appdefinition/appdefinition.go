@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/acorn-io/aml"
-	amllegacy "github.com/acorn-io/aml/legacy"
 	"github.com/acorn-io/aml/pkg/eval"
 	"github.com/acorn-io/aml/pkg/value"
 	"github.com/acorn-io/baaah/pkg/typed"
@@ -35,7 +34,6 @@ const (
 	messageSuffix    = ", you may need to define the image/build in the images section of the Acornfile"
 
 	AcornfileSchemaVersion = "v1"
-	V0Pragma               = "//acorn:amlv0"
 )
 
 var (
@@ -76,7 +74,6 @@ type DataFiles struct {
 
 type AppDefinition struct {
 	data         []byte
-	acornfileV0  bool
 	imageDatas   []v1.ImagesData
 	hasImageData bool
 	args         map[string]any
@@ -84,16 +81,9 @@ type AppDefinition struct {
 }
 
 func FromAppImage(appImage *v1.AppImage) (appDef *AppDefinition, err error) {
-	if appImage.Version != nil && appImage.Version.AcornfileSchema == AcornfileSchemaVersion {
-		appDef, err = NewAppDefinition([]byte(appImage.Acornfile))
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		appDef, err = NewLegacyAppDefinition([]byte(appImage.Acornfile))
-		if err != nil {
-			return nil, err
-		}
+	appDef, err = NewAppDefinition([]byte(appImage.Acornfile))
+	if err != nil {
+		return nil, err
 	}
 
 	appDef = appDef.WithImageData(appImage.ImageData)
@@ -107,7 +97,6 @@ func (a *AppDefinition) clone() AppDefinition {
 		hasImageData: a.hasImageData,
 		args:         a.args,
 		profiles:     a.profiles,
-		acornfileV0:  a.acornfileV0,
 	}
 }
 
@@ -129,22 +118,9 @@ func (a *AppDefinition) WithImageData(imageData v1.ImagesData) *AppDefinition {
 	return &result
 }
 
-func NewLegacyAppDefinition(data []byte) (*AppDefinition, error) {
-	appDef := &AppDefinition{
-		data:        data,
-		acornfileV0: true,
-	}
-	_, err := appDef.AppSpec()
-	if err != nil {
-		return nil, err
-	}
-	return appDef, nil
-}
-
 func NewAppDefinition(data []byte) (*AppDefinition, error) {
 	appDef := &AppDefinition{
-		data:        data,
-		acornfileV0: strings.HasPrefix(string(data), V0Pragma),
+		data: data,
 	}
 	_, err := appDef.AppSpec()
 	if err != nil {
@@ -215,47 +191,7 @@ func (a *AppDefinition) getData() []byte {
 	return append(a.data, def...)
 }
 
-func (a *AppDefinition) decodeLegacy(out any) error {
-	decoder := amllegacy.NewDecoder(bytes.NewReader(a.data), amllegacy.Options{
-		Args:      a.args,
-		Profiles:  a.profiles,
-		Acornfile: true,
-	})
-
-	if f, ok := out.(*value.FuncSchema); ok {
-		args, err := decoder.Args()
-		if err != nil {
-			return err
-		}
-
-		for _, profile := range args.Profiles {
-			f.ProfileNames = append(f.ProfileNames, value.Name{
-				Name:        profile.Name,
-				Description: profile.Description,
-			})
-		}
-
-		for _, param := range args.Params {
-			f.Args = append(f.Args, value.ObjectSchemaField{
-				Key:         param.Name,
-				Description: param.Description,
-				Schema: &value.TypeSchema{
-					KindValue: value.Kind(param.Type),
-				},
-			})
-		}
-
-		return nil
-	}
-
-	return decoder.Decode(out)
-}
-
 func (a *AppDefinition) decode(out any) error {
-	if a.acornfileV0 {
-		return a.decodeLegacy(out)
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
