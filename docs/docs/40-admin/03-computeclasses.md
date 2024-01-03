@@ -21,6 +21,7 @@ memory:
   min: 1Gi
   max: 2Gi
   default: 1Gi # This default overrides the install-wide memory default
+  requestScaler: .5 # A percentage of memory to request in relation to the limit, will not go below a configured min value
   values: # Specific values that are only allowed to be used. Default must be included in these values and max/min cannot be set.
   - 1.5Gi
 cpuScaler: 1 # This is used as a ratio of how many VCPUs to schedule per Gibibyte of memory. In this case it is 1 to 1.

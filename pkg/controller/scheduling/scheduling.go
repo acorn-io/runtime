@@ -187,18 +187,36 @@ func ResourceRequirements(req router.Request, app *v1.AppInstance, containerName
 		}
 	}
 
-	memoryQuantity, err := v1.ValidateMemory(app.Spec.Memory, containerName, container, memDefault, memMax)
+	memoryLimit, err := v1.ValidateMemory(app.Spec.Memory, containerName, container, memDefault, memMax)
 	if err != nil {
 		return nil, err
 	}
 
-	if memoryQuantity.Value() != 0 {
-		requirements.Requests[corev1.ResourceMemory] = memoryQuantity
-		requirements.Limits[corev1.ResourceMemory] = memoryQuantity
+	// Figure out the scaled value of memory to request based on the compute class
+	memoryRequest := memoryLimit.DeepCopy()
+	if computeClass != nil && computeClass.Memory.RequestScaler != 0 {
+		// The following line should hold up without loss of precision up to 4 petabytes
+		memoryRequest.Set(int64(memoryLimit.AsApproximateFloat64() * computeClass.Memory.RequestScaler))
+
+		// Never allocate less than the defined minimum of the compute class
+		if computeClass.Memory.Min != "" && computeClass.Memory.Min != "0" {
+			minValue, err := resource.ParseQuantity(computeClass.Memory.Min)
+			if err != nil {
+				return nil, err
+			}
+			if minValue.Cmp(memoryRequest) == 1 {
+				memoryRequest = minValue
+			}
+		}
+	}
+
+	if memoryLimit.Value() != 0 {
+		requirements.Requests[corev1.ResourceMemory] = memoryRequest
+		requirements.Limits[corev1.ResourceMemory] = memoryLimit
 	}
 
 	if computeClass != nil {
-		cpuQuantity, err := computeclasses.CalculateCPU(*computeClass, memDefault, memoryQuantity)
+		cpuQuantity, err := computeclasses.CalculateCPU(*computeClass, memDefault, memoryRequest)
 		if err != nil {
 			return nil, err
 		}

@@ -59,6 +59,10 @@ func ParseComputeClassMemory(memory internaladminv1.ComputeClassMemory) (memoryQ
 	}
 	quantities.Def = &defInt
 
+	if memory.RequestScaler < 0 || memory.RequestScaler > 1 {
+		return memoryQuantities{}, errors.New("request scaler value must be between 0 and 1, inclusive")
+	}
+
 	quantities.Values = make([]*resource.Quantity, len(memory.Values))
 	for i, value := range memory.Values {
 		valueInt, err := parseQuantity(value)

@@ -180,6 +180,41 @@ func TestCreatingComputeClasses(t *testing.T) {
 			},
 			fail: true,
 		},
+		{
+			name:      "valid-values-with-scaler",
+			cpuScaler: 0.25,
+			memory: adminv1.ComputeClassMemory{
+				RequestScaler: 0.1,
+				Default:       "1Gi",
+				Values:        []string{"1Gi", "2Gi"},
+			},
+		},
+		{
+			name: "valid-scaler-upper-bound",
+			memory: adminv1.ComputeClassMemory{
+				RequestScaler: 1.0,
+			},
+		},
+		{
+			name: "valid-scaler-lower-bound",
+			memory: adminv1.ComputeClassMemory{
+				RequestScaler: 0,
+			},
+		},
+		{
+			name: "invalid-scaler-negative",
+			memory: adminv1.ComputeClassMemory{
+				RequestScaler: -0.1,
+			},
+			fail: true,
+		},
+		{
+			name: "invalid-scaler-too-large",
+			memory: adminv1.ComputeClassMemory{
+				RequestScaler: 1.1,
+			},
+			fail: true,
+		},
 	}
 
 	for _, tt := range checks {
