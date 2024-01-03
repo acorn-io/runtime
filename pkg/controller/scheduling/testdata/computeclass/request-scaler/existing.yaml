@@ -9,7 +9,7 @@ memory:
   min: 1Mi # 1Mi
   max: 2Mi # 2Mi
   default: 2Mi # 2Mi
-  requestScalar: .5
+  requestScaler: .5
 affinity:
   nodeAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:

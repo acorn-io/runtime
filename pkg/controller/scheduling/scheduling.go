@@ -194,9 +194,9 @@ func ResourceRequirements(req router.Request, app *v1.AppInstance, containerName
 
 	// Figure out the scaled value of memory to request based on the compute class
 	memoryRequest := memoryLimit.DeepCopy()
-	if computeClass != nil && computeClass.Memory.RequestScalar != 0 {
+	if computeClass != nil && computeClass.Memory.RequestScaler != 0 {
 		// The following line should hold up without loss of precision up to 4 petabytes
-		memoryRequest.Set(int64(memoryLimit.AsApproximateFloat64() * computeClass.Memory.RequestScalar))
+		memoryRequest.Set(int64(memoryLimit.AsApproximateFloat64() * computeClass.Memory.RequestScaler))
 
 		// Never allocate less than the defined minimum of the compute class
 		if computeClass.Memory.Min != "" && computeClass.Memory.Min != "0" {

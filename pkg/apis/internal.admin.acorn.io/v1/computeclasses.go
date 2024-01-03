@@ -68,6 +68,6 @@ type ComputeClassMemory struct {
 	Min           string   `json:"min,omitempty"`
 	Max           string   `json:"max,omitempty"`
 	Default       string   `json:"default,omitempty"`
-	RequestScalar float64  `json:"requestScalar,omitempty"`
+	RequestScaler float64  `json:"requestScaler,omitempty"`
 	Values        []string `json:"values,omitempty"`
 }

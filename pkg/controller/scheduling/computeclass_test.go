@@ -61,12 +61,12 @@ func TestGenericResourcesComputeClass(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/generic-resources", Calculate)
 }
 
-func TestRequestScalar(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/request-scalar", Calculate)
+func TestRequestScaler(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/request-scaler", Calculate)
 }
 
-func TestRequestScalarFloor(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/request-scalar-floor", Calculate)
+func TestRequestScalerFloor(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/request-scaler-floor", Calculate)
 }
 
 func TestTwoCCCDefaultsShouldError(t *testing.T) {

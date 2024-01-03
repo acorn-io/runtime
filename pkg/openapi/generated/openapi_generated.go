@@ -14330,7 +14330,7 @@ func schema_pkg_apis_internaladminacornio_v1_ComputeClassMemory(ref common.Refer
 							Format: "",
 						},
 					},
-					"requestScalar": {
+					"requestScaler": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"number"},
 							Format: "double",
