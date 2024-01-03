@@ -38,3 +38,7 @@ func TestAllSetComputeClass(t *testing.T) {
 func TestAllSetOverwriteComputeClass(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/all-set-overwrite-computeclass", DeploySpec)
 }
+
+func TestGenericResourcesComputeClass(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/generic-resources", DeploySpec)
+}

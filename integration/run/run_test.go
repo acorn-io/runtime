@@ -966,15 +966,24 @@ func TestUsingComputeClasses(t *testing.T) {
 					Min: "512Mi",
 					Max: "1Gi",
 				},
+				Resources: &corev1.ResourceRequirements{
+					Limits: corev1.ResourceList{
+						"mygpu/nvidia": resource.MustParse("1"),
+					}, Requests: corev1.ResourceList{
+						"mygpu/nvidia": resource.MustParse("1"),
+					}},
 				SupportedRegions: []string{apiv1.LocalRegion},
 			},
 			expected: map[string]v1.Scheduling{"simple": {
 				Requirements: corev1.ResourceRequirements{
 					Limits: corev1.ResourceList{
-						corev1.ResourceMemory: resource.MustParse("1Gi")},
+						corev1.ResourceMemory: resource.MustParse("1Gi"),
+						"mygpu/nvidia":        resource.MustParse("1"),
+					},
 					Requests: corev1.ResourceList{
 						corev1.ResourceMemory: resource.MustParse("1Gi"),
 						corev1.ResourceCPU:    resource.MustParse("250m"),
+						"mygpu/nvidia":        resource.MustParse("1"),
 					},
 				},
 				Tolerations: []corev1.Toleration{

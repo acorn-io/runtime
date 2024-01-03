@@ -8,6 +8,7 @@ package v1
 import (
 	jsonschema "github.com/acorn-io/aml/pkg/jsonschema"
 	internal_acorn_iov1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -366,6 +367,11 @@ func (in *ComputeClass) DeepCopyInto(out *ComputeClass) {
 	out.TypeMeta = in.TypeMeta
 	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
 	in.Memory.DeepCopyInto(&out.Memory)
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(corev1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.SupportedRegions != nil {
 		in, out := &in.SupportedRegions, &out.SupportedRegions
 		*out = make([]string, len(*in))

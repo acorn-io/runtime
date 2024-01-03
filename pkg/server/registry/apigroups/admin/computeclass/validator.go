@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	corev1 "k8s.io/api/core/v1"
+
 	adminv1 "github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	admininternalv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
@@ -36,6 +38,18 @@ func (s *ProjectValidator) Validate(ctx context.Context, obj runtime.Object) (re
 			if pcc.Default && pcc.Name != cc.Name {
 				return append(result, field.Invalid(field.NewPath("spec", "default"), cc.Default, fmt.Sprintf("%s is already default for project", pcc.Name)))
 			}
+		}
+	}
+
+	invalidResources := []corev1.ResourceName{corev1.ResourceCPU, corev1.ResourceMemory}
+
+	for _, resource := range invalidResources {
+		if _, specified := cc.Resources.Requests[resource]; specified {
+			return append(result, field.Invalid(field.NewPath(fmt.Sprintf("spec.resources.requests%s", string(resource))), cc.Default, fmt.Sprintf("Cannot specifiy spec.resources.requests.%s. Use explicit spec.cpuScaler and spec.memory instead", string(resource))))
+		}
+
+		if _, specified := cc.Resources.Limits[resource]; specified {
+			return append(result, field.Invalid(field.NewPath(fmt.Sprintf("spec.resources.limits%s", string(resource))), cc.Default, fmt.Sprintf("Cannot specifiy spec.resources.limits.%s. Use explicit spec.cpuScaler and spec.memory instead", string(resource))))
 		}
 	}
 
@@ -73,6 +87,18 @@ func (s *ClusterValidator) Validate(ctx context.Context, obj runtime.Object) (re
 			if pcc.Default && pcc.Name != cc.Name {
 				return append(result, field.Invalid(field.NewPath("spec.default"), cc.Default, fmt.Sprintf("%s is already default for project", pcc.Name)))
 			}
+		}
+	}
+
+	invalidResources := []corev1.ResourceName{corev1.ResourceCPU, corev1.ResourceMemory}
+
+	for _, resource := range invalidResources {
+		if _, specified := cc.Resources.Requests[resource]; specified {
+			return append(result, field.Invalid(field.NewPath(fmt.Sprintf("spec.resources.requests%s", string(resource))), cc.Default, fmt.Sprintf("Cannot specifiy spec.resources.requests.%s. Use explicit spec.cpuScaler and spec.memory instead", string(resource))))
+		}
+
+		if _, specified := cc.Resources.Limits[resource]; specified {
+			return append(result, field.Invalid(field.NewPath(fmt.Sprintf("spec.resources.limits%s", string(resource))), cc.Default, fmt.Sprintf("Cannot specifiy spec.resources.limits.%s. Use explicit spec.cpuScaler and spec.memory instead", string(resource))))
 		}
 	}
 
