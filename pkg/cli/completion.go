@@ -280,6 +280,22 @@ func secretsCompletion(ctx context.Context, c client.Client, toComplete string) 
 	return result, nil
 }
 
+func snapshotsCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
+	snapshots, err := c.SnapshotList(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []string
+	for _, snapshot := range snapshots {
+		if strings.HasPrefix(snapshot.Name, toComplete) {
+			result = append(result, snapshot.Name)
+		}
+	}
+
+	return result, nil
+}
+
 func projectsCompletion(f ClientFactory) completionFunc {
 	return func(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
 		var acornConfigFile string

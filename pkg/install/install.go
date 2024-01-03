@@ -338,8 +338,8 @@ func validateMemoryArgs(defaultMemory int64, maximumMemory int64, opts *Options)
 	return nil
 }
 
-func TraefikResources() (result []kclient.Object, _ error) {
-	objs, err := objectsFromFile("traefik.yaml")
+func managedObjectsFromFile(filename string) ([]kclient.Object, error) {
+	objs, err := objectsFromFile(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -358,6 +358,10 @@ func TraefikResources() (result []kclient.Object, _ error) {
 	}
 
 	return objs, nil
+}
+
+func TraefikResources() ([]kclient.Object, error) {
+	return managedObjectsFromFile("traefik.yaml")
 }
 
 func missingIngressClass(ctx context.Context, client kclient.Client) (bool, error) {

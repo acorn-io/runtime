@@ -6,7 +6,9 @@ import (
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	snapshotv1 "github.com/acorn-io/runtime/pkg/apis/snapshot.storage.k8s.io/v1"
 	"github.com/acorn-io/runtime/pkg/client/term"
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -281,6 +283,51 @@ func (d *DeferredClient) VolumeDelete(ctx context.Context, name string) (*apiv1.
 		return nil, err
 	}
 	return d.Client.VolumeDelete(ctx, name)
+}
+
+func (d *DeferredClient) SnapshotCreate(ctx context.Context, pvc *corev1.PersistentVolumeClaim) (*snapshotv1.VolumeSnapshot, error) {
+	err := d.create()
+	if err != nil {
+		return nil, err
+	}
+
+	return d.Client.SnapshotCreate(ctx, pvc)
+}
+
+func (d *DeferredClient) SnapshotList(ctx context.Context) ([]snapshotv1.VolumeSnapshot, error) {
+	err := d.create()
+	if err != nil {
+		return nil, err
+	}
+
+	return d.Client.SnapshotList(ctx)
+}
+
+func (d *DeferredClient) SnapshotGet(ctx context.Context, name string) (*snapshotv1.VolumeSnapshot, error) {
+	err := d.create()
+	if err != nil {
+		return nil, err
+	}
+
+	return d.Client.SnapshotGet(ctx, name)
+}
+
+func (d *DeferredClient) SnapshotDelete(ctx context.Context, name string) error {
+	err := d.create()
+	if err != nil {
+		return err
+	}
+
+	return d.Client.SnapshotDelete(ctx, name)
+}
+
+func (d *DeferredClient) SnapshotRestore(ctx context.Context, snapshotName string, volumeName string) error {
+	err := d.create()
+	if err != nil {
+		return err
+	}
+
+	return d.Client.SnapshotRestore(ctx, snapshotName, volumeName)
 }
 
 func (d *DeferredClient) ImageList(ctx context.Context) ([]apiv1.Image, error) {

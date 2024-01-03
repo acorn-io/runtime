@@ -32,6 +32,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/event"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/project"
+	"github.com/acorn-io/runtime/pkg/snapshot"
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/acorn-io/runtime/pkg/volume"
 	appsv1 "k8s.io/api/apps/v1"
@@ -138,6 +139,7 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).Name(system.DNSIngressName).Namespace(system.Namespace).Middleware(ingress.RequireLBs).Handler(ingress.NewDNSHandler())
 	router.Type(&corev1.Secret{}).Selector(managedSelector).Name(system.TLSSecretName).Namespace(system.Namespace).Middleware(tls.RequireSecretTypeTLS).HandlerFunc(tls.RenewCert) // renew (expired) TLS certificate
 	router.Type(&storagev1.StorageClass{}).HandlerFunc(volume.SyncVolumeClasses)
+	router.Type(&storagev1.StorageClass{}).HandlerFunc(snapshot.SyncSnapshotClasses)
 	router.Type(&corev1.Service{}).Selector(managedSelector).HandlerFunc(networkpolicy.ForService)
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).HandlerFunc(networkpolicy.ForIngress)
 	router.Type(&appsv1.Deployment{}).Namespace(system.ImagesNamespace).HandlerFunc(networkpolicy.ForBuilder)

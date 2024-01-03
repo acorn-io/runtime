@@ -14,6 +14,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	snapshotv1 "github.com/acorn-io/runtime/pkg/apis/snapshot.storage.k8s.io/v1"
 	"github.com/acorn-io/runtime/pkg/client/term"
 	"github.com/acorn-io/runtime/pkg/k8schannel"
 	"github.com/acorn-io/runtime/pkg/k8sclient"
@@ -21,6 +22,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/scheme"
 	"github.com/acorn-io/runtime/pkg/streams"
 	"github.com/acorn-io/runtime/pkg/system"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/rest"
@@ -253,6 +255,12 @@ type Client interface {
 	VolumeList(ctx context.Context) ([]apiv1.Volume, error)
 	VolumeGet(ctx context.Context, name string) (*apiv1.Volume, error)
 	VolumeDelete(ctx context.Context, name string) (*apiv1.Volume, error)
+
+	SnapshotCreate(ctx context.Context, pvc *corev1.PersistentVolumeClaim) (*snapshotv1.VolumeSnapshot, error)
+	SnapshotList(ctx context.Context) ([]snapshotv1.VolumeSnapshot, error)
+	SnapshotGet(ctx context.Context, name string) (*snapshotv1.VolumeSnapshot, error)
+	SnapshotDelete(ctx context.Context, name string) error
+	SnapshotRestore(ctx context.Context, snapshotName string, volumeName string) error
 
 	ImageList(ctx context.Context) ([]apiv1.Image, error)
 	ImageGet(ctx context.Context, name string) (*apiv1.Image, error)

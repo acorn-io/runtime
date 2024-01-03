@@ -1,27 +1,18 @@
 ---
-title: "acorn volume"
+title: "acorn volume snapshot restore"
 ---
-## acorn volume
+## acorn volume snapshot restore
 
-Manage volumes
-
-```
-acorn volume [flags] [VOLUME_NAME...]
-```
-
-### Examples
+Restore a snapshot to a new volume
 
 ```
-
-acorn volume
+acorn volume snapshot restore [flags] SNAPSHOT_NAME VOLUME_NAME
 ```
 
 ### Options
 
 ```
-  -h, --help            help for volume
-  -o, --output string   Output format (json, yaml, {{gotemplate}})
-  -q, --quiet           Output only names
+  -h, --help   help for restore
 ```
 
 ### Options inherited from parent commands
@@ -31,12 +22,12 @@ acorn volume
       --debug                Enable debug logging
       --debug-level int      Debug log level (valid 0-9) (default 7)
       --kubeconfig string    Explicitly use kubeconfig file, overriding the default context
+  -o, --output string        Output format (json, yaml, {{gotemplate}})
   -j, --project string       Project to work in
+  -q, --quiet                Output only names
 ```
 
 ### SEE ALSO
 
-* [acorn](acorn.md)	 - 
-* [acorn volume rm](acorn_volume_rm.md)	 - Delete a volume
 * [acorn volume snapshot](acorn_volume_snapshot.md)	 - Manage snapshots
 

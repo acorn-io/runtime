@@ -10,9 +10,11 @@ import (
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	snapshotv1 "github.com/acorn-io/runtime/pkg/apis/snapshot.storage.k8s.io/v1"
 	"github.com/acorn-io/runtime/pkg/channels"
 	"github.com/acorn-io/runtime/pkg/client/term"
 	"github.com/acorn-io/runtime/pkg/streams"
+	corev1 "k8s.io/api/core/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -394,6 +396,38 @@ func (m *MultiClient) VolumeDelete(ctx context.Context, name string) (*apiv1.Vol
 	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.Volume, error) {
 		return c.VolumeDelete(ctx, name)
 	})
+}
+
+func (m *MultiClient) SnapshotCreate(ctx context.Context, pvc *corev1.PersistentVolumeClaim) (*snapshotv1.VolumeSnapshot, error) {
+	return onOne(ctx, m.Factory, pvc.Name, func(name string, c Client) (*snapshotv1.VolumeSnapshot, error) {
+		return c.SnapshotCreate(ctx, pvc)
+	})
+}
+
+func (m *MultiClient) SnapshotList(ctx context.Context) ([]snapshotv1.VolumeSnapshot, error) {
+	return aggregate(ctx, m.Factory, func(c Client) ([]snapshotv1.VolumeSnapshot, error) {
+		return c.SnapshotList(ctx)
+	})
+}
+
+func (m *MultiClient) SnapshotGet(ctx context.Context, name string) (*snapshotv1.VolumeSnapshot, error) {
+	return onOne(ctx, m.Factory, name, func(name string, client Client) (*snapshotv1.VolumeSnapshot, error) {
+		return client.SnapshotGet(ctx, name)
+	})
+}
+
+func (m *MultiClient) SnapshotDelete(ctx context.Context, name string) error {
+	_, err := onOne(ctx, m.Factory, name, func(name string, client Client) (*snapshotv1.VolumeSnapshot, error) {
+		return nil, client.SnapshotDelete(ctx, name)
+	})
+	return err
+}
+
+func (m *MultiClient) SnapshotRestore(ctx context.Context, snapshotName string, volumeName string) error {
+	_, err := onOne(ctx, m.Factory, "restore", func(name string, client Client) (*snapshotv1.VolumeSnapshot, error) {
+		return nil, client.SnapshotRestore(ctx, snapshotName, volumeName)
+	})
+	return err
 }
 
 func (m *MultiClient) ImageList(ctx context.Context) ([]apiv1.Image, error) {

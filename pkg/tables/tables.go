@@ -41,6 +41,13 @@ var (
 	}
 	VolumeClassConverter = MustConverter(VolumeClass)
 
+	Snapshot = [][]string{
+		{"Name", "{{ . | name }}"},
+		{"Ready", "{{ .Status.ReadyToUse }}"},
+		{"Created", "{{ ago .CreationTimestamp }}"},
+	}
+	SnapshotConverter = MustConverter(Snapshot)
+
 	Service = [][]string{
 		{"Name", "{{ . | name }}"},
 		{"Created", "{{ago .CreationTimestamp}}"},

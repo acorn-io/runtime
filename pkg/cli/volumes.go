@@ -19,6 +19,7 @@ acorn volume`,
 		ValidArgsFunction: newCompletion(c.ClientFactory, volumesCompletion).complete,
 	})
 	cmd.AddCommand(NewVolumeDelete(c))
+	cmd.AddCommand(NewSnapshot(c))
 	return cmd
 }
 

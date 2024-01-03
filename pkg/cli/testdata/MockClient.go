@@ -8,10 +8,12 @@ import (
 	"github.com/acorn-io/baaah/pkg/typed"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	snapshotv1 "github.com/acorn-io/runtime/pkg/apis/snapshot.storage.k8s.io/v1"
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/client/term"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/project"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -145,6 +147,31 @@ type MockClient struct {
 	RegionItem       *apiv1.Region
 	Events           []apiv1.Event
 	EventItem        *apiv1.Event
+}
+
+func (m *MockClient) SnapshotCreate(ctx context.Context, pvc *corev1.PersistentVolumeClaim) (*snapshotv1.VolumeSnapshot, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockClient) SnapshotList(ctx context.Context) ([]snapshotv1.VolumeSnapshot, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockClient) SnapshotGet(ctx context.Context, name string) (*snapshotv1.VolumeSnapshot, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockClient) SnapshotDelete(ctx context.Context, name string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockClient) SnapshotRestore(ctx context.Context, snapshotName string, volumeName string) error {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (m *MockClient) KubeConfig(ctx context.Context, opts *client.KubeProxyAddressOptions) ([]byte, error) {

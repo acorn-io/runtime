@@ -10,9 +10,11 @@ import (
 
 	v1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v10 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	v11 "github.com/acorn-io/runtime/pkg/apis/snapshot.storage.k8s.io/v1"
 	client "github.com/acorn-io/runtime/pkg/client"
 	term "github.com/acorn-io/runtime/pkg/client/term"
 	gomock "github.com/golang/mock/gomock"
+	v12 "k8s.io/api/core/v1"
 	client0 "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -957,6 +959,79 @@ func (m *MockClient) SecretUpdate(arg0 context.Context, arg1 string, arg2 map[st
 func (mr *MockClientMockRecorder) SecretUpdate(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SecretUpdate", reflect.TypeOf((*MockClient)(nil).SecretUpdate), arg0, arg1, arg2)
+}
+
+// SnapshotCreate mocks base method.
+func (m *MockClient) SnapshotCreate(arg0 context.Context, arg1 *v12.PersistentVolumeClaim) (*v11.VolumeSnapshot, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SnapshotCreate", arg0, arg1)
+	ret0, _ := ret[0].(*v11.VolumeSnapshot)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SnapshotCreate indicates an expected call of SnapshotCreate.
+func (mr *MockClientMockRecorder) SnapshotCreate(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SnapshotCreate", reflect.TypeOf((*MockClient)(nil).SnapshotCreate), arg0, arg1)
+}
+
+// SnapshotDelete mocks base method.
+func (m *MockClient) SnapshotDelete(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SnapshotDelete", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SnapshotDelete indicates an expected call of SnapshotDelete.
+func (mr *MockClientMockRecorder) SnapshotDelete(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SnapshotDelete", reflect.TypeOf((*MockClient)(nil).SnapshotDelete), arg0, arg1)
+}
+
+// SnapshotGet mocks base method.
+func (m *MockClient) SnapshotGet(arg0 context.Context, arg1 string) (*v11.VolumeSnapshot, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SnapshotGet", arg0, arg1)
+	ret0, _ := ret[0].(*v11.VolumeSnapshot)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SnapshotGet indicates an expected call of SnapshotGet.
+func (mr *MockClientMockRecorder) SnapshotGet(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SnapshotGet", reflect.TypeOf((*MockClient)(nil).SnapshotGet), arg0, arg1)
+}
+
+// SnapshotList mocks base method.
+func (m *MockClient) SnapshotList(arg0 context.Context) ([]v11.VolumeSnapshot, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SnapshotList", arg0)
+	ret0, _ := ret[0].([]v11.VolumeSnapshot)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SnapshotList indicates an expected call of SnapshotList.
+func (mr *MockClientMockRecorder) SnapshotList(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SnapshotList", reflect.TypeOf((*MockClient)(nil).SnapshotList), arg0)
+}
+
+// SnapshotRestore mocks base method.
+func (m *MockClient) SnapshotRestore(arg0 context.Context, arg1, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SnapshotRestore", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SnapshotRestore indicates an expected call of SnapshotRestore.
+func (mr *MockClientMockRecorder) SnapshotRestore(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SnapshotRestore", reflect.TypeOf((*MockClient)(nil).SnapshotRestore), arg0, arg1, arg2)
 }
 
 // VolumeClassGet mocks base method.
