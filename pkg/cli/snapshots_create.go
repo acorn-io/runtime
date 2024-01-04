@@ -56,8 +56,12 @@ func (sc *SnapshotCreate) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if len(pvcs.Items) == 0 || len(pvcs.Items) > 1 {
-		return errors.New("pvc not found")
+	if len(pvcs.Items) == 0 {
+		return errors.New("unbound volumes cannot be snapshot")
+	}
+
+	if len(pvcs.Items) > 1 {
+		return errors.New("multiple persistent volume claims are associated with the requested volume")
 	}
 
 	pvc := &pvcs.Items[0]
