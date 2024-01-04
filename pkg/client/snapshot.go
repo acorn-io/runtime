@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -145,7 +146,7 @@ func (c *DefaultClient) SnapshotRestore(ctx context.Context, snapshotName string
 
 	_, err = c.VolumeGet(ctx, volumeName)
 	if err == nil {
-		return errors.New("a volume by that name already exists")
+		return fmt.Errorf("a volume named %s already exists", volumeName)
 	} else if err != nil && !apierrors.IsNotFound(err) {
 		return err
 	}
