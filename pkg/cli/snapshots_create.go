@@ -67,7 +67,9 @@ func (sc *SnapshotCreate) Run(cmd *cobra.Command, args []string) error {
 	pvc := &pvcs.Items[0]
 
 	if sc.Name != "" {
-		pvc.Labels["custom-name"] = sc.Name
+		// the modifications to this PVC are not saved
+		// so this additional label is just for internal use within SnapshotCreate
+		pvc.Labels["acorn.io/custom-name"] = sc.Name
 	}
 
 	_, err = cl.SnapshotCreate(cmd.Context(), pvc)

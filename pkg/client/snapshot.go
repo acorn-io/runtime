@@ -33,7 +33,7 @@ func (c *DefaultClient) SnapshotCreate(ctx context.Context, pvc *corev1.Persiste
 		return nil, err
 	}
 
-	name, ok := pvc.Labels["custom-name"]
+	name, ok := pvc.Labels["acorn.io/custom-name"]
 	if !ok {
 		name = pvc.Labels[labels.AcornPublicName] + "-" + strconv.FormatInt(time.Now().Unix(), 10)
 	}
