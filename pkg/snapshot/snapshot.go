@@ -8,6 +8,7 @@ import (
 	snapshotv1 "github.com/acorn-io/runtime/pkg/apis/snapshot.storage.k8s.io/v1"
 	"github.com/acorn-io/runtime/pkg/labels"
 	storagev1 "k8s.io/api/storage/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubectl/pkg/util/storage"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -53,9 +54,11 @@ func CreateSnapshotClass(ctx context.Context, client kclient.WithWatch) error {
 	err := client.Get(ctx, kclient.ObjectKey{
 		Name: ClassName,
 	}, acornSnapshotClass)
-	if err == nil && acornSnapshotClass.Name != "" {
+	if err == nil {
 		// it already exists
 		return nil
+	} else if !apierrors.IsNotFound(err) {
+		return err
 	}
 
 	storageClasses := &storagev1.StorageClassList{}
