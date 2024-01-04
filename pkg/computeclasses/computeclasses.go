@@ -13,7 +13,6 @@ import (
 	internaladminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -121,29 +120,13 @@ func Validate(cc apiv1.ComputeClass, memory resource.Quantity, memDefault *int64
 	return nil
 }
 
-func CalculateCPU(cc internaladminv1.ProjectComputeClassInstance, memDefault *int64, memory resource.Quantity) (resource.Quantity, error) {
-	if err := ValidateProjectComputeClass(cc, memory, memDefault); err != nil {
-		return resource.Quantity{}, err
-	}
-
+func CalculateCPU(cc internaladminv1.ProjectComputeClassInstance, memory resource.Quantity) (resource.Quantity, error) {
 	// The CPU scaler calculates the CPUs per Gi of memory so get the memory in a ratio of Gi
 	memoryInGi := memory.AsApproximateFloat64() / gi
 	// Since we're putting this in to mili-cpu's, multiply memoryInGi by the scaler and by 1000
 	value := cc.CPUScaler * memoryInGi * 1000
 
 	return *resource.NewMilliQuantity(int64(math.Ceil(value)), resource.DecimalSI), nil
-}
-
-func ValidateProjectComputeClass(cc internaladminv1.ProjectComputeClassInstance, memory resource.Quantity, memDefault *int64) error {
-	return Validate(apiv1.ComputeClass{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: cc.Name,
-		},
-		Memory:           cc.Memory,
-		Description:      cc.Description,
-		Default:          cc.Default,
-		SupportedRegions: cc.SupportedRegions,
-	}, memory, memDefault)
 }
 
 func GetComputeClassNameForWorkload(workload string, container internalv1.Container, computeClasses internalv1.ComputeClassMap) string {
