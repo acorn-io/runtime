@@ -61,6 +61,10 @@ func TestGenericResourcesComputeClass(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/generic-resources", Calculate)
 }
 
+func TestRequestScalerValues(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/request-scaler-values", Calculate)
+}
+
 func TestRequestScaler(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/request-scaler", Calculate)
 }

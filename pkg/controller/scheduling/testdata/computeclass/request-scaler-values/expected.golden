@@ -59,7 +59,7 @@ status:
           memory: 2Mi
         requests:
           cpu: 1m
-          memory: 256Ki
+          memory: 512Ki
     oneimage:
       affinity:
         nodeAffinity:
@@ -75,7 +75,7 @@ status:
           memory: 2Mi
         requests:
           cpu: 1m
-          memory: 256Ki
+          memory: 512Ki
       tolerations:
       - key: taints.acorn.io/workload
         operator: Exists

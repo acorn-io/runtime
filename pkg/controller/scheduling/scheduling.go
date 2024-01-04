@@ -197,17 +197,6 @@ func ResourceRequirements(req router.Request, app *v1.AppInstance, containerName
 	if computeClass != nil && computeClass.Memory.RequestScaler != 0 {
 		// The following line should hold up without loss of precision up to 4 petabytes
 		memoryRequest.Set(int64(memoryLimit.AsApproximateFloat64() * computeClass.Memory.RequestScaler))
-
-		// Never allocate less than the defined minimum of the compute class
-		if computeClass.Memory.Min != "" && computeClass.Memory.Min != "0" {
-			minValue, err := resource.ParseQuantity(computeClass.Memory.Min)
-			if err != nil {
-				return nil, err
-			}
-			if minValue.Cmp(memoryRequest) == 1 {
-				memoryRequest = minValue
-			}
-		}
 	}
 
 	if memoryLimit.Value() != 0 {
@@ -216,7 +205,7 @@ func ResourceRequirements(req router.Request, app *v1.AppInstance, containerName
 	}
 
 	if computeClass != nil {
-		cpuQuantity, err := computeclasses.CalculateCPU(*computeClass, memDefault, memoryRequest)
+		cpuQuantity, err := computeclasses.CalculateCPU(*computeClass, memoryRequest)
 		if err != nil {
 			return nil, err
 		}
