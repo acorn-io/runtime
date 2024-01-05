@@ -27,7 +27,6 @@ spec:
       service-name.acorn.io/nginx-9090: "true"
   policyTypes:
   - Ingress
-status: {}
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -61,5 +60,4 @@ spec:
       service-name.acorn.io/service-7777: "true"
   policyTypes:
   - Ingress
-status: {}
 `

@@ -6,7 +6,6 @@ import (
 	"github.com/acorn-io/mink/pkg/strategy"
 	api "github.com/acorn-io/runtime/pkg/apis/api.acorn.io"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
-	"github.com/rancher/wrangler/pkg/name"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -26,7 +25,8 @@ func NewMapper(scheme *runtime.Scheme, mapper meta.RESTMapper) (meta.RESTMapper,
 
 	gv := schema.GroupVersion{Group: api.Group, Version: apiv1.Version}
 	for kind := range scheme.KnownTypes(gv) {
-		resource := name.GuessPluralName(strings.ToLower(kind))
+		pluralGVR, _ := meta.UnsafeGuessKindToResource(gv.WithKind(kind))
+		resource := pluralGVR.Resource
 		kindToResource[kind] = resource
 		resourceToKind[resource] = kind
 		obj, err := scheme.New(gv.WithKind(kind))

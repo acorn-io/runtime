@@ -2,7 +2,7 @@ package main
 
 import (
 	acorn "github.com/acorn-io/runtime/pkg/cli"
-	"github.com/rancher/wrangler/pkg/signals"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 
 	// Include cloud auth clients
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -11,6 +11,6 @@ import (
 func main() {
 	cmd := acorn.New()
 
-	ctx := signals.SetupSignalContext()
+	ctx := controllerruntime.SetupSignalHandler()
 	acorn.RunAndHandleError(ctx, cmd)
 }

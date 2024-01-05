@@ -2,11 +2,11 @@ package appdefinition
 
 import (
 	"github.com/acorn-io/baaah/pkg/merr"
+	"github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/pullsecret"
 	"github.com/google/go-containerregistry/pkg/authn"
-	"github.com/rancher/wrangler/pkg/name"
 	corev1 "k8s.io/api/core/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )

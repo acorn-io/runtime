@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/acorn-io/baaah/pkg/merr"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/install"
 	"github.com/acorn-io/runtime/pkg/k8sclient"
@@ -14,7 +15,6 @@ import (
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/acorn-io/runtime/pkg/term"
 	"github.com/pterm/pterm"
-	"github.com/rancher/wrangler/pkg/merr"
 	coordinationv1 "k8s.io/api/coordination/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"

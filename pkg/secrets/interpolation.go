@@ -8,9 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	aml "github.com/acorn-io/aml/legacy"
-	"github.com/acorn-io/aml/legacy/pkg/replace"
 	"github.com/acorn-io/baaah/pkg/apply"
+	"github.com/acorn-io/baaah/pkg/merr"
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/config"
@@ -20,11 +19,11 @@ import (
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/acorn-io/runtime/pkg/ref"
+	"github.com/acorn-io/runtime/pkg/replace"
 	"github.com/acorn-io/runtime/pkg/tags"
 	"github.com/acorn-io/runtime/pkg/volume"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/pkg/errors"
-	"github.com/rancher/wrangler/pkg/merr"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -395,7 +394,7 @@ func (i *Interpolator) serviceProperty(svc *v1.ServiceInstance, prop string, ext
 		return "", fmt.Errorf("failed to find port [%s] defined on service [%s]", extra[0], svc.Name)
 	case "data":
 		expr := "@{" + strings.Join(extra, ".") + "}"
-		v, err := aml.Interpolate(svc.Spec.Data, expr)
+		v, err := replace.Interpolate(svc.Spec.Data, expr)
 		return v, err
 	default:
 		return "", fmt.Errorf("invalid property [%s] to lookup on service [%s]", prop, svc.Name)

@@ -5,6 +5,7 @@ import (
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	"crypto/md5"
 	"crypto/rand"
 	"crypto/sha1"
 	"crypto/x509"
@@ -27,7 +28,6 @@ import (
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/go-acme/lego/v4/lego"
 	"github.com/go-acme/lego/v4/registration"
-	"github.com/rancher/wrangler/pkg/name"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -180,10 +180,23 @@ func matchLeURLToEnv(url string) string {
 // For this, we only check the email and url fields, since the key and registration are generated
 // and identify the user against the ACME server.
 func (u *LEUser) toHash() string {
-	toHash := []byte(name.Limit(fmt.Sprintf("%s-%s", matchLeURLToEnv(u.url), u.email), 63))
+	toHash := []byte(limit(fmt.Sprintf("%s-%s", matchLeURLToEnv(u.url), u.email), 63))
 	dig := sha1.New()
-	dig.Write([]byte(toHash))
+	dig.Write(toHash)
 	return hex.EncodeToString(dig.Sum(nil))
+}
+
+func limit(s string, count int) string {
+	if len(s) < count {
+		return s
+	}
+	return fmt.Sprintf("%s-%s", s[:count-6], toHex(s, 5))
+}
+
+func toHex(s string, length int) string {
+	h := md5.Sum([]byte(s))
+	d := hex.EncodeToString(h[:])
+	return d[:length]
 }
 
 func ensureLEUser(ctx context.Context, client kclient.Client) (*LEUser, error) {
