@@ -7,6 +7,8 @@ import (
 	"net/http/httputil"
 	"time"
 
+	"github.com/acorn-io/baaah/pkg/name"
+	"github.com/acorn-io/baaah/pkg/randomtoken"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/baaah/pkg/watcher"
 	"github.com/acorn-io/mink/pkg/strategy"
@@ -14,8 +16,6 @@ import (
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/acorn/apps"
-	"github.com/rancher/wrangler/pkg/name"
-	"github.com/rancher/wrangler/pkg/randomtoken"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

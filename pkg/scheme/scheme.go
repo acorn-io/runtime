@@ -1,12 +1,11 @@
 package scheme
 
 import (
+	"github.com/acorn-io/baaah/pkg/merr"
 	acornadminapiv1 "github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1"
 	acornapiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	acornv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	acornadminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
-	"github.com/rancher/wrangler/pkg/merr"
-	"github.com/rancher/wrangler/pkg/schemes"
 	appsv1 "k8s.io/api/apps/v1"
 	authv1 "k8s.io/api/authorization/v1"
 	batchv1 "k8s.io/api/batch/v1"
@@ -59,6 +58,5 @@ func AddToScheme(scheme *runtime.Scheme) error {
 }
 
 func init() {
-	utilruntime.Must(schemes.Register(AddToScheme))
 	utilruntime.Must(AddToScheme(Scheme))
 }

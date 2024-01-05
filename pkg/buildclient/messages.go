@@ -8,7 +8,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/acorn-io/mink/pkg/channel"
+	"github.com/acorn-io/broadcaster"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/gorilla/websocket"
@@ -154,7 +154,7 @@ type WebsocketMessages struct {
 	handler     func(*Message) error
 	ctx         context.Context
 	cancel      func()
-	broadcaster *channel.Broadcaster[*Message]
+	broadcaster *broadcaster.Broadcaster[*Message]
 }
 
 func NewWebsocketMessages(conn *websocket.Conn) *WebsocketMessages {
@@ -162,7 +162,8 @@ func NewWebsocketMessages(conn *websocket.Conn) *WebsocketMessages {
 		conn:     conn,
 		messages: make(chan *Message, 10),
 	}
-	m.broadcaster = channel.NewBroadcaster(m.messages)
+	m.broadcaster = broadcaster.New[*Message]()
+	m.messages = m.broadcaster.C
 	return m
 }
 

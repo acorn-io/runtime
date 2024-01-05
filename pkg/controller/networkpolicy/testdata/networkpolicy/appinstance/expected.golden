@@ -19,5 +19,4 @@ spec:
       acorn.io/managed: "true"
   policyTypes:
   - Ingress
-status: {}
 `

@@ -12,9 +12,11 @@ import (
 	"strings"
 
 	"github.com/acorn-io/baaah/pkg/apply"
+	"github.com/acorn-io/baaah/pkg/merr"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/acorn-io/baaah/pkg/watcher"
+	"github.com/acorn-io/baaah/pkg/yaml"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/autoupgrade/validate"
 	"github.com/acorn-io/runtime/pkg/buildserver"
@@ -26,12 +28,11 @@ import (
 	"github.com/acorn-io/runtime/pkg/prompt"
 	"github.com/acorn-io/runtime/pkg/publish"
 	"github.com/acorn-io/runtime/pkg/roles"
+	"github.com/acorn-io/runtime/pkg/scheme"
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/acorn-io/runtime/pkg/term"
 	"github.com/acorn-io/z"
 	"github.com/pterm/pterm"
-	"github.com/rancher/wrangler/pkg/merr"
-	"github.com/rancher/wrangler/pkg/yaml"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
@@ -511,7 +512,7 @@ func printObject(image string, opts *Options) error {
 		return enc.Encode(m)
 	}
 
-	data, err := yaml.Export(typed.MapSlice(objs, func(t kclient.Object) runtime.Object {
+	data, err := yaml.Export(scheme.Scheme, typed.MapSlice(objs, func(t kclient.Object) runtime.Object {
 		return t
 	})...)
 	if err != nil {

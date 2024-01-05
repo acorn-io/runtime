@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/acorn-io/baaah/pkg/merr"
 	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	acornsign "github.com/acorn-io/runtime/pkg/cosign"
 	"github.com/acorn-io/runtime/pkg/imageselector/signatures/annotations"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/sigstore/cosign/v2/pkg/cosign"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )

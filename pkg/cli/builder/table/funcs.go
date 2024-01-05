@@ -12,7 +12,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/acorn-io/runtime/pkg/tags"
-	"github.com/rancher/wrangler/pkg/data/convert"
+	"github.com/acorn-io/schemer/data/convert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/duration"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"

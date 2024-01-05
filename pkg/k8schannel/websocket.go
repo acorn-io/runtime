@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/acorn-io/baaah/pkg/merr"
 	"github.com/acorn-io/runtime/pkg/client/term"
 	"github.com/gorilla/websocket"
-	"github.com/rancher/wrangler/pkg/merr"
 )
 
 var Upgrader = &websocket.Upgrader{CheckOrigin: func(req *http.Request) bool {

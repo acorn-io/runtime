@@ -28,5 +28,4 @@ spec:
       service-name.acorn.io/one: "true"
   policyTypes:
   - Ingress
-status: {}
 `

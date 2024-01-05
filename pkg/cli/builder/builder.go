@@ -9,9 +9,9 @@ import (
 	"unsafe"
 
 	"github.com/acorn-io/aml/pkg/value"
-	"github.com/rancher/wrangler/pkg/signals"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 )
 
 var (
@@ -69,7 +69,7 @@ func Name(obj any) string {
 }
 
 func Main(cmd *cobra.Command) {
-	ctx := signals.SetupSignalContext()
+	ctx := controllerruntime.SetupSignalHandler()
 	if err := cmd.ExecuteContext(ctx); err != nil {
 		logrus.Fatal(err)
 	}

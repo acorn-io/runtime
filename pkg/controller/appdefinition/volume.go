@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/acorn-io/baaah/pkg/name"
+	name2 "github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/acorn-io/baaah/pkg/uncached"
@@ -16,7 +17,6 @@ import (
 	"github.com/acorn-io/runtime/pkg/secrets"
 	"github.com/acorn-io/runtime/pkg/volume"
 	"github.com/acorn-io/z"
-	name2 "github.com/rancher/wrangler/pkg/name"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -141,7 +141,7 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 			},
 			Spec: corev1.PersistentVolumeClaimSpec{
 				AccessModes: translateAccessModes(volumeRequest.AccessModes),
-				Resources: corev1.ResourceRequirements{
+				Resources: corev1.VolumeResourceRequirements{
 					Requests: corev1.ResourceList{},
 				},
 			},

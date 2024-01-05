@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/randomtoken"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/baaah/pkg/watcher"
@@ -19,7 +20,6 @@ import (
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/acorn-io/runtime/pkg/tolerations"
 	"github.com/pkg/errors"
-	"github.com/rancher/wrangler/pkg/name"
 	authorizationv1 "k8s.io/api/authorization/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"

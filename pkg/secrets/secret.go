@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/acorn-io/baaah/pkg/merr"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
@@ -18,8 +19,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/acorn-io/runtime/pkg/ref"
 	"github.com/acorn-io/runtime/pkg/system"
-	"github.com/rancher/wrangler/pkg/data/convert"
-	"github.com/rancher/wrangler/pkg/merr"
+	"github.com/acorn-io/schemer/data/convert"
 	"golang.org/x/exp/maps"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
