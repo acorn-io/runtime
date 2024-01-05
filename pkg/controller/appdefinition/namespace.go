@@ -8,6 +8,7 @@ import (
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/condition"
 	"github.com/acorn-io/runtime/pkg/labels"
+	"golang.org/x/exp/slices"
 	corev1 "k8s.io/api/core/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -21,8 +22,12 @@ func AssignNamespace(req router.Request, resp router.Response) (err error) {
 		err = nil
 	}()
 
-	parts := strings.Split(appInstance.Name, ".")
-	appInstance.Status.Namespace = name.SafeConcatName(parts[len(parts)-1], appInstance.ShortID())
+	if appInstance.Status.Namespace == "" {
+		parts := strings.Split(appInstance.Name, ".")
+		slices.Reverse(parts)
+		parts = append(parts, appInstance.Namespace)
+		appInstance.Status.Namespace = name.SafeHashConcatName(parts...)
+	}
 
 	resp.Objects(appInstance)
 	return nil

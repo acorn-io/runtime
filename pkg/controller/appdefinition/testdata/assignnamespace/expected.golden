@@ -20,7 +20,7 @@ status:
     success: true
     type: namespace
   defaults: {}
-  namespace: default-1234567890ab
+  namespace: default-random-2fcaa72a
   resolvedOfferings: {}
   staged:
     appImage:
@@ -52,7 +52,7 @@ status:
     success: true
     type: namespace
   defaults: {}
-  namespace: default-1234567890ab
+  namespace: default-random-2fcaa72a
   resolvedOfferings: {}
   staged:
     appImage:
