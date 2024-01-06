@@ -2958,6 +2958,12 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref common.ReferenceCall
 							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build"),
 						},
 					},
+					"src": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"command": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"array"},
@@ -3572,6 +3578,12 @@ func schema_pkg_apis_apiacornio_v1_EmbeddedContainer(ref common.ReferenceCallbac
 					"build": {
 						SchemaProps: spec.SchemaProps{
 							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build"),
+						},
+					},
+					"src": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 					"command": {
@@ -7865,6 +7877,20 @@ func schema_pkg_apis_internalacornio_v1_Build(ref common.ReferenceCallback) comm
 							},
 						},
 					},
+					"watchFiles": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -8513,6 +8539,12 @@ func schema_pkg_apis_internalacornio_v1_Container(ref common.ReferenceCallback) 
 							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build"),
 						},
 					},
+					"src": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"command": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"array"},
@@ -8722,6 +8754,12 @@ func schema_pkg_apis_internalacornio_v1_ContainerData(ref common.ReferenceCallba
 							},
 						},
 					},
+					"acornfileFragment": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 				},
 			},
 		},
@@ -8745,6 +8783,12 @@ func schema_pkg_apis_internalacornio_v1_ContainerImageBuilderSpec(ref common.Ref
 					"build": {
 						SchemaProps: spec.SchemaProps{
 							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build"),
+						},
+					},
+					"src": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 					"sidecars": {

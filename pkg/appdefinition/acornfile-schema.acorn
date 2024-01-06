@@ -17,6 +17,7 @@ let types: {
 		additionalContexts?:    StringMap
 		dockerfile?:            string
 		target?:                string
+		watchFiles: [string]
 	}
 
 	EnvVars: StringArray || StringMap
@@ -60,6 +61,7 @@ let types: {
 		NameDescription
 		Metadata
 
+		src?:             string
 		match "consumes": string || [string]
 		match "dirs|directories": {
 			string: FunctionDir
@@ -211,6 +213,10 @@ let types: {
 
 	ContainerBase: {
 		ContainerCommon
+
+		// 1 or both of image or build is required
+		image?: string
+		build?: string || Build
 		match "dirs|directories": {
 			string: ContainerDir
 		}
@@ -224,9 +230,6 @@ let types: {
 		files?: {
 			string: FileContent
 		}
-		// 1 or both of image or build is required
-		image?:                           string
-		build?:                           string || Build
 		entrypoint?:                      string || [string]
 		match "command|cmd":              string || [string]
 		match "env|environment":          EnvVars

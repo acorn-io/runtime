@@ -45,8 +45,9 @@ func digestOnlyContainers(data map[string]v1.ContainerData) (map[string]v1.Conta
 			return nil, err
 		}
 		result[k] = v1.ContainerData{
-			Image:    t.DigestStr(),
-			Sidecars: sidecars,
+			Image:             t.DigestStr(),
+			AcornfileFragment: v.AcornfileFragment,
+			Sidecars:          sidecars,
 		}
 	}
 	if len(result) == 0 {

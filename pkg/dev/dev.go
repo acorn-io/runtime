@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -84,13 +85,14 @@ func (o *Options) complete(ctx context.Context, c client.Client) *Options {
 }
 
 type watcher struct {
-	c            client.Client
-	imageAndArgs imagesource.ImageSource
-	trigger      chan struct{}
-	watching     []string
-	watchingTS   []time.Time
-	initOnce     sync.Once
-	logger       Logger
+	c               client.Client
+	imageAndArgs    imagesource.ImageSource
+	trigger         chan struct{}
+	dynamicWatching []string
+	watching        []string
+	watchingTS      []time.Time
+	initOnce        sync.Once
+	logger          Logger
 }
 
 func (w *watcher) Trigger() {
@@ -100,8 +102,25 @@ func (w *watcher) Trigger() {
 	}
 }
 
+func (w *watcher) addWatchFiles(files ...string) {
+	var changed bool
+	for _, file := range files {
+		if !slices.Contains(w.dynamicWatching, file) {
+			changed = true
+			w.dynamicWatching = append(w.dynamicWatching, file)
+		}
+	}
+	if changed {
+		w.Trigger()
+	}
+}
+
 func (w *watcher) readFiles(ctx context.Context) ([]string, error) {
-	return w.imageAndArgs.WatchFiles(ctx, w.c)
+	files, err := w.imageAndArgs.WatchFiles(ctx, w.c)
+	if err != nil {
+		return nil, err
+	}
+	return append(files, w.dynamicWatching...), nil
 }
 
 func (w *watcher) foundChanges() bool {
@@ -253,7 +272,7 @@ func buildLoop(ctx context.Context, c client.Client, hash clientHash, opts *Opti
 
 		buildStart(opts.BuildStatus)
 		image, deployArgs, profiles, err := opts.ImageSource.GetImageAndDeployArgs(ctx, c)
-		if err == pflag.ErrHelp {
+		if errors.Is(err, pflag.ErrHelp) {
 			continue
 		} else if err != nil {
 			buildFailed(opts.BuildStatus, err.Error())
@@ -313,7 +332,7 @@ func buildLoop(ctx context.Context, c client.Client, hash clientHash, opts *Opti
 		opts.Run.Name = appName
 		eg, ctx := errgroup.WithContext(ctx)
 		eg.Go(func() error {
-			return DevPorts(ctx, c, appName)
+			return DevPorts(ctx, c, logger, appName)
 		})
 		eg.Go(func() error {
 			return LogLoop(ctx, c, appName, &client.LogOptions{
@@ -324,7 +343,7 @@ func buildLoop(ctx context.Context, c client.Client, hash clientHash, opts *Opti
 			return AppStatusLoop(ctx, c, logger, appName)
 		})
 		eg.Go(func() error {
-			return containerSyncLoop(ctx, c, appName, opts)
+			return containerSyncLoop(ctx, c, logger, appName, &watcher, opts)
 		})
 		eg.Go(func() error {
 			return appDeleteStop(ctx, c, logger, appName, cancel)

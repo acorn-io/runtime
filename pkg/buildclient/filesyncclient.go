@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/acorn-io/function-builder/pkg/factory"
+	"github.com/acorn-io/function-builder/pkg/templates"
 	"github.com/moby/buildkit/session/filesync"
 	"github.com/sirupsen/logrus"
 	"github.com/tonistiigi/fsutil"
@@ -37,7 +39,7 @@ func newFileSyncClient(ctx context.Context, cwd, sessionID string, messages Mess
 		return nil, fmt.Errorf("options can not be nil")
 	}
 
-	tempDir, dirs, err := createFileMapInput(cwd, opts)
+	tempDir, dirs, err := createFileMapInput(ctx, cwd, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +85,7 @@ func newFileSyncClient(ctx context.Context, cwd, sessionID string, messages Mess
 	return fsClient, nil
 }
 
-func createFileMapInput(cwd string, opts *SyncOptions) (string, map[string]string, error) {
+func createFileMapInput(ctx context.Context, cwd string, opts *SyncOptions) (string, map[string]string, error) {
 	var (
 		tempDir    string
 		err        error
@@ -91,7 +93,25 @@ func createFileMapInput(cwd string, opts *SyncOptions) (string, map[string]strin
 		dockerfile = filepath.Dir(filepath.Join(cwd, opts.Dockerfile))
 		dirs       = map[string]string{}
 	)
-	if opts.DockerfileContents != "" {
+
+	if strings.HasSuffix(opts.Dockerfile, templates.Suffix) {
+		data, err := factory.Load(ctx, filepath.Join(cwd, opts.Dockerfile))
+		if err != nil {
+			return "", nil, err
+		}
+		tempDir, err = os.MkdirTemp("", "acorn")
+		if err != nil {
+			return "", nil, err
+		}
+		dockerfile = tempDir
+		if err := os.MkdirAll(filepath.Dir(filepath.Join(tempDir, opts.Dockerfile)), 0655); err != nil {
+			return "", nil, err
+		}
+		err = os.WriteFile(filepath.Join(dockerfile, filepath.Base(opts.Dockerfile)), data, 0600)
+		if err != nil {
+			return "", nil, err
+		}
+	} else if opts.DockerfileContents != "" {
 		tempDir, err = os.MkdirTemp("", "acorn")
 		if err != nil {
 			return "", nil, err

@@ -5,8 +5,9 @@ import (
 )
 
 type ContainerData struct {
-	Image    string               `json:"image,omitempty"`
-	Sidecars map[string]ImageData `json:"sidecars,omitempty"`
+	Image             string               `json:"image,omitempty"`
+	Sidecars          map[string]ImageData `json:"sidecars,omitempty"`
+	AcornfileFragment string               `json:"acornfileFragment,omitempty"`
 }
 
 type ImageData struct {

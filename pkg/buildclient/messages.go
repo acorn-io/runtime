@@ -154,6 +154,7 @@ type WebsocketMessages struct {
 	handler     func(*Message) error
 	ctx         context.Context
 	cancel      func()
+	err         error
 	broadcaster *broadcaster.Broadcaster[*Message]
 }
 
@@ -200,16 +201,22 @@ func (m *WebsocketMessages) run(ctx context.Context) error {
 		}
 		msg := &Message{}
 		if err := m.conn.ReadJSON(msg); err != nil {
+			m.err = err
 			return err
 		}
 		logrus.Tracef("Read build message %s", redact(msg))
 		if m.handler != nil {
 			if err := m.handler(msg); err != nil {
+				m.err = err
 				return err
 			}
 		}
 		m.messages <- msg
 	}
+}
+
+func (m *WebsocketMessages) Err() error {
+	return m.err
 }
 
 func (m *WebsocketMessages) Close() {

@@ -469,7 +469,7 @@ func checkForDuplicateNames(in *AppSpec) error {
 	return nil
 }
 
-func addImpliedResources(in *AppSpec) error {
+func AddImpliedResources(in *AppSpec) error {
 	if in.Volumes == nil {
 		in.Volumes = map[string]VolumeRequest{}
 	}
@@ -549,7 +549,7 @@ func (in *AppSpec) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	if err := addImpliedResources(in); err != nil {
+	if err := AddImpliedResources(in); err != nil {
 		return err
 	}
 

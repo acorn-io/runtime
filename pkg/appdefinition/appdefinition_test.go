@@ -1090,87 +1090,65 @@ images: {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, &v1.BuilderSpec{
+	autogold.Expect(&v1.BuilderSpec{
 		Containers: map[string]v1.ContainerImageBuilderSpec{
-			"image": {
-				Image: "image-image",
-				Sidecars: map[string]v1.ContainerImageBuilderSpec{
-					"side": {
-						Image: "image-image-side",
-					},
-				},
-			},
 			"build": {
 				Build: &v1.Build{
 					Context:    ".",
 					Dockerfile: "Dockerfile",
+					WatchFiles: []string{},
 				},
-				Sidecars: map[string]v1.ContainerImageBuilderSpec{
-					"side": {
-						Build: &v1.Build{
-							Context:    ".",
-							Dockerfile: "Dockerfile",
-						},
-					},
-				},
+				Sidecars: map[string]v1.ContainerImageBuilderSpec{"side": {Build: &v1.Build{
+					Context:    ".",
+					Dockerfile: "Dockerfile",
+					WatchFiles: []string{},
+				}}},
 			},
 			"buildcontext": {
 				Build: &v1.Build{
-					Context:    ".",
-					Dockerfile: "Dockerfile",
-					ContextDirs: map[string]string{
-						"/var/tmp": "./foo/bar",
-					},
+					Context:     ".",
+					Dockerfile:  "Dockerfile",
+					ContextDirs: map[string]string{"/var/tmp": "./foo/bar"},
+					WatchFiles:  []string{},
 				},
-				Sidecars: map[string]v1.ContainerImageBuilderSpec{
-					"side": {
-						Build: &v1.Build{
-							Context:    ".",
-							Dockerfile: "Dockerfile",
-							ContextDirs: map[string]string{
-								"/var/tmp": "./foo/bar",
-							},
-						},
-					},
-				},
+				Sidecars: map[string]v1.ContainerImageBuilderSpec{"side": {Build: &v1.Build{
+					Context:     ".",
+					Dockerfile:  "Dockerfile",
+					ContextDirs: map[string]string{"/var/tmp": "./foo/bar"},
+					WatchFiles:  []string{},
+				}}},
+			},
+			"image": {
+				Image:    "image-image",
+				Sidecars: map[string]v1.ContainerImageBuilderSpec{"side": {Image: "image-image-side"}},
 			},
 			"imagecontext": {
 				Image: "imagecontext-image",
 				Build: &v1.Build{
-					BaseImage:  "imagecontext-image",
-					Context:    ".",
-					Dockerfile: "Dockerfile",
-					ContextDirs: map[string]string{
-						"/var/tmp": "./foo/bar",
-					},
+					Context:     ".",
+					Dockerfile:  "Dockerfile",
+					BaseImage:   "imagecontext-image",
+					ContextDirs: map[string]string{"/var/tmp": "./foo/bar"},
 				},
-				Sidecars: map[string]v1.ContainerImageBuilderSpec{
-					"side": {
-						Image: "imagecontext-image-side",
-						Build: &v1.Build{
-							BaseImage:  "imagecontext-image-side",
-							Context:    ".",
-							Dockerfile: "Dockerfile",
-							ContextDirs: map[string]string{
-								"/var/tmp": "./foo/bar",
-							},
-						},
+				Sidecars: map[string]v1.ContainerImageBuilderSpec{"side": {
+					Image: "imagecontext-image-side",
+					Build: &v1.Build{
+						Context:     ".",
+						Dockerfile:  "Dockerfile",
+						BaseImage:   "imagecontext-image-side",
+						ContextDirs: map[string]string{"/var/tmp": "./foo/bar"},
 					},
-				},
+				}},
 			},
 		},
 		Images: map[string]v1.ImageBuilderSpec{
-			"ibuild": {
-				AcornBuild: &v1.AcornBuild{
-					Context:   ".",
-					Acornfile: "Acornfile",
-				},
-			},
-			"iimage": {
-				Image: "images-image-image",
-			},
+			"ibuild": {AcornBuild: &v1.AcornBuild{
+				Context:   ".",
+				Acornfile: "Acornfile",
+			}},
+			"iimage": {Image: "images-image-image"},
 		},
-	}, buildSpec)
+	}).Equal(t, buildSpec)
 
 	app := appImage.WithImageData(v1.ImagesData{
 		Containers: map[string]v1.ContainerData{
@@ -3039,7 +3017,7 @@ func TestNestedScopedLabels(t *testing.T) {
 
 func TestFunction(t *testing.T) {
 	appImage, err := NewAppDefinition([]byte(`functions: foo: {
-		image: "foo:latest"
+		src: "somewhere"
 	}`))
 	if err != nil {
 		t.Fatal(err)
@@ -3052,11 +3030,11 @@ func TestFunction(t *testing.T) {
 	}
 
 	autogold.Expect(v1.Container{
-		Image: "foo:latest",
+		Src: "somewhere",
 	}).Equal(t, appSpec.Functions["foo"])
 
 	_, err = NewAppDefinition([]byte(`functions: foo: {
-		image: "foo:latest"
+		src: "somewhere"
 	}
 	containers: foo: {
 			image: "foo:latest"

@@ -11,6 +11,7 @@ var (
 type ContainerImageBuilderSpec struct {
 	Image string `json:"image,omitempty"`
 	Build *Build `json:"build,omitempty"`
+	Src   string `json:"src,omitempty"`
 	// Sidecars is only populated for non-sidecar containers
 	Sidecars map[string]ContainerImageBuilderSpec `json:"sidecars,omitempty"`
 }

@@ -5,10 +5,11 @@ go 1.21.5
 require (
 	cuelang.org/go v0.6.0
 	github.com/AlecAivazis/survey/v2 v2.3.6
-	github.com/acorn-io/aml v0.0.0-20240104225813-e936fb3bc7b6
-	github.com/acorn-io/aml/cli v0.0.0-20231113171943-4844e2f3e1a2
+	github.com/acorn-io/aml v0.0.0-20240106192317-21afc7320c77
+	github.com/acorn-io/aml/cli v0.0.0-20240106192317-21afc7320c77
 	github.com/acorn-io/baaah v0.0.0-20240105013849-c4f82d7a5a41
 	github.com/acorn-io/broadcaster v0.0.0-20240105011354-bfadd4a7b45d
+	github.com/acorn-io/function-builder v0.0.0-20240106051830-f0d368d2382c
 	github.com/acorn-io/mink v0.0.0-20240105015834-b1f7af4fadea
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
 	github.com/acorn-io/schemer v0.0.0-20240105014212-9739d5485208

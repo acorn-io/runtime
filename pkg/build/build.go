@@ -2,6 +2,7 @@ package build
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"path/filepath"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/acorn-io/aml"
 	"github.com/acorn-io/baaah/pkg/typed"
+	"github.com/acorn-io/function-builder/pkg/templates"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/appdefinition"
@@ -19,6 +21,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/buildclient"
 	images2 "github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/k8sclient"
+	"github.com/containerd/containerd/platforms"
 	"github.com/google/go-containerregistry/pkg/authn"
 	imagename "github.com/google/go-containerregistry/pkg/name"
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
@@ -138,21 +141,100 @@ func build(ctx *buildContext) (*v1.AppImage, error) {
 	return appImage, nil
 }
 
-func buildContainers(ctx *buildContext, buildCache *buildCache, containers map[string]v1.ContainerImageBuilderSpec) (map[string]v1.ContainerData, []v1.BuildRecord, error) {
-	var builds []v1.BuildRecord
+func firstPlatform(ctx *buildContext) ggcrv1.Platform {
+	defaultPlatform := (v1.Platform)(platforms.DefaultSpec())
+	if len(ctx.opts.Platforms) > 0 {
+		defaultPlatform = ctx.opts.Platforms[0]
+	}
+	return ggcrv1.Platform{
+		Architecture: defaultPlatform.Architecture,
+		OS:           defaultPlatform.OS,
+		OSVersion:    defaultPlatform.OSVersion,
+		OSFeatures:   defaultPlatform.OSFeatures,
+		Variant:      defaultPlatform.Variant,
+	}
+}
+
+func getAcornFragment(ctx *buildContext, id string) (string, error) {
+	d, err := imagename.NewDigest(id)
+	if err != nil {
+		return "", err
+	}
+
+	img, err := remote.Image(d, append(ctx.remoteOpts, remote.WithPlatform(firstPlatform(ctx)))...)
+	if err != nil {
+		return "", err
+	}
+
+	cfg, err := img.ConfigFile()
+	if err != nil {
+		return "", err
+	}
+
+	b64 := cfg.Config.Labels["io.acorn.acornfile.fragment"]
+	if b64 == "" {
+		return "", nil
+	}
+
+	data, err := base64.StdEncoding.DecodeString(b64)
+	return string(data), err
+}
+
+func isDevMode(ctx *buildContext) bool {
+	for _, profile := range ctx.opts.Profiles {
+		if profile == "devMode" || profile == "devMode?" {
+			return true
+		}
+	}
+	return false
+}
+
+func buildContainers(ctx *buildContext, buildCache *buildCache, containers map[string]v1.ContainerImageBuilderSpec, functions bool) (map[string]v1.ContainerData, []v1.BuildRecord, error) {
+	var (
+		builds           []v1.BuildRecord
+		addBuildFragment string
+	)
 	result := map[string]v1.ContainerData{}
 
 	for _, entry := range typed.Sorted(containers) {
 		key, container := entry.Key, entry.Value
 
-		if container.Image == "" && container.Build == nil {
-			return nil, nil, fmt.Errorf("either image or build field must be set to build container/job: %s", key)
-		}
+		if functions || (container.Image == "" && container.Build != nil && strings.HasSuffix(container.Build.Dockerfile, templates.Suffix)) {
+			if container.Build == nil {
+				context := container.Src
+				if context == "" {
+					context = key
+				}
 
-		if container.Image != "" && container.Build == nil {
-			// this is a copy, it's fine to modify it
-			container.Build = &v1.Build{
-				BaseImage: container.Image,
+				container.Image = ""
+				container.Build = &v1.Build{
+					Context:    context,
+					Dockerfile: context + "/" + "build.acorn",
+				}
+			}
+
+			if container.Build.Target == "" && isDevMode(ctx) {
+				container.Build.Target = "dev"
+			}
+
+			buildFragmentData, err := json.Marshal(v1.ContainerImageBuilderSpec{
+				Image: container.Image,
+				Build: container.Build,
+			})
+			if err != nil {
+				return nil, nil, err
+			}
+			addBuildFragment = "\n" + string(buildFragmentData)
+		} else {
+			if container.Image == "" && container.Build == nil {
+				return nil, nil, fmt.Errorf("either image or build field must be set to build container/job: %s", key)
+			}
+
+			if container.Image != "" && container.Build == nil {
+				// this is a copy, it's fine to modify it
+				container.Build = &v1.Build{
+					BaseImage: container.Image,
+				}
 			}
 		}
 
@@ -161,9 +243,15 @@ func buildContainers(ctx *buildContext, buildCache *buildCache, containers map[s
 			return nil, nil, err
 		}
 
+		acornfileFragment, err := getAcornFragment(ctx, id)
+		if err != nil {
+			return nil, nil, err
+		}
+
 		result[key] = v1.ContainerData{
-			Image:    id,
-			Sidecars: map[string]v1.ImageData{},
+			Image:             id,
+			AcornfileFragment: acornfileFragment + addBuildFragment,
+			Sidecars:          map[string]v1.ImageData{},
 		}
 
 		builds = append(builds, v1.BuildRecord{
@@ -320,19 +408,19 @@ func fromSpec(ctx *buildContext, spec v1.BuilderSpec) (v1.ImagesData, error) {
 
 	buildCache := &buildCache{}
 
-	data.Containers, builds, err = buildContainers(ctx, buildCache, spec.Containers)
+	data.Containers, builds, err = buildContainers(ctx, buildCache, spec.Containers, false)
 	if err != nil {
 		return data, err
 	}
 	data.Builds = append(data.Builds, builds...)
 
-	data.Functions, builds, err = buildContainers(ctx, buildCache, spec.Functions)
+	data.Functions, builds, err = buildContainers(ctx, buildCache, spec.Functions, true)
 	if err != nil {
 		return data, err
 	}
 	data.Builds = append(data.Builds, builds...)
 
-	data.Jobs, builds, err = buildContainers(ctx, buildCache, spec.Jobs)
+	data.Jobs, builds, err = buildContainers(ctx, buildCache, spec.Jobs, false)
 	if err != nil {
 		return data, err
 	}

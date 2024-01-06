@@ -108,6 +108,11 @@ func (c *DefaultClient) AcornImageBuild(ctx context.Context, file string, opts *
 			SubResource("port").URL().String()
 	}
 
+	if overrideBuildURL := os.Getenv("ACORN_DEBUG_BUILD_URL"); overrideBuildURL != "" {
+		logrus.Infof("Overriding build URL [%s] with [%s]", build.Status.BuildURL, overrideBuildURL)
+		build.Status.BuildURL = overrideBuildURL
+	}
+
 	logrus.Debugf("Building with URL: %s", build.Status.BuildURL)
 	return buildclient.Stream(ctx, opts.Cwd, opts.Streams, dialer, (buildclient.CredentialLookup)(opts.Credentials), build)
 }

@@ -151,7 +151,7 @@ func Stream(ctx context.Context, cwd string, streams *streams.Output, dialer Web
 		}
 	}
 
-	return nil, fmt.Errorf("build failed")
+	return nil, fmt.Errorf("build failed: %w", messages.Err())
 }
 
 func lookupCred(ctx context.Context, creds CredentialLookup, serverAddress string) (result *Message) {

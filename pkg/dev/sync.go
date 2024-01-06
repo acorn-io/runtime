@@ -22,12 +22,13 @@ import (
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 )
 
-func containerSyncLoop(ctx context.Context, client client.Client, appName string, opts *Options) error {
+func containerSyncLoop(ctx context.Context, client client.Client, logger Logger, appName string, watcher *watcher, opts *Options) error {
 	for {
-		err := containerSync(ctx, client, appName, opts)
+		err := containerSync(ctx, client, logger, appName, watcher, opts)
 		if err != nil && !errors.Is(err, context.Canceled) {
 			logrus.Errorf("failed to run container sync: %s", err)
 		}
@@ -39,7 +40,7 @@ func containerSyncLoop(ctx context.Context, client client.Client, appName string
 	}
 }
 
-func containerSync(ctx context.Context, client client.Client, appName string, opts *Options) error {
+func containerSync(ctx context.Context, client client.Client, logger Logger, appName string, watcher *watcher, opts *Options) error {
 	cwd, file, err := opts.ImageSource.ResolveImageAndFile()
 	if err != nil {
 		return err
@@ -62,6 +63,9 @@ func containerSync(ctx context.Context, client client.Client, appName string, op
 			if con.Spec.Init {
 				return false, nil
 			}
+
+			watcher.addWatchFiles(con.Spec.Build.WatchFiles...)
+
 			for remoteDir, mount := range con.Spec.Dirs {
 				if mount.ContextDir == "" {
 					continue
@@ -71,7 +75,7 @@ func containerSync(ctx context.Context, client client.Client, appName string, op
 					mount     = mount
 				)
 				go func() {
-					startSyncForPath(ctx, client, con, cwd, mount.ContextDir, remoteDir, opts.BidirectionalSync)
+					startSyncForPath(ctx, client, logger, con, cwd, mount.ContextDir, remoteDir, opts.BidirectionalSync)
 					syncLock.Lock()
 					delete(syncing, con.Name)
 					syncLock.Unlock()
@@ -86,7 +90,7 @@ func containerSync(ctx context.Context, client client.Client, appName string, op
 	return err
 }
 
-func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv1.ContainerReplica, cwd, localDir, remoteDir string, bidirectional bool) (chan struct{}, chan error, error) {
+func invokeStartSyncForPath(ctx context.Context, client client.Client, logger Logger, con *apiv1.ContainerReplica, cwd, localDir, remoteDir string, bidirectional bool) (chan struct{}, chan error, error) {
 	source := filepath.Join(cwd, localDir)
 	if s, err := os.Stat(source); err == nil && !s.IsDir() {
 		return nil, nil, nil
@@ -116,7 +120,7 @@ func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv
 		Verbose:            true,
 		UploadExcludePaths: exclude,
 		InitialSync:        latest.InitialSyncStrategyPreferLocal,
-		Log: newLogger().
+		Log: newLogger(logger, con).
 			WithPrefix(strings.TrimPrefix(con.Name, con.Spec.AppName+".") + ": (sync): "),
 	})
 	if err != nil {
@@ -153,12 +157,26 @@ func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv
 	return done, waiterr, nil
 }
 
-func newLogger() logpkg.Logger {
-	return logpkg.NewStreamLogger(&ignore{
-		Out: os.Stdout,
+type containerLogWriter struct {
+	logger Logger
+	con    *apiv1.ContainerReplica
+}
+
+func (c containerLogWriter) Write(p []byte) (n int, err error) {
+	c.logger.Container(metav1.Now(), c.con.Name, strings.TrimSpace(string(p)))
+	return len(p), nil
+}
+
+func newLogger(logger Logger, con *apiv1.ContainerReplica) logpkg.Logger {
+	out := containerLogWriter{
+		logger: logger,
+		con:    con,
+	}
+	return logpkg.NewStreamLoggerWithFormat(&ignore{
+		Out: out,
 	}, &ignore{
-		Out: os.Stderr,
-	}, logrus.GetLevel())
+		Out: out,
+	}, logrus.GetLevel(), logpkg.RawFormat)
 }
 
 type ignore struct {
@@ -172,7 +190,7 @@ func (i *ignore) Write(p []byte) (n int, err error) {
 	return i.Out.Write(p)
 }
 
-func startSyncForPath(ctx context.Context, client client.Client, con *apiv1.ContainerReplica, cwd, localDir, remoteDir string, bidirectional bool) {
+func startSyncForPath(ctx context.Context, client client.Client, logger Logger, con *apiv1.ContainerReplica, cwd, localDir, remoteDir string, bidirectional bool) {
 	for {
 		var (
 			wait    <-chan struct{}
@@ -184,7 +202,7 @@ func startSyncForPath(ctx context.Context, client client.Client, con *apiv1.Cont
 			return
 		}
 		if err == nil {
-			wait, waiterr, err = invokeStartSyncForPath(ctx, client, con, cwd, localDir, remoteDir, bidirectional)
+			wait, waiterr, err = invokeStartSyncForPath(ctx, client, logger, con, cwd, localDir, remoteDir, bidirectional)
 		}
 
 		if err == nil {

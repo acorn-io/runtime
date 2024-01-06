@@ -50,6 +50,7 @@ type Build struct {
 	BaseImage          string            `json:"baseImage,omitempty"`
 	ContextDirs        map[string]string `json:"contextDirs,omitempty"`
 	BuildArgs          map[string]string `json:"buildArgs,omitempty"`
+	WatchFiles         []string          `json:"watchFiles,omitempty"`
 }
 
 func (in Build) BaseBuild() Build {
@@ -636,6 +637,7 @@ type Container struct {
 	Files        Files                  `json:"files,omitempty"`
 	Image        string                 `json:"image,omitempty"`
 	Build        *Build                 `json:"build,omitempty"`
+	Src          string                 `json:"src,omitempty"`
 	Command      CommandSlice           `json:"command,omitempty"`
 	Interactive  bool                   `json:"interactive,omitempty"`
 	Entrypoint   CommandSlice           `json:"entrypoint,omitempty"`

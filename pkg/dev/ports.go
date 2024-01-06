@@ -12,12 +12,11 @@ import (
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/portforward"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/util/retry"
 )
 
-func DevPorts(ctx context.Context, c client.Client, appName string) error {
+func DevPorts(ctx context.Context, c client.Client, logger Logger, appName string) error {
 	wc, err := c.GetClient()
 	if err != nil {
 		return err
@@ -26,6 +25,7 @@ func DevPorts(ctx context.Context, c client.Client, appName string) error {
 
 	forwarder := forwarder{
 		c:                         c,
+		logger:                    logger,
 		looping:                   map[string]bool{},
 		forwardingByContainerName: map[string]func(){},
 	}
@@ -50,6 +50,7 @@ func DevPorts(ctx context.Context, c client.Client, appName string) error {
 type forwarder struct {
 	c                         client.Client
 	looping                   map[string]bool
+	logger                    Logger
 	forwardingByContainerName map[string]func()
 	mapLock                   sync.Mutex
 }
@@ -61,7 +62,7 @@ func (f *forwarder) Stop(container *apiv1.ContainerReplica) {
 	cancel := f.forwardingByContainerName[container.Spec.ContainerName]
 	if cancel != nil {
 		cancel()
-		logrus.Infof("Stopping dev ports container [%s]", container.Name)
+		f.logger.Infof("Stopping dev ports container [%s]", container.Name)
 	}
 
 	delete(f.forwardingByContainerName, container.Spec.ContainerName)
@@ -79,7 +80,7 @@ func (f *forwarder) startListener(ctx context.Context, container *apiv1.Containe
 	f.forwardingByContainerName[container.Spec.ContainerName] = cancel
 
 	for _, port := range ports {
-		logrus.Infof("Start dev port [%s] on container [%s]", port.FormatString(""), container.Name)
+		f.logger.Infof("Start dev port [%s] on container [%s]", port.FormatString(""), container.Name)
 		port := port
 		go func() {
 			err := retry.OnError(retry.DefaultBackoff, func(err error) bool {
@@ -89,7 +90,7 @@ func (f *forwarder) startListener(ctx context.Context, container *apiv1.Containe
 			})
 			if err != nil {
 				if !errors.Is(err, context.Canceled) {
-					logrus.Errorf("Failed to establish port forward for dev port [%s] on container [%s]: %v", port.FormatString(""), container.Name, err)
+					f.logger.Errorf("Failed to establish port forward for dev port [%s] on container [%s]: %v", port.FormatString(""), container.Name, err)
 				}
 				f.Stop(container)
 			}

@@ -217,6 +217,39 @@ func (a *AppDefinition) imagesData() (result v1.ImagesData) {
 	return
 }
 
+func getFragment(imagesData v1.ImagesData, imageID string) string {
+	for _, check := range []map[string]v1.ContainerData{
+		imagesData.Containers,
+		imagesData.Functions,
+		imagesData.Jobs,
+	} {
+		for _, imageData := range check {
+			if imageData.Image == imageID && imageData.AcornfileFragment != "" {
+				return imageData.AcornfileFragment
+			}
+		}
+	}
+	return ""
+}
+
+func overlayFragment(con *v1.Container, imagesData v1.ImagesData, imageID, serviceName string) error {
+	fragment := getFragment(imagesData, imageID)
+	if fragment == "" {
+		return nil
+	}
+
+	containerData, err := json.Marshal(con)
+	if err != nil {
+		return err
+	}
+
+	strData := fmt.Sprintf(`
+let serviceName: "%s"
+{ %s } + { %s }`, serviceName, containerData, fragment)
+
+	return aml.Unmarshal([]byte(strData), con)
+}
+
 func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 	spec := &v1.AppSpec{}
 	if err := a.decode(spec); err != nil {
@@ -231,6 +264,9 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 
 	for containerName, conSpec := range spec.Containers {
 		if image, ok := GetImageReferenceForServiceName(containerName, spec, imagesData); ok {
+			if err := overlayFragment(&conSpec, imagesData, image, containerName); err != nil {
+				return nil, err
+			}
 			conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, image)
 		} else {
 			return nil, fmt.Errorf("failed to find image for container [%s] in Acornfile"+messageSuffix, containerName)
@@ -248,6 +284,9 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 
 	for functionName, conSpec := range spec.Functions {
 		if image, ok := GetImageReferenceForServiceName(functionName, spec, imagesData); ok {
+			if err := overlayFragment(&conSpec, imagesData, image, functionName); err != nil {
+				return nil, err
+			}
 			conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, image)
 		} else {
 			return nil, fmt.Errorf("failed to find image for function [%s] in Acornfile"+messageSuffix, functionName)
@@ -265,6 +304,9 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 
 	for containerName, conSpec := range spec.Jobs {
 		if image, ok := GetImageReferenceForServiceName(containerName, spec, imagesData); ok {
+			if err := overlayFragment(&conSpec, imagesData, image, containerName); err != nil {
+				return nil, err
+			}
 			conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, image)
 		} else {
 			return nil, fmt.Errorf("failed to find image for job [%s] in Acornfile"+messageSuffix, containerName)
@@ -314,7 +356,7 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 		spec.Services[serviceName] = serviceSpec
 	}
 
-	return spec, nil
+	return spec, v1.AddImpliedResources(spec)
 }
 
 func addContainerFiles(fileSet map[string]bool, builds map[string]v1.ContainerImageBuilderSpec, cwd string) {
