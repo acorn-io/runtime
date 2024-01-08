@@ -159,6 +159,10 @@ func ResourceRequirements(req router.Request, app *v1.AppInstance, containerName
 	}
 
 	requirements := &corev1.ResourceRequirements{Limits: corev1.ResourceList{}, Requests: corev1.ResourceList{}}
+	if z.Dereference(cfg.IgnoreResourceRequest) {
+		return requirements, nil
+	}
+
 	if computeClass != nil && computeClass.Resources != nil {
 		if computeClass.Resources.Requests != nil {
 			requirements.Requests = computeClass.Resources.Requests

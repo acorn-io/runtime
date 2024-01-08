@@ -570,6 +570,7 @@ type Config struct {
 	BuildkitdServiceCPU    *string `json:"buildkitdServiceCPU" name:"buildkitd-service-cpu" usage:"The CPU to allocate to the buildkitd service in the format of <req>:<limit> (example 200m:1000m)"`
 	RegistryMemory         *string `json:"registryMemory" name:"registry-memory" usage:"The memory to allocate to the registry in the format of <req>:<limit> (example 256Mi:1Gi)"`
 	RegistryCPU            *string `json:"registryCPU" name:"registry-cpu" usage:"The CPU to allocate to the registry in the format of <req>:<limit> (example 200m:1000m)"`
+	IgnoreResourceRequest  *bool   `json:"ignoreResourceRequest" name:"ignore-resource-request" usage:"Ignore memory and CPU requests and limits, intended for local development (default is false)"`
 }
 
 type EncryptionKey struct {

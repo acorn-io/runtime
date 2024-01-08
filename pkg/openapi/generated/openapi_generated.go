@@ -2630,8 +2630,14 @@ func schema_pkg_apis_apiacornio_v1_Config(ref common.ReferenceCallback) common.O
 							Format: "",
 						},
 					},
+					"ignoreResourceRequest": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
 				},
-				Required: []string{"ingressClassName", "clusterDomains", "letsEncrypt", "letsEncryptEmail", "letsEncryptTOSAgree", "setPodSecurityEnforceProfile", "podSecurityEnforceProfile", "httpEndpointPattern", "internalClusterDomain", "acornDNS", "acornDNSEndpoint", "autoUpgradeInterval", "recordBuilds", "publishBuilders", "builderPerProject", "internalRegistryPrefix", "ignoreUserLabelsAndAnnotations", "allowUserLabels", "allowUserAnnotations", "allowUserMetadataNamespaces", "workloadMemoryDefault", "workloadMemoryMaximum", "useCustomCABundle", "propagateProjectAnnotations", "propagateProjectLabels", "manageVolumeClasses", "volumeSizeDefault", "networkPolicies", "ingressControllerNamespace", "allowTrafficFromNamespace", "serviceLBAnnotations", "awsIdentityProviderArn", "eventTTL", "features", "certManagerIssuer", "profile", "autoConfigureKarpenterDontEvictAnnotations", "controllerMemory", "controllerCPU", "apiServerMemory", "apiServerCPU", "buildkitdMemory", "buildkitdCPU", "buildkitdServiceMemory", "buildkitdServiceCPU", "registryMemory", "registryCPU"},
+				Required: []string{"ingressClassName", "clusterDomains", "letsEncrypt", "letsEncryptEmail", "letsEncryptTOSAgree", "setPodSecurityEnforceProfile", "podSecurityEnforceProfile", "httpEndpointPattern", "internalClusterDomain", "acornDNS", "acornDNSEndpoint", "autoUpgradeInterval", "recordBuilds", "publishBuilders", "builderPerProject", "internalRegistryPrefix", "ignoreUserLabelsAndAnnotations", "allowUserLabels", "allowUserAnnotations", "allowUserMetadataNamespaces", "workloadMemoryDefault", "workloadMemoryMaximum", "useCustomCABundle", "propagateProjectAnnotations", "propagateProjectLabels", "manageVolumeClasses", "volumeSizeDefault", "networkPolicies", "ingressControllerNamespace", "allowTrafficFromNamespace", "serviceLBAnnotations", "awsIdentityProviderArn", "eventTTL", "features", "certManagerIssuer", "profile", "autoConfigureKarpenterDontEvictAnnotations", "controllerMemory", "controllerCPU", "apiServerMemory", "apiServerCPU", "buildkitdMemory", "buildkitdCPU", "buildkitdServiceMemory", "buildkitdServiceCPU", "registryMemory", "registryCPU", "ignoreResourceRequest"},
 			},
 		},
 	}
