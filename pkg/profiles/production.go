@@ -33,7 +33,7 @@ func productionProfile() apiv1.Config {
 	conf.ControllerCPU = z.Pointer("100m")
 	conf.APIServerMemory = z.Pointer("256Mi")
 	conf.APIServerCPU = z.Pointer("100m")
-	conf.IgnoreResourceRequest = z.Pointer(false)
+	conf.IgnoreResourceRequirements = z.Pointer(false)
 	conf.AutoConfigureKarpenterDontEvictAnnotations = z.Pointer(true)
 
 	return conf

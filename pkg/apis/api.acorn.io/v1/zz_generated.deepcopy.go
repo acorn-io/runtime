@@ -649,8 +649,8 @@ func (in *Config) DeepCopyInto(out *Config) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.IgnoreResourceRequest != nil {
-		in, out := &in.IgnoreResourceRequest, &out.IgnoreResourceRequest
+	if in.IgnoreResourceRequirements != nil {
+		in, out := &in.IgnoreResourceRequirements, &out.IgnoreResourceRequirements
 		*out = new(bool)
 		**out = **in
 	}

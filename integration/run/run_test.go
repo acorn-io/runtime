@@ -1788,3 +1788,44 @@ func TestAutoUpgradeLocalImage(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestIgnoreResourceRequirements(t *testing.T) {
+	ctx := helper.GetCTX(t)
+
+	helper.StartController(t)
+	restConfig, err := restconfig.New(scheme.Scheme)
+	if err != nil {
+		t.Fatal("error while getting rest config:", err)
+	}
+	kclient := helper.MustReturn(kclient.Default)
+	project := helper.TempProject(t, kclient)
+
+	helper.SetIgnoreResourceRequirementsWithRestore(t, ctx, kclient)
+
+	c, err := client.New(restConfig, project.Name, project.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	image, err := c.AcornImageBuild(ctx, "./testdata/simple/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/simple",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// deploy an app with memory request configured, verify that it doesn't have the constraints
+	app, err := c.AppRun(ctx, image.ID, &client.AppRunOptions{
+		Memory: map[string]*int64{
+			"": z.Pointer(int64(1073741824)),
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success
+	})
+	assert.Empty(t, app.Status.Scheduling["simple"].Requirements)
+}

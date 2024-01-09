@@ -560,17 +560,17 @@ type Config struct {
 	AutoConfigureKarpenterDontEvictAnnotations *bool           `json:"autoConfigureKarpenterDontEvictAnnotations" name:"auto-configure-karpenter-dont-evict-annotations" usage:"Automatically configure Karpenter to not evict pods with the given annotations if app is running a single replica. (default false)"`
 
 	// Flags for setting resource request and limits on sytem components
-	ControllerMemory       *string `json:"controllerMemory" name:"controller-memory" usage:"The memory to allocate to the runtime-controller in the format of <req>:<limit> (example 256Mi:1Gi)"`
-	ControllerCPU          *string `json:"controllerCPU" name:"controller-cpu" usage:"The CPU to allocate to the runtime-controller in the format of <req>:<limit> (example 200m:1000m)"`
-	APIServerMemory        *string `json:"apiServerMemory" name:"api-server-memory" usage:"The memory to allocate to the runtime-api-server in the format of <req>:<limit> (example 256Mi:1Gi)"`
-	APIServerCPU           *string `json:"apiServerCPU" name:"api-server-cpu" usage:"The CPU to allocate to the runtime-api-server in the format of <req>:<limit> (example 200m:1000m)"`
-	BuildkitdMemory        *string `json:"buildkitdMemory" name:"buildkitd-memory" usage:"The memory to allocate to buildkitd in the format of <req>:<limit> (example 256Mi:1Gi)"`
-	BuildkitdCPU           *string `json:"buildkitdCPU" name:"buildkitd-cpu" usage:"The CPU to allocate to buildkitd in the format of <req>:<limit> (example 200m:1000m)"`
-	BuildkitdServiceMemory *string `json:"buildkitdServiceMemory" name:"buildkitd-service-memory" usage:"The memory to allocate to the buildkitd service in the format of <req>:<limit> (example 256Mi:1Gi)"`
-	BuildkitdServiceCPU    *string `json:"buildkitdServiceCPU" name:"buildkitd-service-cpu" usage:"The CPU to allocate to the buildkitd service in the format of <req>:<limit> (example 200m:1000m)"`
-	RegistryMemory         *string `json:"registryMemory" name:"registry-memory" usage:"The memory to allocate to the registry in the format of <req>:<limit> (example 256Mi:1Gi)"`
-	RegistryCPU            *string `json:"registryCPU" name:"registry-cpu" usage:"The CPU to allocate to the registry in the format of <req>:<limit> (example 200m:1000m)"`
-	IgnoreResourceRequest  *bool   `json:"ignoreResourceRequest" name:"ignore-resource-request" usage:"Ignore memory and CPU requests and limits, intended for local development (default is false)"`
+	ControllerMemory           *string `json:"controllerMemory" name:"controller-memory" usage:"The memory to allocate to the runtime-controller in the format of <req>:<limit> (example 256Mi:1Gi)"`
+	ControllerCPU              *string `json:"controllerCPU" name:"controller-cpu" usage:"The CPU to allocate to the runtime-controller in the format of <req>:<limit> (example 200m:1000m)"`
+	APIServerMemory            *string `json:"apiServerMemory" name:"api-server-memory" usage:"The memory to allocate to the runtime-api-server in the format of <req>:<limit> (example 256Mi:1Gi)"`
+	APIServerCPU               *string `json:"apiServerCPU" name:"api-server-cpu" usage:"The CPU to allocate to the runtime-api-server in the format of <req>:<limit> (example 200m:1000m)"`
+	BuildkitdMemory            *string `json:"buildkitdMemory" name:"buildkitd-memory" usage:"The memory to allocate to buildkitd in the format of <req>:<limit> (example 256Mi:1Gi)"`
+	BuildkitdCPU               *string `json:"buildkitdCPU" name:"buildkitd-cpu" usage:"The CPU to allocate to buildkitd in the format of <req>:<limit> (example 200m:1000m)"`
+	BuildkitdServiceMemory     *string `json:"buildkitdServiceMemory" name:"buildkitd-service-memory" usage:"The memory to allocate to the buildkitd service in the format of <req>:<limit> (example 256Mi:1Gi)"`
+	BuildkitdServiceCPU        *string `json:"buildkitdServiceCPU" name:"buildkitd-service-cpu" usage:"The CPU to allocate to the buildkitd service in the format of <req>:<limit> (example 200m:1000m)"`
+	RegistryMemory             *string `json:"registryMemory" name:"registry-memory" usage:"The memory to allocate to the registry in the format of <req>:<limit> (example 256Mi:1Gi)"`
+	RegistryCPU                *string `json:"registryCPU" name:"registry-cpu" usage:"The CPU to allocate to the registry in the format of <req>:<limit> (example 200m:1000m)"`
+	IgnoreResourceRequirements *bool   `json:"ignoreResourceRequirements" name:"ignore-resource-requirements" usage:"Ignore memory and CPU requests and limits, intended for local development (default is false)"`
 }
 
 type EncryptionKey struct {
