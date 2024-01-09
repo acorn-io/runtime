@@ -73,6 +73,7 @@ func defaultProfile() apiv1.Config {
 		ControllerCPU:                  new(string),
 		APIServerMemory:                new(string),
 		APIServerCPU:                   new(string),
+		IgnoreResourceRequirements:     z.Pointer(false),
 		AutoConfigureKarpenterDontEvictAnnotations: z.Pointer(true),
 	}
 }
