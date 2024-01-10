@@ -24,8 +24,9 @@ func NewSnapshotCreate(c CommandContext) *cobra.Command {
 }
 
 type SnapshotCreate struct {
-	Name   string `usage:"Give your snapshot a custom name" short:"n"`
-	client ClientFactory
+	Name          string `usage:"Give your snapshot a custom name" short:"n"`
+	SnapshotClass string `usage:"Manually select the snapshot class used" short:"s"`
+	client        ClientFactory
 }
 
 func (sc *SnapshotCreate) Run(cmd *cobra.Command, args []string) error {
@@ -69,7 +70,12 @@ func (sc *SnapshotCreate) Run(cmd *cobra.Command, args []string) error {
 	if sc.Name != "" {
 		// the modifications to this PVC are not saved
 		// so this additional label is just for internal use within SnapshotCreate
+		// I did this as a lazy way of passing args into SnapshotCreate (no struct or additional params)
 		pvc.Labels["acorn.io/custom-name"] = sc.Name
+	}
+
+	if sc.SnapshotClass != "" {
+		pvc.Labels["acorn.io/snapshot-class"] = sc.SnapshotClass
 	}
 
 	_, err = cl.SnapshotCreate(cmd.Context(), pvc)

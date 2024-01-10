@@ -26,6 +26,7 @@ const (
 	AcornAppUID                            = Prefix + "app-uid"
 	AcornVolumeName                        = Prefix + "volume-name"
 	AcornVolumeClass                       = Prefix + "volume-class"
+	AcornIsDefaultForStorageClass          = Prefix + "is-default-for-storage-class"
 	AcornSecretName                        = Prefix + "secret-name"
 	AcornSecretSourceNamespace             = Prefix + "secret-source-namespace"
 	AcornSecretSourceName                  = Prefix + "secret-source-name"

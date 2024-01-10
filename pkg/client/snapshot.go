@@ -12,11 +12,12 @@ import (
 
 	snapshotv1 "github.com/acorn-io/runtime/pkg/apis/snapshot.storage.k8s.io/v1"
 	"github.com/acorn-io/runtime/pkg/labels"
-	snapshot2 "github.com/acorn-io/runtime/pkg/snapshot"
+	"github.com/acorn-io/z"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	klabels "k8s.io/apimachinery/pkg/labels"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var (
@@ -29,14 +30,20 @@ var (
 // SnapshotCreate creates a VolumeSnapshot resource in the cluster using the details of the given *PersistentVolumeClaim.
 // Returns a *VolumeSnapshot or error if one occurred.
 func (c *DefaultClient) SnapshotCreate(ctx context.Context, pvc *corev1.PersistentVolumeClaim) (*snapshotv1.VolumeSnapshot, error) {
-	err := snapshot2.CreateSnapshotClass(ctx, c.Client)
-	if err != nil {
-		return nil, err
-	}
-
 	name, ok := pvc.Labels["acorn.io/custom-name"]
 	if !ok {
+		// generate a name if one wasn't given by the user
 		name = pvc.Labels[labels.AcornPublicName] + "-" + strconv.FormatInt(time.Now().Unix(), 10)
+	}
+
+	var err error
+	snapshotClass, ok := pvc.Labels["acorn.io/snapshot-class"]
+	if !ok {
+		// select the default snapshot class if one wasn't given by the user
+		snapshotClass, err = getDefaultSnapshotClass(ctx, c, pvc.Labels[labels.AcornVolumeClass])
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	accessModesJSON, err := json.Marshal(pvc.Spec.AccessModes)
@@ -67,14 +74,36 @@ func (c *DefaultClient) SnapshotCreate(ctx context.Context, pvc *corev1.Persiste
 			},
 		},
 		Spec: snapshotv1.VolumeSnapshotSpec{
-			VolumeSnapshotClassName: pointer.String(snapshot2.ClassName),
+			VolumeSnapshotClassName: z.Pointer(snapshotClass),
 			Source: snapshotv1.VolumeSnapshotSource{
-				PersistentVolumeClaimName: pointer.String(pvc.Name),
+				PersistentVolumeClaimName: z.Pointer(pvc.Name),
 			},
 		},
 	}
 
 	return snapshot, c.Client.Create(ctx, snapshot)
+}
+
+func getDefaultSnapshotClass(ctx context.Context, c *DefaultClient, volumeClass string) (string, error) {
+	defaultSnapshotClasses := &snapshotv1.VolumeSnapshotClassList{}
+	err := c.Client.List(ctx, defaultSnapshotClasses, &kclient.ListOptions{
+		LabelSelector: klabels.SelectorFromSet(map[string]string{
+			labels.AcornIsDefaultForStorageClass: volumeClass,
+		}),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	if len(defaultSnapshotClasses.Items) > 1 {
+		return "", errors.New("Multiple default snapshot classes found for storage class " + volumeClass + ".")
+	}
+
+	if len(defaultSnapshotClasses.Items) == 0 {
+		return "", errors.New("No default snapshot class found for storage class " + volumeClass + ".")
+	}
+
+	return defaultSnapshotClasses.Items[0].Name, nil
 }
 
 // SnapshotList lists VolumeSnapshot. Returns []VolumeSnapshot or an error if one occurred.
@@ -170,7 +199,7 @@ func (c *DefaultClient) SnapshotRestore(ctx context.Context, snapshotName string
 			DataSource: &corev1.TypedLocalObjectReference{
 				Name:     snapshot.Name,
 				Kind:     "VolumeSnapshot",
-				APIGroup: pointer.String(snapshotv1.GroupName),
+				APIGroup: z.Pointer(snapshotv1.GroupName),
 			},
 		},
 	}
