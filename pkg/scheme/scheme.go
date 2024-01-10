@@ -7,8 +7,6 @@ import (
 	acornv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	acornadminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	snapshotv1 "github.com/acorn-io/runtime/pkg/apis/snapshot.storage.k8s.io/v1"
-	"github.com/rancher/wrangler/pkg/merr"
-	"github.com/rancher/wrangler/pkg/schemes"
 	appsv1 "k8s.io/api/apps/v1"
 	authv1 "k8s.io/api/authorization/v1"
 	batchv1 "k8s.io/api/batch/v1"

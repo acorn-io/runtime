@@ -12,8 +12,9 @@ acorn volume snapshot create [flags] BOUND_VOLUME_NAME
 ### Options
 
 ```
-  -h, --help          help for create
-  -n, --name string   Give your snapshot a custom name
+  -h, --help                    help for create
+  -n, --name string             Give your snapshot a custom name
+  -s, --snapshot-class string   Manually select the snapshot class used
 ```
 
 ### Options inherited from parent commands

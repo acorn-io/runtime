@@ -167,7 +167,7 @@ func (c *DefaultClient) SnapshotRestore(ctx context.Context, snapshotName string
 		return err
 	}
 
-	var resources corev1.ResourceRequirements
+	var resources corev1.VolumeResourceRequirements
 	err = json.Unmarshal([]byte(snapshot.Annotations[annotationResources]), &resources)
 	if err != nil {
 		return err
