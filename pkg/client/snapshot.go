@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	v1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	snapshotv1 "github.com/acorn-io/runtime/pkg/apis/snapshot.storage.k8s.io/v1"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/z"
@@ -108,24 +109,40 @@ func getDefaultSnapshotClass(ctx context.Context, c *DefaultClient, volumeClass 
 
 // SnapshotList lists VolumeSnapshot. Returns []VolumeSnapshot or an error if one occurred.
 func (c *DefaultClient) SnapshotList(ctx context.Context) ([]snapshotv1.VolumeSnapshot, error) {
-	snapshots := &snapshotv1.VolumeSnapshotList{}
-	err := c.Client.List(ctx, snapshots)
+	aggregatedSnapshots := make([]snapshotv1.VolumeSnapshot, 0)
+
+	apps := &v1.AppList{}
+	err := c.Client.List(ctx, apps, &kclient.ListOptions{
+		Namespace: c.Namespace,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	sort.Slice(snapshots.Items, func(i, j int) bool {
-		iTime := snapshots.Items[i].CreationTimestamp.Time
-		jTime := snapshots.Items[j].CreationTimestamp.Time
+	for _, app := range apps.Items {
+		snapshots := &snapshotv1.VolumeSnapshotList{}
+		err = c.Client.List(ctx, snapshots, &kclient.ListOptions{
+			Namespace: app.Status.Namespace,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		aggregatedSnapshots = append(aggregatedSnapshots, snapshots.Items...)
+	}
+
+	sort.Slice(aggregatedSnapshots, func(i, j int) bool {
+		iTime := aggregatedSnapshots[i].CreationTimestamp.Time
+		jTime := aggregatedSnapshots[j].CreationTimestamp.Time
 
 		if iTime == jTime {
-			return snapshots.Items[i].Name < snapshots.Items[j].Name
+			return aggregatedSnapshots[i].Name < aggregatedSnapshots[j].Name
 		}
 
 		return iTime.After(jTime)
 	})
 
-	return snapshots.Items, nil
+	return aggregatedSnapshots, nil
 }
 
 // SnapshotGet gets you a *VolumeSnapshot by name or error.

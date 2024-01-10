@@ -2,7 +2,9 @@ package cli
 
 import (
 	"errors"
+	"strings"
 
+	v1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/acorn-io/runtime/pkg/labels"
@@ -45,8 +47,26 @@ func (sc *SnapshotCreate) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	apps, err := cl.AppList(cmd.Context())
+	if err != nil {
+		return err
+	}
+
+	appName := strings.TrimSuffix(vol.Labels[labels.AcornPublicName], "."+vol.Labels[labels.AcornVolumeName])
+	var app v1.App
+	for _, papp := range apps {
+		if papp.Name == appName {
+			app = papp
+		}
+	}
+
+	if app.Status.Namespace == "" {
+		return errors.New("unbound volumes cannot be snapshot")
+	}
+
 	pvcs := &corev1.PersistentVolumeClaimList{}
 	err = kc.List(cmd.Context(), pvcs, &kclient.ListOptions{
+		Namespace: app.Status.Namespace,
 		LabelSelector: klabels.SelectorFromSet(map[string]string{
 			labels.AcornManaged:    "true",
 			labels.AcornAppName:    vol.Labels[labels.AcornAppName],
