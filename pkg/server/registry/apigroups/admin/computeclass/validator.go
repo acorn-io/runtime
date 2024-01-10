@@ -42,15 +42,8 @@ func (s *ProjectValidator) Validate(ctx context.Context, obj runtime.Object) (re
 	}
 
 	invalidResources := []corev1.ResourceName{corev1.ResourceCPU, corev1.ResourceMemory}
-
-	for _, resource := range invalidResources {
-		if _, specified := cc.Resources.Requests[resource]; specified {
-			return append(result, field.Invalid(field.NewPath(fmt.Sprintf("spec.resources.requests%s", string(resource))), cc.Default, fmt.Sprintf("Cannot specifiy spec.resources.requests.%s. Use explicit spec.cpuScaler and spec.memory instead", string(resource))))
-		}
-
-		if _, specified := cc.Resources.Limits[resource]; specified {
-			return append(result, field.Invalid(field.NewPath(fmt.Sprintf("spec.resources.limits%s", string(resource))), cc.Default, fmt.Sprintf("Cannot specifiy spec.resources.limits.%s. Use explicit spec.cpuScaler and spec.memory instead", string(resource))))
-		}
+	if err := checkForInvalidResources(cc.Resources, invalidResources); err != nil {
+		return append(result, err)
 	}
 
 	if _, err := computeclasses.ParseComputeClassMemory(cc.Memory); err != nil {
@@ -91,15 +84,8 @@ func (s *ClusterValidator) Validate(ctx context.Context, obj runtime.Object) (re
 	}
 
 	invalidResources := []corev1.ResourceName{corev1.ResourceCPU, corev1.ResourceMemory}
-
-	for _, resource := range invalidResources {
-		if _, specified := cc.Resources.Requests[resource]; specified {
-			return append(result, field.Invalid(field.NewPath(fmt.Sprintf("spec.resources.requests%s", string(resource))), cc.Default, fmt.Sprintf("Cannot specifiy spec.resources.requests.%s. Use explicit spec.cpuScaler and spec.memory instead", string(resource))))
-		}
-
-		if _, specified := cc.Resources.Limits[resource]; specified {
-			return append(result, field.Invalid(field.NewPath(fmt.Sprintf("spec.resources.limits%s", string(resource))), cc.Default, fmt.Sprintf("Cannot specifiy spec.resources.limits.%s. Use explicit spec.cpuScaler and spec.memory instead", string(resource))))
-		}
+	if err := checkForInvalidResources(cc.Resources, invalidResources); err != nil {
+		return append(result, err)
 	}
 
 	if _, err := computeclasses.ParseComputeClassMemory(cc.Memory); err != nil {
@@ -153,6 +139,25 @@ func validateMemorySpec(memory admininternalv1.ComputeClassMemory) field.ErrorLi
 		)
 	}
 	return errors
+}
+
+// checkForInvalidResources checks if the given resources contains any of the invalid resources.
+func checkForInvalidResources(resources *corev1.ResourceRequirements, invalidResources []corev1.ResourceName) *field.Error {
+	if resources == nil {
+		return nil
+	}
+
+	for _, resource := range invalidResources {
+		if val, specified := resources.Requests[resource]; specified {
+			return field.Invalid(field.NewPath(fmt.Sprintf("spec.resources.requests.%s", string(resource))), val, fmt.Sprintf("Cannot specifiy spec.resources.requests.%s. Use explicit spec.cpuScaler and spec.memory instead", string(resource)))
+		}
+
+		if val, specified := resources.Limits[resource]; specified {
+			return field.Invalid(field.NewPath(fmt.Sprintf("spec.resources.limits.%s", string(resource))), val, fmt.Sprintf("Cannot specifiy spec.resources.limits.%s. Use explicit spec.cpuScaler and spec.memory instead", string(resource)))
+		}
+	}
+
+	return nil
 }
 
 func (s *ClusterValidator) ValidateUpdate(ctx context.Context, newObj, _ runtime.Object) field.ErrorList {
