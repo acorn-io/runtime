@@ -96,7 +96,7 @@ brews:
     homepage: "https://acorn.io"
     license: "Apache 2.0"
     skip_upload: false
-    tap:
+    repository:
       owner: acorn-io
       name: homebrew-cli
       token: "{{ .Env.GH_PROJECT_TOKEN }}"
