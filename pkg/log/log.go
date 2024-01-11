@@ -134,7 +134,7 @@ func pipe(input io.ReadCloser, output chan<- Message, pod *corev1.Pod, name stri
 	var lastTS *metav1.Time
 
 	scanner := bufio.NewScanner(input)
-	scanner.Buffer(nil, 1_000_000)
+	scanner.Buffer(nil, 2_000_000)
 	for scanner.Scan() {
 		line := scanner.Text()
 		ts, newLine, _ := strings.Cut(line, " ")
@@ -417,6 +417,8 @@ func matchesContainer(pod *corev1.Pod, container corev1.Container, options *Opti
 		if containerName == "" {
 			if pod.Labels[applabels.AcornContainerName] != "" {
 				return pod.Name == podName && container.Name == pod.Labels[applabels.AcornContainerName]
+			} else if pod.Labels[applabels.AcornFunctionName] != "" {
+				return pod.Name == podName && container.Name == pod.Labels[applabels.AcornFunctionName]
 			} else {
 				return pod.Name == podName && container.Name == pod.Labels[applabels.AcornJobName]
 			}
@@ -429,6 +431,7 @@ func matchesContainer(pod *corev1.Pod, container corev1.Container, options *Opti
 	if options != nil && options.Container != "" {
 		// Must match the acorn container name or job name on the pod
 		if pod.Labels[applabels.AcornContainerName] != options.Container &&
+			pod.Labels[applabels.AcornFunctionName] != options.Container &&
 			pod.Labels[applabels.AcornJobName] != options.Container {
 			return false
 		}
@@ -437,6 +440,9 @@ func matchesContainer(pod *corev1.Pod, container corev1.Container, options *Opti
 	var validContainerNames []string
 	if pod.Labels[applabels.AcornContainerName] != "" {
 		validContainerNames = append(validContainerNames, pod.Labels[applabels.AcornContainerName])
+	}
+	if pod.Labels[applabels.AcornFunctionName] != "" {
+		validContainerNames = append(validContainerNames, pod.Labels[applabels.AcornFunctionName])
 	}
 	if pod.Labels[applabels.AcornJobName] != "" {
 		validContainerNames = append(validContainerNames, pod.Labels[applabels.AcornJobName])

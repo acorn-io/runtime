@@ -9,7 +9,7 @@ require (
 	github.com/acorn-io/aml/cli v0.0.0-20240106192317-21afc7320c77
 	github.com/acorn-io/baaah v0.0.0-20240105013849-c4f82d7a5a41
 	github.com/acorn-io/broadcaster v0.0.0-20240105011354-bfadd4a7b45d
-	github.com/acorn-io/function-builder v0.0.0-20240106051830-f0d368d2382c
+	github.com/acorn-io/function-builder v0.0.0-20240111042311-041315dd7091
 	github.com/acorn-io/mink v0.0.0-20240105015834-b1f7af4fadea
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
 	github.com/acorn-io/schemer v0.0.0-20240105014212-9739d5485208
@@ -54,9 +54,9 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/tonistiigi/fsutil v0.0.0-20230629203738-36ef4d8c0dbb
 	github.com/wI2L/jsondiff v0.3.0
-	golang.org/x/crypto v0.14.0
-	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
-	golang.org/x/sync v0.4.0
+	golang.org/x/crypto v0.16.0
+	golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc
+	golang.org/x/sync v0.5.0
 	google.golang.org/grpc v1.58.3
 	inet.af/tcpproxy v0.0.0-20221017015627-91f861402626
 	k8s.io/api v0.29.0
@@ -285,14 +285,14 @@ require (
 	go.starlark.net v0.0.0-20230525235612-a134d8f9ddca // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/mod v0.13.0 // indirect
-	golang.org/x/net v0.17.0 // indirect
+	golang.org/x/mod v0.14.0 // indirect
+	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/oauth2 v0.12.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
-	golang.org/x/term v0.13.0 // indirect
-	golang.org/x/text v0.13.0 // indirect
+	golang.org/x/term v0.15.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.14.0 // indirect
+	golang.org/x/tools v0.16.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230803162519-f966b187b2e5 // indirect
