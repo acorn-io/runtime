@@ -705,8 +705,13 @@ type Assistant struct {
 	Name         string             `json:"name,omitempty"`
 	Description  string             `json:"description,omitempty"`
 	Prompts      Prompts            `json:"prompts,omitempty"`
+	Vision       bool               `json:"vision,omitempty"`
+	Model        string             `json:"model,omitempty"`
 	Dependencies Dependencies       `json:"tools,omitempty"`
 	InputSchema  *jsonschema.Schema `json:"inputSchema,omitempty"`
+	MaxTokens    int                `json:"maxTokens,omitempty"`
+	JSONResponse bool               `json:"jsonResponse,omitempty"`
+	Cache        *bool              `json:"cache,omitempty"`
 }
 
 type Prompts []string

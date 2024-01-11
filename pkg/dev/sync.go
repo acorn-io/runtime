@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -90,6 +91,29 @@ func containerSync(ctx context.Context, client client.Client, logger Logger, app
 	return err
 }
 
+func findDockerIgnore(path string) (string, error) {
+	startPath := filepath.Join(path, ".dockerignore")
+	for {
+		testPath := filepath.Join(path, ".dockerignore")
+		if _, err := os.Stat(testPath); err == nil {
+			return testPath, nil
+		} else if errors.Is(err, fs.ErrNotExist) {
+			newPath := filepath.Dir(path)
+			if newPath == path {
+				return startPath, nil
+			}
+			if _, err := os.Stat(newPath); errors.Is(err, fs.ErrNotExist) {
+				return startPath, nil
+			} else if err != nil {
+				return "", err
+			}
+			path = newPath
+		} else {
+			return "", err
+		}
+	}
+}
+
 func invokeStartSyncForPath(ctx context.Context, client client.Client, logger Logger, con *apiv1.ContainerReplica, cwd, localDir, remoteDir string, bidirectional bool) (chan struct{}, chan error, error) {
 	source := filepath.Join(cwd, localDir)
 	if s, err := os.Stat(source); err == nil && !s.IsDir() {
@@ -100,7 +124,12 @@ func invokeStartSyncForPath(ctx context.Context, client client.Client, logger Lo
 		return nil, nil, err
 	}
 	var exclude []string
-	f, err := os.Open(filepath.Join(cwd, ".dockerignore"))
+	dockerIgnorePath, err := findDockerIgnore(filepath.Join(cwd, localDir))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	f, err := os.Open(dockerIgnorePath)
 	if err == nil {
 		lines, err := dockerignore.ReadAll(f)
 		_ = f.Close()
@@ -110,7 +139,7 @@ func invokeStartSyncForPath(ctx context.Context, client client.Client, logger Lo
 			logrus.Warnf("failed to read %s for syncing: %v", filepath.Join(cwd, ".dockerignore"), err)
 			exclude = nil
 		}
-	} else if !os.IsNotExist(err) {
+	} else if !errors.Is(err, fs.ErrNotExist) {
 		logrus.Warnf("failed to open %s for syncing: %v", filepath.Join(cwd, ".dockerignore"), err)
 		exclude = nil
 	}
@@ -121,7 +150,7 @@ func invokeStartSyncForPath(ctx context.Context, client client.Client, logger Lo
 		UploadExcludePaths: exclude,
 		InitialSync:        latest.InitialSyncStrategyPreferLocal,
 		Log: newLogger(logger, con).
-			WithPrefix(strings.TrimPrefix(con.Name, con.Spec.AppName+".") + ": (sync): "),
+			WithPrefix("(sync): "),
 	})
 	if err != nil {
 		return nil, nil, err

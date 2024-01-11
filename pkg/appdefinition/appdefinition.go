@@ -245,7 +245,8 @@ func overlayFragment(con *v1.Container, imagesData v1.ImagesData, imageID, servi
 
 	strData := fmt.Sprintf(`
 let serviceName: "%s"
-{ %s } + { %s }`, serviceName, containerData, fragment)
+let base: { %s }
+{ %s } + { %s }`, serviceName, containerData, containerData, fragment)
 
 	return aml.Unmarshal([]byte(strData), con)
 }
@@ -359,6 +360,18 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 	return spec, v1.AddImpliedResources(spec)
 }
 
+func addFunctionFiles(fileSet map[string]bool, builds map[string]v1.ContainerImageBuilderSpec, cwd string) {
+	for key, build := range builds {
+		addContainerFiles(fileSet, build.Sidecars, cwd)
+		context := build.Src
+		if context == "" {
+			context = key
+		}
+		fileSet[filepath.Join(cwd, context, "build.acorn")] = true
+		fileSet[filepath.Join(cwd, context, ".dockerignore")] = true
+	}
+}
+
 func addContainerFiles(fileSet map[string]bool, builds map[string]v1.ContainerImageBuilderSpec, cwd string) {
 	for _, build := range builds {
 		addContainerFiles(fileSet, build.Sidecars, cwd)
@@ -416,7 +429,7 @@ func (a *AppDefinition) WatchFiles(cwd string) (result []string, _ error) {
 	}
 
 	addContainerFiles(fileSet, spec.Containers, cwd)
-	addContainerFiles(fileSet, spec.Functions, cwd)
+	addFunctionFiles(fileSet, spec.Functions, cwd)
 	addContainerFiles(fileSet, spec.Jobs, cwd)
 	addFiles(fileSet, spec.Images, cwd)
 	addAcorns(fileSet, spec.Services, cwd)

@@ -12,14 +12,39 @@ import (
 )
 
 func PortForward(ctx context.Context, c client.Client, containerName string, address string, portDef string) error {
+	var anyPort bool
 	src, dest, ok := strings.Cut(portDef, ":")
 	if !ok {
 		dest = src
+		anyPort = true
+	} else if src == dest {
+		anyPort = true
 	}
 
 	port, err := strconv.Atoi(dest)
 	if err != nil {
 		return err
+	}
+
+	var (
+		listener      net.Listener
+		listenAddress = address + ":" + src
+		// this is only used when anyPort is true which assumes dest == src
+		currentSrcPort = port
+	)
+
+	for {
+		l, err := net.Listen("tcp", listenAddress)
+		if err != nil && anyPort && strings.Contains(err.Error(), "address already in use") {
+			currentSrcPort++
+			listenAddress = fmt.Sprintf("%s:%d", address, currentSrcPort)
+			continue
+		} else if err != nil {
+			return err
+		}
+		listener = l
+		defer listener.Close()
+		break
 	}
 
 	dialer, err := c.ContainerReplicaPortForward(ctx, containerName, port)
@@ -28,18 +53,14 @@ func PortForward(ctx context.Context, c client.Client, containerName string, add
 	}
 
 	p := tcpproxy.Proxy{}
-	p.AddRoute(address+":"+src, &tcpproxy.DialProxy{
+	p.AddRoute(listenAddress, &tcpproxy.DialProxy{
 		DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
 			return dialer(ctx)
 		},
 	})
 	p.ListenFunc = func(_, laddr string) (net.Listener, error) {
-		l, err := net.Listen("tcp", laddr)
-		if err != nil {
-			return nil, err
-		}
-		fmt.Printf("Forwarding %s => %d for container [%s]\n", l.Addr().String(), port, containerName)
-		return l, err
+		fmt.Printf("Forwarding %s => %d for container [%s]\n", listener.Addr().String(), port, containerName)
+		return listener, err
 	}
 	go func() {
 		<-ctx.Done()

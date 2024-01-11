@@ -7777,6 +7777,18 @@ func schema_pkg_apis_internalacornio_v1_Assistant(ref common.ReferenceCallback) 
 							},
 						},
 					},
+					"vision": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"model": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"tools": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"array"},
@@ -7792,6 +7804,24 @@ func schema_pkg_apis_internalacornio_v1_Assistant(ref common.ReferenceCallback) 
 					"inputSchema": {
 						SchemaProps: spec.SchemaProps{
 							Ref: ref("github.com/acorn-io/aml/pkg/jsonschema.Schema"),
+						},
+					},
+					"maxTokens": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+					"jsonResponse": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"cache": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
 						},
 					},
 				},
