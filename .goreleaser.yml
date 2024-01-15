@@ -151,6 +151,7 @@ dockers:
       - scripts/setup-binfmt
       - scripts/acorn-busybox-init
       - scripts/40-copy-resolv-nameserver.sh
+      - scripts/k3s-config.yaml
 
 docker_manifests:
   - use: docker

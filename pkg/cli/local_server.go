@@ -10,6 +10,7 @@ func NewLocalServer(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Server{}, cobra.Command{
 		SilenceUsage: true,
 		Short:        "Run local development server",
+		Hidden:       true,
 	})
 	return cmd
 }
