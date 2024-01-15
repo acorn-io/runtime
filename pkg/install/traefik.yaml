@@ -93,6 +93,7 @@ spec:
   replicas: 1
   selector:
     matchLabels:
+      app: traefik
       app.kubernetes.io/name: traefik
       app.kubernetes.io/instance: traefik
   strategy:
@@ -108,6 +109,7 @@ spec:
         prometheus.io/path: "/metrics"
         prometheus.io/port: "9100"
       labels:
+        app: traefik
         app.kubernetes.io/name: traefik
         app.kubernetes.io/managed-by: Acorn
         app.kubernetes.io/instance: traefik
@@ -116,7 +118,7 @@ spec:
       terminationGracePeriodSeconds: 60
       hostNetwork: false
       containers:
-      - image: "traefik:2.8.0"
+      - image: "traefik:2.10.7"
         imagePullPolicy: IfNotPresent
         name: traefik
         readinessProbe:
@@ -163,6 +165,8 @@ spec:
             mountPath: /data
           - name: tmp
             mountPath: /tmp
+        command:
+          - "/usr/local/bin/traefik"
         args:
           - "--global.checknewversion"
           - "--global.sendanonymoususage"

@@ -171,6 +171,9 @@ func registryDeployment(namespace, serviceAccountName, registryImage string, req
 }
 
 func containerdConfigPathDaemonSet(namespace, image, registryServiceNodePort string) []client.Object {
+	if system.IsLocal() {
+		return nil
+	}
 	return []client.Object{
 		&appsv1.DaemonSet{
 			ObjectMeta: metav1.ObjectMeta{

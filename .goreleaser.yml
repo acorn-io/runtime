@@ -126,6 +126,7 @@ dockers:
       - scripts/setup-binfmt
       - scripts/acorn-busybox-init
       - scripts/40-copy-resolv-nameserver.sh
+      - scripts/k3s-config.yaml
   - use: buildx
     goos: linux
     goarch: arm64

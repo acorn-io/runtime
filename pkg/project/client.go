@@ -11,6 +11,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/credentials"
+	"github.com/acorn-io/runtime/pkg/local"
 	"github.com/acorn-io/runtime/pkg/manager"
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/sirupsen/logrus"
@@ -196,7 +197,29 @@ func fullyQualifiedProjectName(server, account, namespace string) string {
 	return strings.Join(parts, "/")
 }
 
+func getLocalClient(ctx context.Context) (client.Client, error) {
+	return &client.DeferredClient{
+		Project:   "local",
+		Namespace: "local",
+		New: func() (client.Client, error) {
+			docker, err := local.NewContainer(ctx)
+			if err != nil {
+				return nil, err
+			}
+			cfg, err := docker.Ensure(ctx)
+			if err != nil {
+				return nil, err
+			}
+			return client.New(cfg, "local", "local")
+		},
+	}, nil
+}
+
 func getClient(ctx context.Context, cfg *config.CLIConfig, opts Options, project string) (client.Client, error) {
+	if project == "local" {
+		return getLocalClient(ctx)
+	}
+
 	server, account, namespace, isKubeconfig, err := ParseProject(project, cfg.DefaultContext)
 	if err != nil {
 		return nil, err
