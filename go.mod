@@ -7,7 +7,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/acorn-io/aml v0.0.0-20240106192317-21afc7320c77
 	github.com/acorn-io/aml/cli v0.0.0-20240106192317-21afc7320c77
-	github.com/acorn-io/baaah v0.0.0-20240105013849-c4f82d7a5a41
+	github.com/acorn-io/baaah v0.0.0-20240111044744-384c1595d964
 	github.com/acorn-io/broadcaster v0.0.0-20240105011354-bfadd4a7b45d
 	github.com/acorn-io/function-builder v0.0.0-20240111042311-041315dd7091
 	github.com/acorn-io/mink v0.0.0-20240105015834-b1f7af4fadea
@@ -24,7 +24,9 @@ require (
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/depot/depot-go v0.0.0-20230819013533-12cec5cbd2f9
 	github.com/docker/cli v24.0.0+incompatible
+	github.com/docker/docker v24.0.0+incompatible
 	github.com/docker/docker-credential-helpers v0.7.0
+	github.com/docker/go-connections v0.4.0
 	github.com/go-acme/lego/v4 v4.9.1
 	github.com/go-git/go-git/v5 v5.9.0
 	github.com/golang/mock v1.6.0
@@ -125,7 +127,7 @@ require (
 	github.com/digitorus/timestamp v0.0.0-20230821155606-d1ad5ca9624c // indirect
 	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
-	github.com/docker/docker v24.0.0+incompatible // indirect
+	github.com/docker/go-units v0.5.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/evanphx/json-patch v5.7.0+incompatible // indirect

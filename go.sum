@@ -111,8 +111,8 @@ github.com/acorn-io/aml v0.0.0-20240106192317-21afc7320c77 h1:MFaoLSKZj1z9c+U7S0
 github.com/acorn-io/aml v0.0.0-20240106192317-21afc7320c77/go.mod h1:z/Tz4f5dWHj/F5THru0+IQBIq31Xq06S5b7YpPkV7K0=
 github.com/acorn-io/aml/cli v0.0.0-20240106192317-21afc7320c77 h1:KdXktTqCv1OlmkFYl7+P11Dh0NDiYnQFblNDdLXPhT4=
 github.com/acorn-io/aml/cli v0.0.0-20240106192317-21afc7320c77/go.mod h1:tTw5qUW+S3cAoYepBLFdLNqaRV/DHV3YhHFhB2FzZhE=
-github.com/acorn-io/baaah v0.0.0-20240105013849-c4f82d7a5a41 h1:ZzzhWJ2ZP1QQlibd9pll9UTfmitIGReW0x3VNNBg5Qw=
-github.com/acorn-io/baaah v0.0.0-20240105013849-c4f82d7a5a41/go.mod h1:13nTO3svO8zTD3j9E5c86tCtK5YrKsK5sxca4Lwkbc0=
+github.com/acorn-io/baaah v0.0.0-20240111044744-384c1595d964 h1:WmHOqQQbCrwNEPMXmbNj95lcUOK6s/yZqgSckPPDsvA=
+github.com/acorn-io/baaah v0.0.0-20240111044744-384c1595d964/go.mod h1:13nTO3svO8zTD3j9E5c86tCtK5YrKsK5sxca4Lwkbc0=
 github.com/acorn-io/broadcaster v0.0.0-20240105011354-bfadd4a7b45d h1:hfpNQkJ4I2b8+DbMr8m97gG67ku0uPsMzUfskVu3cHU=
 github.com/acorn-io/broadcaster v0.0.0-20240105011354-bfadd4a7b45d/go.mod h1:WF6FYrEqW0+ZtY5OKb21JhSL0aeL5VJoVrm+u0d4gOE=
 github.com/acorn-io/cmd v0.0.0-20230929053520-ebe1b9879b38 h1:oJMGvI702ZW5L0JjJfGV9ekzU2IqqTGjmAQl4gkO6Ro=

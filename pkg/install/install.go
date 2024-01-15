@@ -60,7 +60,9 @@ type Mode string
 
 type Options struct {
 	SkipChecks                          bool
+	IncludeLocalEnvResources            bool
 	OutputFormat                        string
+	Output                              io.Writer
 	APIServerReplicas                   *int
 	APIServerPodAnnotations             map[string]string
 	ControllerReplicas                  *int
@@ -74,6 +76,10 @@ func (o *Options) complete() *Options {
 	if o == nil {
 		o := &Options{}
 		return o.complete()
+	}
+
+	if o.Output == nil {
+		o.Output = os.Stdout
 	}
 
 	if o.Progress == nil {
@@ -202,7 +208,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 
 	opts = opts.complete()
 	if opts.OutputFormat != "" {
-		return printObject(image, opts)
+		return PrintObjects(image, opts)
 	}
 
 	if err := upgradeFromV03(ctx, c); err != nil {
@@ -360,6 +366,50 @@ func TraefikResources() (result []kclient.Object, _ error) {
 	return objs, nil
 }
 
+func LocalResources() (result []kclient.Object, _ error) {
+	objs, err := objectsFromFile("local.yaml")
+	if err != nil {
+		return nil, err
+	}
+	for _, obj := range objs {
+		m, err := meta.Accessor(obj)
+		if err != nil {
+			return nil, err
+		}
+
+		labels := m.GetLabels()
+		if labels == nil {
+			labels = map[string]string{}
+		}
+		labels[labels2.AcornManaged] = "true"
+		m.SetLabels(labels)
+	}
+
+	return objs, nil
+}
+
+func CorednsResources() (result []kclient.Object, _ error) {
+	objs, err := objectsFromFile("coredns.yaml")
+	if err != nil {
+		return nil, err
+	}
+	for _, obj := range objs {
+		m, err := meta.Accessor(obj)
+		if err != nil {
+			return nil, err
+		}
+
+		labels := m.GetLabels()
+		if labels == nil {
+			labels = map[string]string{}
+		}
+		labels[labels2.AcornManaged] = "true"
+		m.SetLabels(labels)
+	}
+
+	return objs, nil
+}
+
 func missingIngressClass(ctx context.Context, client kclient.Client) (bool, error) {
 	ingressClassList := &networkingv1.IngressClassList{}
 	err := client.List(ctx, ingressClassList)
@@ -482,7 +532,7 @@ func resources(image string, opts *Options) ([]kclient.Object, error) {
 	objs = append(objs, namespace...)
 
 	deps, err := Deployments(image, *opts.APIServerReplicas, *opts.ControllerReplicas, *opts.Config.UseCustomCABundle,
-		opts.ControllerServiceAccountAnnotations, opts.APIServerPodAnnotations)
+		opts.ControllerServiceAccountAnnotations, opts.APIServerPodAnnotations, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -497,7 +547,9 @@ func resources(image string, opts *Options) ([]kclient.Object, error) {
 	return objs, nil
 }
 
-func printObject(image string, opts *Options) error {
+func PrintObjects(image string, opts *Options) error {
+	opts = opts.complete()
+
 	objs, err := resources(image, opts)
 	if err != nil {
 		return err
@@ -519,7 +571,7 @@ func printObject(image string, opts *Options) error {
 		return err
 	}
 
-	_, err = os.Stdout.Write(data)
+	_, err = opts.Output.Write(data)
 	return err
 }
 
@@ -534,7 +586,7 @@ func applyDeployments(ctx context.Context, imageName string, apiServerReplicas, 
 		return err
 	}
 
-	deps, err := Deployments(imageName, apiServerReplicas, controllerReplicas, useCustomCABundle, controllerSAAnnotations, apiPodAnnotations)
+	deps, err := Deployments(imageName, apiServerReplicas, controllerReplicas, useCustomCABundle, controllerSAAnnotations, apiPodAnnotations, nil)
 	if err != nil {
 		return err
 	}
@@ -574,7 +626,30 @@ func Namespace() ([]kclient.Object, error) {
 	return objectsFromFile("namespace.yaml")
 }
 
-func Deployments(runtimeImage string, apiServerReplicas, controllerReplicas int, useCustomCABundle bool, controllerSAAnnotations, apiPodAnnotations map[string]string) ([]kclient.Object, error) {
+func Deployments(runtimeImage string, apiServerReplicas, controllerReplicas int, useCustomCABundle bool, controllerSAAnnotations, apiPodAnnotations map[string]string, opts *Options) ([]kclient.Object, error) {
+	var objects []kclient.Object
+
+	// Do local resources first so that the webhook gets setup before anything else
+	if opts != nil && opts.IncludeLocalEnvResources {
+		objs, err := TraefikResources()
+		if err != nil {
+			return nil, err
+		}
+		objects = append(objects, objs...)
+
+		objs, err = CorednsResources()
+		if err != nil {
+			return nil, err
+		}
+		objects = append(objects, objs...)
+
+		objs, err = LocalResources()
+		if err != nil {
+			return nil, err
+		}
+		objects = append(objects, objs...)
+	}
+
 	apiServerObjects, err := objectsFromFile("apiserver.yaml")
 	if err != nil {
 		return nil, err
@@ -605,8 +680,8 @@ func Deployments(runtimeImage string, apiServerReplicas, controllerReplicas int,
 		return nil, err
 	}
 
-	var objects []kclient.Object
-	objects = append(apiServerObjects, controllerObjects...)
+	objects = append(objects, apiServerObjects...)
+	objects = append(objects, controllerObjects...)
 	if useCustomCABundle {
 		objects, err = replaceCABundleVolumes(objects)
 		if err != nil {
@@ -687,14 +762,20 @@ func replaceImage(image string, objs []kclient.Object) ([]kclient.Object, error)
 					"name":  "ACORN_IMAGE",
 					"value": image,
 				}
+				acornDockerImageEnv := map[string]any{
+					"name":  "ACORN_DOCKER_IMAGE",
+					"value": os.Getenv("ACORN_DOCKER_IMAGE"),
+				}
 				envs := container.(map[string]any)["env"]
 				if envs == nil {
-					container.(map[string]any)["env"] = []interface{}{acornImageEnv}
+					container.(map[string]any)["env"] = []interface{}{acornImageEnv, acornDockerImageEnv}
 				} else {
-					container.(map[string]any)["env"] = append(envs.([]interface{}), acornImageEnv)
+					container.(map[string]any)["env"] = append(envs.([]interface{}), acornImageEnv, acornDockerImageEnv)
 				}
-				if !strings.Contains(image, ":v") {
+				if !strings.Contains(image, ":v") && image != system.LocalImage {
 					container.(map[string]any)["imagePullPolicy"] = "Always"
+				} else {
+					container.(map[string]any)["imagePullPolicy"] = "IfNotPresent"
 				}
 			}
 			if err := unstructured.SetNestedSlice(ustr.Object, containers, "spec", "template", "spec", "containers"); err != nil {

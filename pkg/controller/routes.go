@@ -19,6 +19,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/controller/images"
 	"github.com/acorn-io/runtime/pkg/controller/ingress"
 	"github.com/acorn-io/runtime/pkg/controller/jobs"
+	"github.com/acorn-io/runtime/pkg/controller/local"
 	"github.com/acorn-io/runtime/pkg/controller/namespace"
 	"github.com/acorn-io/runtime/pkg/controller/networkpolicy"
 	"github.com/acorn-io/runtime/pkg/controller/permissions"
@@ -31,6 +32,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/controller/tls"
 	"github.com/acorn-io/runtime/pkg/event"
 	"github.com/acorn-io/runtime/pkg/labels"
+	"github.com/acorn-io/runtime/pkg/local/webhook"
 	"github.com/acorn-io/runtime/pkg/project"
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/acorn-io/runtime/pkg/volume"
@@ -154,6 +156,24 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 
 	devConfigRouter := router.Type(&corev1.ConfigMap{}).Namespace(system.Namespace).Name(system.DevConfigName)
 	devConfigRouter.HandlerFunc(config.PurgeDevConfig)
+
+	if system.IsLocal() {
+		svcHandler, err := local.NewHandler()
+		if err != nil {
+			return err
+		}
+		createFolder, err := local.NewCreateFolder()
+		if err != nil {
+			return err
+		}
+		if err := webhook.Server("0.0.0.0:8443"); err != nil {
+			return err
+		}
+		router.Type(&corev1.Pod{}).HandlerFunc(local.DeletePods)
+		router.Type(&corev1.Service{}).HandlerFunc(svcHandler.ProvisionPorts)
+		router.Type(&corev1.PersistentVolumeClaim{}).Handler(createFolder)
+		router.Type(&corev1.PersistentVolume{}).HandlerFunc(local.CleanupStorage)
+	}
 
 	return nil
 }

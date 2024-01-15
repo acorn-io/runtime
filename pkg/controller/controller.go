@@ -20,6 +20,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/acorn-io/runtime/pkg/logserver"
 	"github.com/acorn-io/runtime/pkg/scheme"
+	"github.com/acorn-io/runtime/pkg/system"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -44,7 +45,16 @@ func New(ctx context.Context) (*Controller, error) {
 		return nil, err
 	}
 
-	router, err := baaah.DefaultRouter("acorn-controller", scheme.Scheme)
+	opts, err := baaah.DefaultOptions("acorn-controller", scheme.Scheme)
+	if err != nil {
+		return nil, err
+	}
+
+	if system.IsLocal() {
+		opts.ElectionConfig = nil
+	}
+
+	router, err := baaah.NewRouter("acorn-controller", opts)
 	if err != nil {
 		return nil, err
 	}

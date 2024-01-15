@@ -8,10 +8,18 @@ import (
 )
 
 var (
-	InstallImage  = "ghcr.io/acorn-io/runtime"
-	DefaultBranch = "main"
-	devTag        = "v0.0.0-dev"
+	InstallImage     = "ghcr.io/acorn-io/runtime"
+	LocalImage       = "acorn-local"
+	LocalDockerImage = os.Getenv("ACORN_DOCKER_IMAGE")
+	LocalImageBind   = "ghcr.io/acorn-io/acorn-local-bind:latest"
+	LocalNode        = "acorn-node"
+	DefaultBranch    = "main"
+	devTag           = "v0.0.0-dev"
 )
+
+func IsLocal() bool {
+	return DefaultImage() == LocalImage
+}
 
 func DefaultImage() string {
 	img := os.Getenv("ACORN_IMAGE")

@@ -1,0 +1,69 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: acorn-local-webhook
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURNakNDQWhxZ0F3SUJBZ0lSQU5FUVZ1Qk00a0hsQjZtZmY3bmlvdHd3RFFZSktvWklodmNOQVFFTEJRQXcKRWpFUU1BNEdBMVVFQ2hNSFFXTnRaU0JEYnpBZ0Z3MDNNREF4TURFd01EQXdNREJhR0E4eU1EZzBNREV5T1RFMgpNREF3TUZvd0VqRVFNQTRHQTFVRUNoTUhRV050WlNCRGJ6Q0NBU0l3RFFZSktvWklodmNOQVFFQkJRQURnZ0VQCkFEQ0NBUW9DZ2dFQkFMT2xyQzVjdzZFb1dCRVVyNjhFYnd5OURKbGxqMDdNb2c2eGdsTzU0R2F5U05FYks2YkQKTWo5NlFBV1AzRmc1KzJOL08zZG5SRElsOCs1UkN1QXgrWGsyZEE1SFdSeUxtVnJYOHo0M1l3ZXNCOVQ3RmhwbQpWTHVVL0dXc1ZqK0VJd05EMlo5cVNWRitsUHpsaHRnM2srR1BocE1xaTNvdlU2RStuNE9OZDFOcitoVDc5TGxJCldPUk9HR3FKMTdaR0dMYjA0R2FXaVpqSXF1d0FFVk5WTEFnWTJuN0xjUUlzTDNCOGZZbVVEWlFkbkJWR0ZwOUQKM0NUaHVhQlVKT0Z4cDF3TzAzS1dSc1N3VVB2UnF5dGZKN2VZUDZhUS8xNzRFYnVwN3Y4OUg2MjBYaERJQTN3awpSaFJ6SERuZThEWGhPeDAyNDYxQ3RwRWRjVExONm9QSHZwY0NBd0VBQWFPQmdEQitNQTRHQTFVZER3RUIvd1FFCkF3SUNwREFUQmdOVkhTVUVEREFLQmdnckJnRUZCUWNEQVRBUEJnTlZIUk1CQWY4RUJUQURBUUgvTUIwR0ExVWQKRGdRV0JCVGE4bTkyOFU4UG5ic3p2QnoxNWRqaklSYVgwakFuQmdOVkhSRUVJREFlZ2h4aFkyOXliaTFzYjJOaApiQzVoWTI5eWJpMXplWE4wWlcwdWMzWmpNQTBHQ1NxR1NJYjNEUUVCQ3dVQUE0SUJBUUE3a1NOY1FqQ3FqUVBVClU3M3V1YVROTGhJQWhPaEVLS1ZSN3I4ZW5PMVlPdnkwS1VxRHNPelhRNmd4aXluQzdkQk9nWWF2U1p1Vm51azQKalh2dzdWTGJXK0IvZ3h4KzR6WHhRTDU2WnZrdldhWjhuUnp0dzB5cXhPc0ZueEt5Y2srK1V2VElJK0NCem9DTAo3Vmc5a2VBeERaRUl6Z2hSSlpvQnFrUDJZczhnaU1VMWo1QWdiY2dyUm1UTFBWOEE3dE9weFFza1pWa005R0o4ClNFS3o5V3IxaklvTHQrQ1YxdGFLMTlMU0Zkb0hncFo1T3ZFdUo3R2h1QkRKUTlmSTJiZ2dUNzV2SUdWcVJDOUsKV1g1a1JhUmZPYUtNZWpGUXpDS1BnWlliQndIdEtIMTljVVViUE1ucjBMNWs2K1pPTHlndVZsVFV2dFpQcWFPeApCUitCUkRzNQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+    service:
+      name: acorn-local
+      namespace: acorn-system
+      port: 8443
+  failurePolicy: Fail
+  matchPolicy: Equivalent
+  name: local.acorn.io
+  objectSelector:
+    matchExpressions:
+    - key: app
+      operator: NotIn
+      values:
+        - "acorn-controller"
+        - "acorn-api"
+        - "coredns"
+        - "traefik"
+  reinvocationPolicy: Never
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    resources:
+    - pods
+    scope: Namespaced
+  sideEffects: NoneOnDryRun
+  timeoutSeconds: 30
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: acorn-local
+  namespace: acorn-system
+spec:
+  selector:
+    app: acorn-controller
+  ports:
+    - port: 8443
+      targetPort: 8443
+      protocol: TCP
+
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: acorn-local
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: acorn.io/local-storage
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+
+---
+kind: Project
+apiVersion: api.acorn.io/v1
+metadata:
+  name: local

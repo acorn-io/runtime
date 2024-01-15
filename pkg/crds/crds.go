@@ -7,6 +7,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/acorn-io/runtime/pkg/k8sclient"
+	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/acorn-io/schemer/crd"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -62,5 +63,9 @@ func Create(ctx context.Context, scheme *runtime.Scheme, gvs ...schema.GroupVers
 		return err
 	}
 
-	return factory.BatchCreateCRDs(ctx, schemerCRDs...).BatchWait()
+	if err := factory.BatchCreateCRDs(ctx, schemerCRDs...).BatchWait(); err != nil && !system.IsLocal() {
+		return err
+	}
+
+	return nil
 }
