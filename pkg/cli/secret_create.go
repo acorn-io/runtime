@@ -122,6 +122,8 @@ func (a *SecretCreate) Run(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
+		} else {
+			return fmt.Errorf("secret %s already exists", args[0])
 		}
 	} else if err != nil {
 		return err
