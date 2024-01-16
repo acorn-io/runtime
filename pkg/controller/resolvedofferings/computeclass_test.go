@@ -84,3 +84,7 @@ func TestAcornfileOverrideComputeClass(t *testing.T) {
 func TestUserOverrideComputeClass(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/user-override-compute-class", Calculate)
 }
+
+func TestWithAcornfileMemoryAndSpecOverride(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/with-acornfile-memory-and-spec-override", Calculate)
+}

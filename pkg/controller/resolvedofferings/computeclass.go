@@ -102,10 +102,10 @@ func resolveComputeClass(req router.Request, appInstance *v1.AppInstance, config
 
 		if appInstance.Spec.Memory[name] != nil { // runtime-level overrides from the user
 			memory = appInstance.Spec.Memory[name]
-		} else if container.Memory != nil { // defaults in the acorn image
-			memory = container.Memory
 		} else if appInstance.Spec.Memory[""] != nil { // runtime-level overrides from the user for all containers in the app
 			memory = appInstance.Spec.Memory[""]
+		} else if container.Memory != nil { // defaults in the acorn image
+			memory = container.Memory
 		} else if cc != nil { // defaults from compute class
 			parsedMemory, err := computeclasses.ParseComputeClassMemory(cc.Memory)
 			if err != nil {
