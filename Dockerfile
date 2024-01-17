@@ -38,7 +38,8 @@ RUN apk add --no-cache ca-certificates iptables ip6tables fuse3 git openssh pigz
 RUN adduser -D acorn
 RUN mkdir /wd && \
     chown acorn /wd && \
-    mkdir /etc/coredns
+    mkdir /etc/coredns && \
+    mkdir /lib/modules
 RUN --mount=from=binfmt,src=/usr/bin,target=/usr/src for i in aarch64 x86_64; do if [ -e /usr/src/qemu-$i ]; then cp /usr/src/qemu-$i /usr/bin; fi; done
 RUN --mount=from=buildkit,src=/usr/bin,target=/usr/src for i in aarch64 x86_64; do if [ -e /usr/src/buildkit-qemu-$i ]; then cp /usr/src/buildkit-qemu-$i /usr/bin; fi; done
 COPY --from=binfmt /usr/bin/binfmt /usr/local/bin
@@ -64,7 +65,6 @@ COPY /scripts/acorn-job-get-output /usr/local/bin
 COPY /scripts/k3s-config.yaml /etc/rancher/k3s/config.yaml
 CMD []
 WORKDIR /wd
-VOLUME /var/lib/buildkit
 VOLUME /var/lib/rancher/k3s
 STOPSIGNAL SIGTERM
 ENTRYPOINT ["/usr/local/bin/acorn"]

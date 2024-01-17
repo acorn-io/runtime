@@ -19,7 +19,7 @@ func NewLocalRm(c CommandContext) *cobra.Command {
 }
 
 type LocalRm struct {
-	State bool `usage:"Include associated state (acorns and acorn data)"`
+	State bool `usage:"Include associated state (acorns, secrets and volume data)"`
 }
 
 func (a *LocalRm) Run(cmd *cobra.Command, args []string) error {

@@ -12,12 +12,10 @@ func NewLocal(c CommandContext) *cobra.Command {
 		Hidden:       true,
 	})
 	cmd.AddCommand(NewLocalServer(c))
-	cmd.AddCommand(NewLocalCreate(c))
 	cmd.AddCommand(NewLocalLogs(c))
 	cmd.AddCommand(NewLocalRm(c))
 	cmd.AddCommand(NewLocalStart(c))
 	cmd.AddCommand(NewLocalStop(c))
-	cmd.AddCommand(NewLocalReset(c))
 	return cmd
 }
 

@@ -78,7 +78,7 @@ func editSecret(ctx context.Context, c client.Client, secret *apiv1.Secret) erro
 
 	editor := editor.NewDefaultEditor(envs)
 	for {
-		buf, file, err := editor.LaunchTempFile("acorn", "secret", bytes.NewReader(spec))
+		buf, file, err := editor.LaunchTempFile("acorn", "secret.acorn", bytes.NewReader(spec))
 		if file != "" {
 			_ = os.Remove(file)
 		}
@@ -128,7 +128,7 @@ func editApp(ctx context.Context, c client.Client, app *apiv1.App) error {
 
 	editor := editor.NewDefaultEditor(envs)
 	for {
-		buf, file, err := editor.LaunchTempFile("acorn", "app", bytes.NewReader(spec))
+		buf, file, err := editor.LaunchTempFile("acorn", "acorn.acorn", bytes.NewReader(spec))
 		if file != "" {
 			_ = os.Remove(file)
 		}

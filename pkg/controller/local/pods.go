@@ -13,5 +13,10 @@ func DeletePods(req router.Request, resp router.Response) error {
 			return req.Client.Delete(req.Ctx, pod)
 		}
 	}
+	for _, container := range pod.Spec.InitContainers {
+		if container.Image == system.LocalImage {
+			return req.Client.Delete(req.Ctx, pod)
+		}
+	}
 	return nil
 }

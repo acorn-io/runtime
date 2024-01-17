@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"fmt"
-
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/local"
 	"github.com/spf13/cobra"
@@ -19,22 +17,22 @@ func NewLocalStart(c CommandContext) *cobra.Command {
 }
 
 type LocalStart struct {
+	Reset  bool `usage:"Delete existing server and all data before starting"`
+	Delete bool `usage:"Delete existing server before starting"`
 }
 
-func (a *LocalStart) Run(cmd *cobra.Command, args []string) error {
+func (a *LocalStart) Run(cmd *cobra.Command, args []string) (err error) {
 	c, err := local.NewContainer(cmd.Context())
 	if err != nil {
 		return err
 	}
 
-	if _, err := c.Create(cmd.Context(), false); err != nil {
-		return err
+	if a.Reset {
+		return c.Reset(cmd.Context(), true)
+	} else if a.Delete {
+		return c.Reset(cmd.Context(), false)
 	}
 
-	if err := c.Start(cmd.Context()); err != nil {
-		return err
-	}
-
-	fmt.Println("started")
-	return nil
+	_, _, err = c.Upgrade(cmd.Context(), false)
+	return err
 }

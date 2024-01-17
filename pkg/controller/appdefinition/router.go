@@ -85,6 +85,10 @@ func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router, 
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								{
+									Name:      "confd",
+									MountPath: "/etc/nginx/conf.d",
+								},
+								{
 									Name:      "conf",
 									ReadOnly:  true,
 									MountPath: "/etc/nginx/conf.d/nginx.conf",
@@ -121,6 +125,14 @@ func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router, 
 						},
 					},
 					Volumes: []corev1.Volume{
+						{
+							Name: "confd",
+							VolumeSource: corev1.VolumeSource{
+								EmptyDir: &corev1.EmptyDirVolumeSource{
+									Medium: corev1.StorageMediumMemory,
+								},
+							},
+						},
 						{
 							Name: "conf",
 							VolumeSource: corev1.VolumeSource{

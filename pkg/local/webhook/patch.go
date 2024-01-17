@@ -19,8 +19,20 @@ func PatchPodSpec(podSpec *corev1.PodSpec) bool {
 	var (
 		modified bool
 		paths    = []string{
-			"/etc", "/lib", "/bin", "/sbin", "/usr", "docker-entrypoint.d", "docker-entrypoint.sh", "/wd",
-			"/var/run/docker.sock", "/var/lib/rancher/k3s/storage",
+			"/etc/passwd",
+			"/etc/group",
+			"/etc/docker",
+			"/etc/nginx",
+			"/lib",
+			"/bin",
+			"/sbin",
+			"/usr",
+			"docker-entrypoint.d",
+			"docker-entrypoint.sh",
+			"/etc/ssl/certs/ca-certificates.crt",
+			"/var/run/docker.sock",
+			"/var/lib/rancher/k3s/storage",
+			"/var/lib/buildkit",
 		}
 		mounts   []corev1.VolumeMount
 		existing = map[string]bool{}
@@ -37,8 +49,10 @@ func PatchPodSpec(podSpec *corev1.PodSpec) bool {
 			continue
 		}
 		mounts = append(mounts, corev1.VolumeMount{
-			Name:      "acorn-local-host",
-			ReadOnly:  path != "/wd" && path != "/sbin" && path != "/var/lib/rancher/k3s/storage",
+			Name: "acorn-local-host",
+			ReadOnly: path != "/sbin" &&
+				path != "/var/lib/rancher/k3s/storage" &&
+				path != "/var/lib/buildkit",
 			MountPath: path,
 			SubPath:   strings.TrimPrefix(path, "/"),
 		})
@@ -57,6 +71,16 @@ func PatchPodSpec(podSpec *corev1.PodSpec) bool {
 			container.ImagePullPolicy = corev1.PullIfNotPresent
 			container.VolumeMounts = append(container.VolumeMounts, mounts...)
 			podSpec.Containers[i] = container
+		}
+	}
+
+	for i, container := range podSpec.InitContainers {
+		if container.Image == "acorn-local" {
+			modified = true
+			container.Image = system.LocalImageBind
+			container.ImagePullPolicy = corev1.PullIfNotPresent
+			container.VolumeMounts = append(container.VolumeMounts, mounts...)
+			podSpec.InitContainers[i] = container
 		}
 	}
 

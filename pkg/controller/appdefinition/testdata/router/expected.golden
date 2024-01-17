@@ -54,6 +54,8 @@ spec:
             port: 8080
         resources: {}
         volumeMounts:
+        - mountPath: /etc/nginx/conf.d
+          name: confd
         - mountPath: /etc/nginx/conf.d/nginx.conf
           name: conf
           readOnly: true
@@ -65,6 +67,9 @@ spec:
       - key: taints.acorn.io/workload
         operator: Exists
       volumes:
+      - emptyDir:
+          medium: Memory
+        name: confd
       - configMap:
           name: router-name-30019cec
         name: conf

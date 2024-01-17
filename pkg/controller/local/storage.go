@@ -60,6 +60,10 @@ func createFolder(req router.Request, resp router.Response) error {
 		return err
 	}
 
+	if err := os.Chmod(path, 0777); err != nil {
+		return err
+	}
+
 	err := apply.New(req.Client).Ensure(req.Ctx, &corev1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:       pvName,
