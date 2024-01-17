@@ -106,10 +106,13 @@ func createSecret(ctx context.Context, c client.Client, app *apiv1.App, secretNa
 	data := map[string][]byte{}
 	promptOrder, _ := app.Status.AppSpec.Secrets[secretName].Params.GetData()["promptOrder"].([]string)
 	for _, key := range promptOrder {
-		if _, ok := app.Status.AppSpec.Secrets[secretName].Data[key]; ok {
-			value, err := prompt.Password(key)
+		if def, ok := app.Status.AppSpec.Secrets[secretName].Data[key]; ok {
+			value, err := prompt.Password(fmt.Sprintf("%s (default: %s)", key, def))
 			if err != nil {
 				return err
+			}
+			if len(value) == 0 {
+				value = []byte(def)
 			}
 			data[key] = value
 			asked[key] = struct{}{}
@@ -119,9 +122,13 @@ func createSecret(ctx context.Context, c client.Client, app *apiv1.App, secretNa
 		if _, asked := asked[key]; asked {
 			continue
 		}
-		value, err := prompt.Password(key)
+		def := app.Status.AppSpec.Secrets[secretName].Data[key]
+		value, err := prompt.Password(fmt.Sprintf("%s (default: %s)", key, def))
 		if err != nil {
 			return err
+		}
+		if len(value) == 0 {
+			value = []byte(def)
 		}
 		data[key] = value
 	}
