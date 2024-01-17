@@ -65,6 +65,7 @@ COPY /scripts/acorn-job-get-output /usr/local/bin
 COPY /scripts/k3s-config.yaml /etc/rancher/k3s/config.yaml
 CMD []
 WORKDIR /wd
+VOLUME /var/lib/buildkit
 VOLUME /var/lib/rancher/k3s
 STOPSIGNAL SIGTERM
 ENTRYPOINT ["/usr/local/bin/acorn"]
