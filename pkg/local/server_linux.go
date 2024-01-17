@@ -1,19 +1,24 @@
 package local
 
 import (
+	"archive/tar"
 	"bytes"
 	"context"
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
+	"syscall"
 
 	"github.com/acorn-io/baaah/pkg/yaml"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/install"
 	"github.com/acorn-io/runtime/pkg/local/webhook"
 	"github.com/acorn-io/runtime/pkg/scheme"
 	"github.com/acorn-io/runtime/pkg/system"
+	"github.com/acorn-io/z"
 	"github.com/google/go-containerregistry/pkg/name"
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/empty"
@@ -27,9 +32,11 @@ func ServerRun(ctx context.Context) error {
 	if os.Getuid() != 0 {
 		return fmt.Errorf("must run as root")
 	}
+
 	if _, err := os.Stat("/.dockerenv"); err != nil {
 		return fmt.Errorf("must be ran in a docker container: %w", err)
 	}
+
 	if f, err := os.Open("/dev/kmsg"); err != nil {
 		return fmt.Errorf("must be ran in a privileged docker container: %w", err)
 	} else {
@@ -53,6 +60,11 @@ func ServerRun(ctx context.Context) error {
 	err = install.PrintObjects("acorn-local", &install.Options{
 		Output:                   buf,
 		IncludeLocalEnvResources: true,
+		Config: apiv1.Config{
+			IngressClassName:             z.Pointer("traefik"),
+			SetPodSecurityEnforceProfile: z.Pointer(false),
+			IgnoreResourceRequirements:   z.Pointer(true),
+		},
 	})
 	if err != nil {
 		return err
@@ -106,7 +118,6 @@ func ServerRun(ctx context.Context) error {
 		cmd := exec.Command("/bin/sh", "-c", `
 mkdir -p /sys/fs/cgroup/init
 busybox xargs -rn1 < /sys/fs/cgroup/cgroup.procs > /sys/fs/cgroup/init/cgroup.procs || :
-# enable controllers
 sed -e 's/ / +/g' -e 's/^/+/' <"/sys/fs/cgroup/cgroup.controllers" >"/sys/fs/cgroup/cgroup.subtree_control"
 `)
 		cmd.Stderr = os.Stderr
@@ -119,6 +130,46 @@ sed -e 's/ / +/g' -e 's/^/+/' <"/sys/fs/cgroup/cgroup.controllers" >"/sys/fs/cgr
 	ref, err := name.NewTag(system.LocalImageBind)
 	if err != nil {
 		return err
+	}
+
+	img, err := buildImage(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll("/var/lib/rancher/k3s/agent/images", 0755); err != nil {
+		return err
+	}
+
+	if err := tarball.WriteToFile("/var/lib/rancher/k3s/agent/images/empty.tar", ref, img); err != nil {
+		return err
+	}
+
+	return syscall.Exec("/bin/k3s", []string{"k3s", "server"}, os.Environ())
+}
+
+func buildImage(ctx context.Context) (ggcrv1.Image, error) {
+	layer, err := tarball.LayerFromOpener(func() (io.ReadCloser, error) {
+		out := &bytes.Buffer{}
+		t := tar.NewWriter(out)
+		for _, dir := range []string{"wd", "tmp", "var", "var/lib", "etc", "etc/nginx", "var/log", "var/log/nginx",
+			"var/cache", "var/cache/nginx"} {
+			err := t.WriteHeader(&tar.Header{
+				Typeflag: tar.TypeDir,
+				Name:     dir,
+				Mode:     0777,
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+		if err := t.Close(); err != nil {
+			return nil, err
+		}
+		return io.NopCloser(out), nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	img, err := mutate.Config(empty.Image, ggcrv1.Config{
@@ -136,20 +187,8 @@ sed -e 's/ / +/g' -e 's/^/+/' <"/sys/fs/cgroup/cgroup.controllers" >"/sys/fs/cgr
 		StopSignal: "SIGTERM",
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if err := os.MkdirAll("/var/lib/rancher/k3s/agent/images", 0755); err != nil {
-		return err
-	}
-
-	if err := tarball.WriteToFile("/var/lib/rancher/k3s/agent/images/empty.tar", ref, img); err != nil {
-		return err
-	}
-
-	cmd := exec.Command("k3s", "server")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
-	return cmd.Run()
+	return mutate.AppendLayers(img, layer)
 }

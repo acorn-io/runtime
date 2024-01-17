@@ -428,7 +428,9 @@ func generateKubeConfig(restConfig *rest.Config) ([]byte, error) {
 		},
 		AuthInfos: map[string]*clientcmdapi.AuthInfo{
 			"auth": {
-				Token: restConfig.BearerToken,
+				Token:                 restConfig.BearerToken,
+				ClientCertificateData: restConfig.TLSClientConfig.CertData,
+				ClientKeyData:         restConfig.TLSClientConfig.KeyData,
 			},
 		},
 		Contexts: map[string]*clientcmdapi.Context{

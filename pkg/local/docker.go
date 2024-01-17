@@ -11,8 +11,12 @@ import (
 	"time"
 
 	"github.com/acorn-io/baaah/pkg/restconfig"
+	"github.com/acorn-io/baaah/pkg/watcher"
+	v1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/install"
 	"github.com/acorn-io/runtime/pkg/scheme"
 	"github.com/acorn-io/runtime/pkg/system"
+	"github.com/acorn-io/runtime/pkg/term"
 	"github.com/acorn-io/z"
 	"github.com/docker/cli/cli/streams"
 	"github.com/docker/docker/api/types"
@@ -26,6 +30,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -47,28 +52,16 @@ func NewContainer(_ context.Context) (*Container, error) {
 	}, nil
 }
 
-func (c *Container) Ensure(ctx context.Context) (*rest.Config, error) {
-	con, err := c.c.ContainerInspect(ctx, ContainerName)
-	if client.IsErrNotFound(err) {
-		var id string
-		id, err = c.Upgrade(ctx)
-		if err != nil {
-			return nil, err
-		}
-		con, err = c.c.ContainerInspect(ctx, id)
-	}
-	if err != nil {
-		return nil, err
-	}
-
+func (c *Container) getKubeconfig(ctx context.Context, port string) (*rest.Config, error) {
 	var (
+		err error
 		out io.ReadCloser
 	)
 	for i := 0; ; i++ {
 		if i > 20 {
 			return nil, fmt.Errorf("timeout trying to launch %s container", ContainerName)
 		}
-		out, _, err = c.c.CopyFromContainer(ctx, con.ID, "/etc/rancher/k3s/k3s.yaml")
+		out, _, err = c.c.CopyFromContainer(ctx, ContainerName, "/etc/rancher/k3s/k3s.yaml")
 		if client.IsErrNotFound(err) {
 			time.Sleep(500 * time.Millisecond)
 			continue
@@ -94,10 +87,19 @@ func (c *Container) Ensure(ctx context.Context) (*rest.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	cfg.Host = fmt.Sprintf("https://localhost:%s", con.NetworkSettings.Ports["6443/tcp"][0].HostPort)
+	cfg.Host = fmt.Sprintf("https://localhost:%s", port)
 
 	restconfig.SetScheme(cfg, scheme.Scheme)
 	return cfg, waitFor(ctx, cfg)
+}
+
+func (c *Container) Ensure(ctx context.Context) (*rest.Config, error) {
+	_, port, err := c.Upgrade(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.getKubeconfig(ctx, port)
 }
 
 func waitFor(ctx context.Context, cfg *rest.Config) error {
@@ -138,7 +140,8 @@ func (c *Container) DeletePorts(ctx context.Context) error {
 		for _, name := range con.Names {
 			if strings.HasPrefix(name, "/"+ContainerName+"-") {
 				if err := c.c.ContainerRemove(ctx, name, types.ContainerRemoveOptions{
-					Force: true,
+					RemoveVolumes: true,
+					Force:         true,
 				}); err != nil {
 					return err
 				}
@@ -153,7 +156,6 @@ func (c *Container) DeletePorts(ctx context.Context) error {
 func (c *Container) Delete(ctx context.Context, data bool) error {
 	err := c.c.ContainerRemove(ctx, ContainerName, types.ContainerRemoveOptions{
 		RemoveVolumes: data,
-		RemoveLinks:   false,
 		Force:         true,
 	})
 	if client.IsErrNotFound(err) {
@@ -171,34 +173,147 @@ func (c *Container) Delete(ctx context.Context, data bool) error {
 	return c.DeletePorts(ctx)
 }
 
-func (c *Container) Upgrade(ctx context.Context) (string, error) {
+func (c *Container) Upgrade(ctx context.Context, ignoreLocal bool) (string, string, error) {
 	con, err := c.c.ContainerInspect(ctx, ContainerName)
 	if client.IsErrNotFound(err) {
-		return c.Create(ctx, false)
+		if _, err := c.Create(ctx); err != nil {
+			return "", "", err
+		}
+		con, err = c.c.ContainerInspect(ctx, ContainerName)
+		if err != nil {
+			return "", "", err
+		}
 	} else if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	if con.Config.Image == system.DefaultImage() {
-		return con.ID, c.Start(ctx)
+	if con.Config.Image == system.DefaultImage() || (ignoreLocal && con.Config.Image == "localdev") {
+		return con.ID, con.NetworkSettings.Ports["6443/tcp"][0].HostPort, c.Start(ctx)
 	}
 
 	if err := c.Delete(ctx, false); err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return c.Create(ctx, false)
+	return c.Upgrade(ctx, ignoreLocal)
 }
 
-func (c *Container) Reset(ctx context.Context) error {
-	if err := c.Delete(ctx, true); err != nil {
+func (c *Container) Reset(ctx context.Context, data bool) error {
+	if err := c.Delete(ctx, data); err != nil {
 		return err
 	}
-	_, err := c.Create(ctx, false)
+	_, err := c.Create(ctx)
 	return err
 }
 
-func (c *Container) Create(ctx context.Context, upgrade bool) (string, error) {
+func (c *Container) Wait(ctx context.Context) error {
+	pb := &term.Builder{}
+
+	imageStatus := pb.New("Image pulled")
+	imageStatus.Infof("Pulling image %s", system.DefaultImage())
+	if err := c.pull(ctx); err != nil {
+		return imageStatus.Fail(err)
+	}
+	imageStatus.Success()
+
+	conStatus := pb.New("Container created")
+	conStatus.Infof("Creating")
+
+	for {
+		_, err := c.c.ContainerInspect(ctx, ContainerName)
+		if client.IsErrNotFound(err) {
+		} else if err != nil {
+			return conStatus.Fail(err)
+		} else {
+			conStatus.Success()
+			break
+		}
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(500 * time.Millisecond):
+		}
+	}
+
+	running := pb.New("Container running")
+	running.Infof("Starting")
+
+	var port string
+
+	for {
+		con, err := c.c.ContainerInspect(ctx, ContainerName)
+		if err != nil {
+			return running.Fail(err)
+		}
+
+		if con.State == nil || !con.State.Running {
+			select {
+			case <-ctx.Done():
+			case <-time.After(500 * time.Millisecond):
+				continue
+			}
+		}
+
+		port = con.NetworkSettings.Ports["6443/tcp"][0].HostPort
+		break
+	}
+
+	running.Success()
+
+	restConfig, err := c.getKubeconfig(ctx, port)
+	if err != nil {
+		return err
+	}
+
+	kc, err := kclient.NewWithWatch(restConfig, kclient.Options{
+		Scheme: scheme.Scheme,
+	})
+	if err != nil {
+		return err
+	}
+
+	if err := install.WaitAPI(ctx, pb, 1, system.LocalImageBind, kc); err != nil {
+		return err
+	}
+
+	ns := pb.New("Local project created")
+	ns.Infof("Waiting for local project")
+	w := watcher.New[*v1.Project](kc)
+	for {
+		_, err = w.ByName(ctx, "", "local", func(obj *v1.Project) (bool, error) {
+			return true, nil
+		})
+		if err != nil {
+			ns.Infof("Waiting for local project: %v", err)
+			select {
+			case <-ctx.Done():
+				return ns.Fail(ctx.Err())
+			case <-time.After(1 * time.Second):
+			}
+			continue
+		}
+		break
+	}
+	ns.Success()
+	return nil
+}
+
+func (c *Container) pull(ctx context.Context) error {
+	_, _, err := c.c.ImageInspectWithRaw(ctx, system.DefaultImage())
+	if err == nil {
+		return nil
+	}
+
+	resp, err := c.c.ImagePull(ctx, system.DefaultImage(), types.ImagePullOptions{})
+	if err != nil {
+		return err
+	}
+	out := streams.NewOut(os.Stdout)
+	return jsonmessage.DisplayJSONMessagesToStream(resp, out, nil)
+}
+
+func (c *Container) Create(ctx context.Context) (string, error) {
 	v, err := c.c.VolumeCreate(ctx, volume.CreateOptions{
 		Name: volumeName,
 	})
@@ -226,7 +341,7 @@ func (c *Container) Create(ctx context.Context, upgrade bool) (string, error) {
 			"6443/tcp": {
 				{
 					HostIP:   "0.0.0.0",
-					HostPort: "",
+					HostPort: os.Getenv("ACORN_LOCAL_PORT"),
 				},
 			},
 		},
@@ -241,33 +356,39 @@ func (c *Container) Create(ctx context.Context, upgrade bool) (string, error) {
 				Target: "/var/lib/rancher/k3s",
 			},
 			{
+				Type:   mount.TypeVolume,
+				Source: v.Name,
+				Target: "/var/lib/buildkit",
+			},
+			{
 				Type:   mount.TypeBind,
 				Source: "/var/run/docker.sock",
 				Target: "/var/run/docker.sock",
 			},
+			{
+				Type:     mount.TypeBind,
+				Source:   "/lib/modules",
+				Target:   "/lib/modules",
+				ReadOnly: true,
+			},
 		},
 	}, nil, nil, ContainerName)
 	if client.IsErrNotFound(err) {
-		resp, err := c.c.ImagePull(ctx, system.DefaultImage(), types.ImagePullOptions{})
-		if err != nil {
+		if err := c.pull(ctx); err != nil {
 			return "", err
 		}
-		out := streams.NewOut(os.Stdout)
-		if err := jsonmessage.DisplayJSONMessagesToStream(resp, out, nil); err != nil {
-			return "", err
-		}
-		return c.Create(ctx, false)
+		return c.Create(ctx)
 	} else if errdefs.IsConflict(err) {
-		if upgrade {
-			return c.Upgrade(ctx)
-		} else {
-			return con.ID, c.Start(ctx)
-		}
+		return con.ID, c.Start(ctx)
 	} else if err != nil {
 		return "", err
 	}
 
-	return con.ID, c.Start(ctx)
+	if err := c.Start(ctx); err != nil {
+		return "", err
+	}
+
+	return con.ID, c.Wait(ctx)
 }
 
 func (c *Container) Start(ctx context.Context) error {

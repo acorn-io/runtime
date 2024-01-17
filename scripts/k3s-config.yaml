@@ -11,7 +11,6 @@ disable-network-policy: true
 disable-helm-controller: true
 disable-scheduler: true
 kube-apiserver-arg:
-  - etcd-servers-overrides=coordination.k8s.io/leases#unix:///tmp/kine.sock,/apiServerIPInfo#unix:///tmp/kine.sock
   - enable-priority-and-fairness=false
   - feature-gates=AllBeta=false
   - feature-gates=AllAlpha=false
@@ -58,7 +57,6 @@ kubelet-arg:
   - feature-gates=AllAlpha=false
   - feature-gates=AllBeta=false
   - log-flush-frequency=25s
-  - node-status-update-frequency=10m
 kube-proxy-arg:
   - log-flush-frequency=25s
 kube-cloud-controller-arg:

@@ -97,5 +97,15 @@ func (c *Controller) initData(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	if system.IsLocal() {
+		err = c.apply.Ensure(ctx, &v1.ProjectInstance{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "local",
+			},
+		})
+		if err != nil {
+			return err
+		}
+	}
 	return config.Init(ctx, c.client)
 }

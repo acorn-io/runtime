@@ -14,6 +14,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -57,7 +58,7 @@ func (c *Handler) ProvisionPorts(req router.Request, resp router.Response) error
 			continue
 		}
 
-		pod := &corev1.Pod{
+		deploy := &appsv1.Deployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      name,
 				Namespace: system.Namespace,
@@ -65,47 +66,62 @@ func (c *Handler) ProvisionPorts(req router.Request, resp router.Response) error
 					"app": "klipper-lb",
 				},
 			},
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name:    "klipper-lb",
-						Command: []string{"klipper-lb"},
-						Image:   system.LocalImage,
-						SecurityContext: &corev1.SecurityContext{
-							Capabilities: &corev1.Capabilities{
-								Add: []corev1.Capability{
-									"NET_ADMIN",
+			Spec: appsv1.DeploymentSpec{
+				Selector: metav1.SetAsLabelSelector(map[string]string{
+					"app": "klipper-lb",
+				}),
+				Strategy: appsv1.DeploymentStrategy{
+					Type: appsv1.RecreateDeploymentStrategyType,
+				},
+				Template: corev1.PodTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{
+							"app": "klipper-lb",
+						},
+					},
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							{
+								Name:    "klipper-lb",
+								Command: []string{"klipper-lb"},
+								Image:   system.LocalImage,
+								SecurityContext: &corev1.SecurityContext{
+									Capabilities: &corev1.Capabilities{
+										Add: []corev1.Capability{
+											"NET_ADMIN",
+										},
+									},
 								},
-							},
-						},
-						Env: []corev1.EnvVar{
-							{
-								Name:  "SRC_PORT",
-								Value: fmt.Sprint(port.Port),
-							},
-							{
-								Name:  "SRC_RANGES",
-								Value: "0.0.0.0/0",
-							},
-							{
-								Name:  "DEST_PROTO",
-								Value: string(port.Protocol),
-							},
-							{
-								Name:  "DEST_PORT",
-								Value: fmt.Sprint(port.Port),
-							},
-							{
-								Name:  "DEST_IPS",
-								Value: svc.Spec.ClusterIP,
-							},
-						},
-						Ports: []corev1.ContainerPort{
-							{
-								Name:          "port",
-								HostPort:      port.Port,
-								ContainerPort: port.Port,
-								Protocol:      port.Protocol,
+								Env: []corev1.EnvVar{
+									{
+										Name:  "SRC_PORT",
+										Value: fmt.Sprint(port.Port),
+									},
+									{
+										Name:  "SRC_RANGES",
+										Value: "0.0.0.0/0",
+									},
+									{
+										Name:  "DEST_PROTO",
+										Value: string(port.Protocol),
+									},
+									{
+										Name:  "DEST_PORT",
+										Value: fmt.Sprint(port.Port),
+									},
+									{
+										Name:  "DEST_IPS",
+										Value: svc.Spec.ClusterIP,
+									},
+								},
+								Ports: []corev1.ContainerPort{
+									{
+										Name:          "port",
+										HostPort:      port.Port,
+										ContainerPort: port.Port,
+										Protocol:      port.Protocol,
+									},
+								},
 							},
 						},
 					},
@@ -114,8 +130,8 @@ func (c *Handler) ProvisionPorts(req router.Request, resp router.Response) error
 		}
 
 		// Patch inline now, otherwise baaah will fight with the changes the webhook makes
-		webhook.PatchPodSpec(&pod.Spec)
-		resp.Objects(pod)
+		webhook.PatchPodSpec(&deploy.Spec.Template.Spec)
+		resp.Objects(deploy)
 
 		svc.Status.LoadBalancer.Ingress = []corev1.LoadBalancerIngress{
 			{

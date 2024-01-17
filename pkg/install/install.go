@@ -279,7 +279,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		return err
 	}
 
-	if err := waitAPI(ctx, opts.Progress, *opts.APIServerReplicas, image, c); err != nil {
+	if err := WaitAPI(ctx, opts.Progress, *opts.APIServerReplicas, image, c); err != nil {
 		return err
 	}
 
@@ -486,7 +486,7 @@ func waitRegistry(ctx context.Context, p progress.Builder, image string, client 
 	return s.Fail(waitDeployment(ctx, s, client, image, system.RegistryName, system.ImagesNamespace, 1))
 }
 
-func waitAPI(ctx context.Context, p progress.Builder, replicas int, image string, client kclient.WithWatch) error {
+func WaitAPI(ctx context.Context, p progress.Builder, replicas int, image string, client kclient.WithWatch) error {
 	s := p.New("Waiting for API server deployment to be available")
 	if err := waitDeployment(ctx, s, client, image, "acorn-api", system.Namespace, int32(replicas)); err != nil {
 		return s.Fail(err)

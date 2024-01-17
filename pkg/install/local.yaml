@@ -61,9 +61,3 @@ metadata:
 provisioner: acorn.io/local-storage
 reclaimPolicy: Delete
 volumeBindingMode: WaitForFirstConsumer
-
----
-kind: Project
-apiVersion: api.acorn.io/v1
-metadata:
-  name: local

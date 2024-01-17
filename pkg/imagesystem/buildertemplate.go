@@ -32,12 +32,20 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 		},
 	}
 
+	var strategy appsv1.DeploymentStrategyType
+	if system.IsLocal() {
+		strategy = appsv1.RecreateDeploymentStrategyType
+	}
+
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
 		Spec: appsv1.DeploymentSpec{
+			Strategy: appsv1.DeploymentStrategy{
+				Type: strategy,
+			},
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labels.ManagedByApp(namespace, name, "app", name),
 			},
@@ -50,6 +58,7 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 					ServiceAccountName:            "acorn-builder",
 					EnableServiceLinks:            new(bool),
 					TerminationGracePeriodSeconds: z.Pointer[int64](10),
+					Hostname:                      "builder",
 					Containers: []corev1.Container{
 						{
 							Name:    "buildkitd",
