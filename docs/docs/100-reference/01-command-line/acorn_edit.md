@@ -3,7 +3,7 @@ title: "acorn edit"
 ---
 ## acorn edit
 
-Edits an acorn or secret interactively
+Edits an acorn or secret interactively. The things you can change with acorn edit are the same things you can set via the CLI when running acorn run.
 
 ```
 acorn edit ACORN_NAME|SECRET_NAME [flags]
