@@ -13,7 +13,7 @@ Available Commands:
   credential   Manage registry credentials
   dashboard    Open the web dashboard for the project
   dev          Run an app from an image or Acornfile in dev mode or attach a dev session to a currently running app
-  edit         Edits an acorn or secret interactively
+  edit         Edits an acorn or secret interactively. The things you can change with acorn edit are the same things you can set via the CLI when running acorn run.
   events       List events about Acorn resources
   exec         Run a command in a container
   fmt          Format an Acornfile
