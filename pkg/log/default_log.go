@@ -60,7 +60,6 @@ func (d *DefaultLoggerImpl) AppStatus(ready bool, msg string, app *apiv1.App) {
 			app.Status.ObservedGeneration > d.lastLoginGeneration &&
 			(app.Status.ResolvedOfferings.Region == apiv1.LocalRegion ||
 				time.Since(d.lastLoginTime) > 5*time.Second) {
-
 			if err := login.Secrets(d.ctx, d.client, app); err != nil {
 				go d.Errorf(err.Error())
 			} else {
