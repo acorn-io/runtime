@@ -127,6 +127,10 @@ func TestEnvironment(t *testing.T) {
 							{
 								Name: "foo",
 							},
+							{
+								Name:  "foo\\.bar",
+								Value: "baz",
+							},
 						},
 					},
 				},
@@ -141,6 +145,10 @@ func TestEnvironment(t *testing.T) {
 		{
 			Name:  "foo",
 			Value: "",
+		},
+		{
+			Name:  "foo.bar",
+			Value: "baz",
 		},
 	}, dep.Spec.Template.Spec.Containers[0].Env)
 }

@@ -165,8 +165,9 @@ func toEnv(envs []v1.EnvVar, appEnvs []v1.NameValue, interpolator *secrets.Inter
 			if appEnvNames.Has(env.Name) {
 				continue
 			}
-			interpolated, ok := interpolator.ToEnv(env.Name, env.Value)
-			if ok {
+			interpolated, noDotInKey := interpolator.ToEnv(env.Name, env.Value)
+			if noDotInKey {
+				interpolated.Name = strings.ReplaceAll(interpolated.Name, "\\.", ".") // restore dots that were escaped during unmarshalling
 				result = append(result, interpolated)
 			}
 		} else {
@@ -179,6 +180,7 @@ func toEnv(envs []v1.EnvVar, appEnvs []v1.NameValue, interpolator *secrets.Inter
 			if strings.Contains(env.Secret.Name, ".") {
 				interpolated, ok := interpolator.ToEnv(env.Name, fmt.Sprintf("@{secrets.%s.%s}", env.Secret.Name, env.Secret.Key))
 				if ok {
+					interpolated.Name = strings.ReplaceAll(interpolated.Name, "\\.", ".") // restore dots that were escaped during unmarshalling
 					result = append(result, interpolated)
 				}
 			} else {
@@ -199,6 +201,7 @@ func toEnv(envs []v1.EnvVar, appEnvs []v1.NameValue, interpolator *secrets.Inter
 	for _, appEnv := range appEnvs {
 		interpolated, ok := interpolator.ToEnv(appEnv.Name, appEnv.Value)
 		if ok {
+			interpolated.Name = strings.ReplaceAll(interpolated.Name, "\\.", ".") // restore dots that were escaped during unmarshalling
 			result = append(result, interpolated)
 		}
 	}

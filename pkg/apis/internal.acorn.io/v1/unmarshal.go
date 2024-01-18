@@ -1396,7 +1396,7 @@ func parseEnvVar(key, value string) (result EnvVar, _ error) {
 		return result, nil
 	}
 
-	result.Name = key
+	result.Name = strings.ReplaceAll(key, ".", "\\.") // escape dots so they don't interfere with name separator '.' during interpolation
 
 	sec, ok, err = parseSecretReference(value)
 	if err != nil {
