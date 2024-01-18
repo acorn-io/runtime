@@ -26,7 +26,7 @@ type Handler struct {
 }
 
 func NewHandler() (*Handler, error) {
-	c, err := client.NewClientWithOpts(client.FromEnv)
+	c, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, err
 	}
