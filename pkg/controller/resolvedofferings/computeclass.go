@@ -39,7 +39,7 @@ func resolveComputeClasses(req router.Request, cfg *apiv1.Config, appInstance *v
 	}
 
 	if cc != nil {
-		parsedMemory, err := computeclasses.ParseComputeClassMemory(cc.Memory)
+		parsedMemory, err := computeclasses.ParseComputeClassMemoryInternal(cc.Memory)
 		if err != nil {
 			return err
 		}
@@ -107,7 +107,7 @@ func resolveComputeClass(req router.Request, appInstance *v1.AppInstance, config
 		} else if container.Memory != nil { // defaults in the acorn image
 			memory = container.Memory
 		} else if cc != nil { // defaults from compute class
-			parsedMemory, err := computeclasses.ParseComputeClassMemory(cc.Memory)
+			parsedMemory, err := computeclasses.ParseComputeClassMemoryInternal(cc.Memory)
 			if err != nil {
 				return err
 			}

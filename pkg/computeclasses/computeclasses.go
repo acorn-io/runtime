@@ -37,7 +37,7 @@ func parseQuantity(memory string) (resource.Quantity, error) {
 	return resource.ParseQuantity(memory)
 }
 
-func ParseComputeClassMemory(memory internaladminv1.ComputeClassMemory) (memoryQuantities, error) {
+func ParseComputeClassMemory(memory apiv1.ComputeClassMemory) (memoryQuantities, error) {
 	var quantities memoryQuantities
 
 	minInt, err := parseQuantity(memory.Min)
@@ -58,10 +58,6 @@ func ParseComputeClassMemory(memory internaladminv1.ComputeClassMemory) (memoryQ
 	}
 	quantities.Def = &defInt
 
-	if memory.RequestScaler < 0 || memory.RequestScaler > 1 {
-		return memoryQuantities{}, errors.New("request scaler value must be between 0 and 1, inclusive")
-	}
-
 	quantities.Values = make([]*resource.Quantity, len(memory.Values))
 	for i, value := range memory.Values {
 		valueInt, err := parseQuantity(value)
@@ -72,6 +68,13 @@ func ParseComputeClassMemory(memory internaladminv1.ComputeClassMemory) (memoryQ
 	}
 
 	return quantities, nil
+}
+
+func ParseComputeClassMemoryInternal(memory internaladminv1.ComputeClassMemory) (memoryQuantities, error) {
+	if memory.RequestScaler < 0 || memory.RequestScaler > 1 {
+		return memoryQuantities{}, errors.New("request scaler value must be between 0 and 1, inclusive")
+	}
+	return ParseComputeClassMemory(apiv1.ComputeClassMemoryFromInternalAdmin(memory))
 }
 
 func memoryInValues(parsedMemory memoryQuantities, memory resource.Quantity) bool {

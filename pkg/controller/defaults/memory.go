@@ -38,7 +38,7 @@ func addDefaultMemory(req router.Request, cfg *apiv1.Config, appInstance *v1.App
 	}
 
 	if cc != nil {
-		parsedMemory, err := computeclasses.ParseComputeClassMemory(cc.Memory)
+		parsedMemory, err := computeclasses.ParseComputeClassMemoryInternal(cc.Memory)
 		if err != nil {
 			return err
 		}
@@ -66,7 +66,7 @@ func addWorkloadMemoryDefault(req router.Request, appInstance *v1.AppInstance, c
 		}
 
 		if computeClass != nil {
-			parsedMemory, err := computeclasses.ParseComputeClassMemory(computeClass.Memory)
+			parsedMemory, err := computeclasses.ParseComputeClassMemoryInternal(computeClass.Memory)
 			if err != nil {
 				return err
 			}

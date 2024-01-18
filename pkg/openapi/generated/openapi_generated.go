@@ -46,6 +46,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.BuilderPortOptions":                                   schema_pkg_apis_apiacornio_v1_BuilderPortOptions(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ComputeClass":                                         schema_pkg_apis_apiacornio_v1_ComputeClass(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ComputeClassList":                                     schema_pkg_apis_apiacornio_v1_ComputeClassList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ComputeClassMemory":                                   schema_pkg_apis_apiacornio_v1_ComputeClassMemory(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Config":                                               schema_pkg_apis_apiacornio_v1_Config(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ConfirmUpgrade":                                       schema_pkg_apis_apiacornio_v1_ConfirmUpgrade(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ContainerReplica":                                     schema_pkg_apis_apiacornio_v1_ContainerReplica(ref),
@@ -2172,7 +2173,7 @@ func schema_pkg_apis_apiacornio_v1_ComputeClass(ref common.ReferenceCallback) co
 					"memory": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ComputeClassMemory"),
 						},
 					},
 					"resources": {
@@ -2212,7 +2213,7 @@ func schema_pkg_apis_apiacornio_v1_ComputeClass(ref common.ReferenceCallback) co
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ComputeClassMemory", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -2261,6 +2262,50 @@ func schema_pkg_apis_apiacornio_v1_ComputeClassList(ref common.ReferenceCallback
 		},
 		Dependencies: []string{
 			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ComputeClass", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_pkg_apis_apiacornio_v1_ComputeClassMemory(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"min": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"max": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"default": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"values": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 }
 

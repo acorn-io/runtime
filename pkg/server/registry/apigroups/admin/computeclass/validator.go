@@ -46,7 +46,7 @@ func (s *ProjectValidator) Validate(ctx context.Context, obj runtime.Object) (re
 		return append(result, err)
 	}
 
-	if _, err := computeclasses.ParseComputeClassMemory(cc.Memory); err != nil {
+	if _, err := computeclasses.ParseComputeClassMemoryInternal(cc.Memory); err != nil {
 		return append(result, field.Invalid(field.NewPath("spec", "memory"), cc.Memory, err.Error()))
 	}
 
@@ -88,7 +88,7 @@ func (s *ClusterValidator) Validate(ctx context.Context, obj runtime.Object) (re
 		return append(result, err)
 	}
 
-	if _, err := computeclasses.ParseComputeClassMemory(cc.Memory); err != nil {
+	if _, err := computeclasses.ParseComputeClassMemoryInternal(cc.Memory); err != nil {
 		return append(result, field.Invalid(field.NewPath("spec.memory"), cc.Memory, err.Error()))
 	}
 
