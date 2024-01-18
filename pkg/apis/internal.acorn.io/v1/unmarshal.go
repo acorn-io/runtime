@@ -1156,7 +1156,7 @@ func (in *EnvVars) UnmarshalJSON(data []byte) error {
 			if ok {
 				v.Secret = sec.SecretReference
 			} else {
-				v.Name = k
+				v.Name = strings.ReplaceAll(k, ".", "\\.") // escape dots so they don't interfere with name separator '.' during interpolation
 			}
 			*in = append(*in, (EnvVar)(v))
 		}
@@ -1396,7 +1396,7 @@ func parseEnvVar(key, value string) (result EnvVar, _ error) {
 		return result, nil
 	}
 
-	result.Name = key
+	result.Name = strings.ReplaceAll(key, ".", "\\.") // escape dots so they don't interfere with name separator '.' during interpolation
 
 	sec, ok, err = parseSecretReference(value)
 	if err != nil {
