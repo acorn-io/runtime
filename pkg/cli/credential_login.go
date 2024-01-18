@@ -53,7 +53,8 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 		if c, err := a.client.CreateDefault(); err == nil {
 			app, err := c.AppGet(cmd.Context(), args[0])
 			if err == nil {
-				return login.Secrets(cmd.Context(), c, app)
+				_, err = login.Secrets(cmd.Context(), c, app)
+				return err
 			} else if !(apierrors.IsNotFound(err) || apierrors.IsForbidden(err)) {
 				return err
 			}

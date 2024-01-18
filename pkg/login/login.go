@@ -14,19 +14,21 @@ import (
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 )
 
-func Secrets(ctx context.Context, c client.Client, app *apiv1.App) error {
+func Secrets(ctx context.Context, c client.Client, app *apiv1.App) (*apiv1.App, error) {
 	for secretName, secret := range app.Status.AppSpec.Secrets {
 		if strings.HasPrefix(secret.Type, v1.SecretTypeCredentialPrefix) {
-			if err := loginSecret(ctx, c, app, secretName); err != nil {
-				return err
+			updatedApp, err := loginSecret(ctx, c, app, secretName)
+			if err != nil {
+				return nil, err
 			}
+			app = updatedApp
 		}
 	}
 
 	for _, acorn := range app.Status.AppStatus.Acorns {
 		if acorn.AcornName != "" {
 			if err := loginApp(ctx, c, acorn.AcornName); err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
@@ -34,12 +36,12 @@ func Secrets(ctx context.Context, c client.Client, app *apiv1.App) error {
 	for _, service := range app.Status.AppStatus.Services {
 		if service.ServiceAcornName != "" {
 			if err := loginApp(ctx, c, service.ServiceAcornName); err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
 
-	return nil
+	return app, nil
 }
 
 func loginApp(ctx context.Context, c client.Client, appName string) error {
@@ -49,7 +51,9 @@ func loginApp(ctx context.Context, c client.Client, appName string) error {
 	} else if err != nil {
 		return err
 	}
-	return Secrets(ctx, c, app)
+
+	_, err = Secrets(ctx, c, app)
+	return err
 }
 
 func secretIsOk(app *apiv1.App, secretName string) (string, bool) {
@@ -79,12 +83,12 @@ func printInstructions(app *apiv1.App, secretName string) error {
 	return nil
 }
 
-func bindSecret(ctx context.Context, c client.Client, app *apiv1.App, targetSecretName, overrideSecretName string) error {
+func bindSecret(ctx context.Context, c client.Client, app *apiv1.App, targetSecretName, overrideSecretName string) (*apiv1.App, error) {
 	parts := append(strings.Split(app.Name, "."), targetSecretName)
 	appName := parts[0]
 	targetSecretName = strings.Join(parts[1:], ".")
 
-	_, err := c.AppUpdate(ctx, appName, &client.AppUpdateOptions{
+	updatedApp, err := c.AppUpdate(ctx, appName, &client.AppUpdateOptions{
 		Secrets: []v1.SecretBinding{
 			{
 				Secret: overrideSecretName,
@@ -92,14 +96,14 @@ func bindSecret(ctx context.Context, c client.Client, app *apiv1.App, targetSecr
 			},
 		},
 	})
-	return err
+	return updatedApp, err
 }
 
-func createSecret(ctx context.Context, c client.Client, app *apiv1.App, secretName string) error {
+func createSecret(ctx context.Context, c client.Client, app *apiv1.App, secretName string) (*apiv1.App, error) {
 	secretType := app.Status.AppSpec.Secrets[secretName].Type
 
 	if err := printInstructions(app, secretName); err != nil {
-		return err
+		return nil, err
 	}
 
 	asked := map[string]struct{}{}
@@ -113,7 +117,7 @@ func createSecret(ctx context.Context, c client.Client, app *apiv1.App, secretNa
 			}
 			value, err := prompt.Password(message)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			if len(value) == 0 {
 				value = []byte(def)
@@ -133,7 +137,7 @@ func createSecret(ctx context.Context, c client.Client, app *apiv1.App, secretNa
 		}
 		value, err := prompt.Password(message)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if len(value) == 0 {
 			value = []byte(def)
@@ -143,13 +147,13 @@ func createSecret(ctx context.Context, c client.Client, app *apiv1.App, secretNa
 
 	secret, err := c.SecretCreate(ctx, secretName+"-", secretType, data)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	return bindSecret(ctx, c, app, secretName, secret.Name)
 }
 
-func loginSecret(ctx context.Context, c client.Client, app *apiv1.App, secretName string) error {
+func loginSecret(ctx context.Context, c client.Client, app *apiv1.App, secretName string) (*apiv1.App, error) {
 	secretType := app.Status.AppSpec.Secrets[secretName].Type
 	secretDisplayName := app.Name + "." + secretName
 
@@ -157,14 +161,14 @@ func loginSecret(ctx context.Context, c client.Client, app *apiv1.App, secretNam
 		change, err := prompt.Bool(fmt.Sprintf("Credential [%s] is configured to [%s], do you want to change it",
 			secretDisplayName, existing), false)
 		if err != nil || !change {
-			return err
+			return nil, err
 		}
 		fmt.Println()
 	}
 
 	secrets, err := c.SecretList(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var (
@@ -183,7 +187,7 @@ func loginSecret(ctx context.Context, c client.Client, app *apiv1.App, secretNam
 		def := "Enter a new credential"
 		choice, err := prompt.Choice("Choose an existing credential or enter a new one", append(displayText, def), def)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if choice == def {
 			return createSecret(ctx, c, app, secretName)
