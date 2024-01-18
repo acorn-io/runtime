@@ -7,7 +7,7 @@ tidy:
 
 dev-reset: build
 	docker build -t localdev .
-	ACORN_IMAGE=localdev ACORN_LOCAL_PORT=6442 acorn local start --delete
+	ACORN_IMAGE=localdev ACORN_LOCAL_PORT=6442 ./bin/acorn local start --delete
 
 dev-install:
 	[ -e .dev-image ] && go mod vendor ; go run main.go install --dev "$$(cat .dev-image)"; rm -rf vendor

@@ -43,7 +43,7 @@ type Container struct {
 }
 
 func NewContainer(_ context.Context) (*Container, error) {
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, err
 	}
