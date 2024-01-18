@@ -187,6 +187,19 @@ func (c *Container) Upgrade(ctx context.Context, ignoreLocal bool) (string, stri
 		return "", "", err
 	}
 
+	if con.State == nil || !con.State.Running {
+		if err := c.Start(ctx); err != nil {
+			return "", "", err
+		}
+		if err := c.Wait(ctx); err != nil {
+			return "", "", err
+		}
+		con, err = c.c.ContainerInspect(ctx, ContainerName)
+		if err != nil {
+			return "", "", err
+		}
+	}
+
 	if con.Config.Image == system.DefaultImage() || (ignoreLocal && con.Config.Image == "localdev") {
 		return con.ID, con.NetworkSettings.Ports["6443/tcp"][0].HostPort, c.Start(ctx)
 	}
@@ -216,7 +229,7 @@ func (c *Container) Wait(ctx context.Context) error {
 	}
 	imageStatus.Success()
 
-	conStatus := pb.New("Container created")
+	conStatus := pb.New("Container created (to delete \"acorn local rm\")")
 	conStatus.Infof("Creating")
 
 	for {
@@ -236,7 +249,7 @@ func (c *Container) Wait(ctx context.Context) error {
 		}
 	}
 
-	running := pb.New("Container running")
+	running := pb.New("Container running (to stop \"acorn local stop\")")
 	running.Infof("Starting")
 
 	var port string
