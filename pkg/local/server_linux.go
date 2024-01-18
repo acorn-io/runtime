@@ -153,7 +153,7 @@ func buildImage(ctx context.Context) (ggcrv1.Image, error) {
 		out := &bytes.Buffer{}
 		t := tar.NewWriter(out)
 		for _, dir := range []string{"wd", "tmp", "var", "var/lib", "etc", "etc/nginx", "var/log", "var/log/nginx",
-			"var/cache", "var/cache/nginx"} {
+			"run", "var/cache", "var/cache/nginx"} {
 			err := t.WriteHeader(&tar.Header{
 				Typeflag: tar.TypeDir,
 				Name:     dir,
