@@ -601,7 +601,7 @@ func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, proj
 				continue
 			}
 			// Parse the memory
-			wcMemory, err := computeclasses.ParseComputeClassMemoryAPI(cc.Memory)
+			wcMemory, err := computeclasses.ParseComputeClassMemory(cc.Memory)
 			if err != nil {
 				if errors.Is(err, computeclasses.ErrInvalidClass) {
 					validationErrors = append(validationErrors, field.Invalid(field.NewPath("spec", "memory"), cc.Memory, err.Error()))

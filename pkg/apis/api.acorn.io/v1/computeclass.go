@@ -26,6 +26,8 @@ type ComputeClassMemory struct {
 	Values  []string `json:"values,omitempty"`
 }
 
+// ComputeClassMemoryFromInternalAdmin casts an internal admin ComputeClassMemory object to an api ComputeClassMemory object
+// This is done to hide the requestScaler value from api endpoints
 func ComputeClassMemoryFromInternalAdmin(memory internaladminv1.ComputeClassMemory) ComputeClassMemory {
 	return ComputeClassMemory{
 		Min:     memory.Min,

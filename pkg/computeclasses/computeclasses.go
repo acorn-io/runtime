@@ -37,7 +37,7 @@ func parseQuantity(memory string) (resource.Quantity, error) {
 	return resource.ParseQuantity(memory)
 }
 
-func ParseComputeClassMemoryAPI(memory apiv1.ComputeClassMemory) (memoryQuantities, error) {
+func ParseComputeClassMemory(memory apiv1.ComputeClassMemory) (memoryQuantities, error) {
 	var quantities memoryQuantities
 
 	minInt, err := parseQuantity(memory.Min)
@@ -70,11 +70,11 @@ func ParseComputeClassMemoryAPI(memory apiv1.ComputeClassMemory) (memoryQuantiti
 	return quantities, nil
 }
 
-func ParseComputeClassMemory(memory internaladminv1.ComputeClassMemory) (memoryQuantities, error) {
+func ParseComputeClassMemoryInternal(memory internaladminv1.ComputeClassMemory) (memoryQuantities, error) {
 	if memory.RequestScaler < 0 || memory.RequestScaler > 1 {
 		return memoryQuantities{}, errors.New("request scaler value must be between 0 and 1, inclusive")
 	}
-	return ParseComputeClassMemoryAPI(apiv1.ComputeClassMemoryFromInternalAdmin(memory))
+	return ParseComputeClassMemory(apiv1.ComputeClassMemoryFromInternalAdmin(memory))
 }
 
 func memoryInValues(parsedMemory memoryQuantities, memory resource.Quantity) bool {
@@ -88,7 +88,7 @@ func memoryInValues(parsedMemory memoryQuantities, memory resource.Quantity) boo
 }
 
 func Validate(cc apiv1.ComputeClass, memory resource.Quantity, memDefault *int64) error {
-	parsedMemory, err := ParseComputeClassMemoryAPI(cc.Memory)
+	parsedMemory, err := ParseComputeClassMemory(cc.Memory)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrInvalidClass, err)
 	}
