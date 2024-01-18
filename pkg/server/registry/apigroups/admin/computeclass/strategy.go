@@ -55,7 +55,7 @@ func (s *Strategy) List(ctx context.Context, namespace string, options storage.L
 		}
 		computeClasses.Items = append(computeClasses.Items, apiv1.ComputeClass{
 			ObjectMeta:       v1.ObjectMeta{Name: pcc.Name, Namespace: pcc.Namespace, CreationTimestamp: pcc.CreationTimestamp},
-			Memory:           pcc.Memory,
+			Memory:           apiv1.ComputeClassMemoryFromInternalAdmin(pcc.Memory),
 			Default:          pcc.Default,
 			Description:      pcc.Description,
 			SupportedRegions: pcc.SupportedRegions,
@@ -73,7 +73,7 @@ func (s *Strategy) List(ctx context.Context, namespace string, options storage.L
 		}
 		computeClasses.Items = append(computeClasses.Items, apiv1.ComputeClass{
 			ObjectMeta:       v1.ObjectMeta{Name: ccc.Name},
-			Memory:           ccc.Memory,
+			Memory:           apiv1.ComputeClassMemoryFromInternalAdmin(ccc.Memory),
 			Default:          ccc.Default,
 			Description:      ccc.Description,
 			SupportedRegions: ccc.SupportedRegions,
