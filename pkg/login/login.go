@@ -107,7 +107,11 @@ func createSecret(ctx context.Context, c client.Client, app *apiv1.App, secretNa
 	promptOrder, _ := app.Status.AppSpec.Secrets[secretName].Params.GetData()["promptOrder"].([]string)
 	for _, key := range promptOrder {
 		if def, ok := app.Status.AppSpec.Secrets[secretName].Data[key]; ok {
-			value, err := prompt.Password(fmt.Sprintf("%s (default: %s)", key, def))
+			message := key
+			if def != "" {
+				message += fmt.Sprintf(" (default: %s)", def)
+			}
+			value, err := prompt.Password(message)
 			if err != nil {
 				return err
 			}
@@ -123,7 +127,11 @@ func createSecret(ctx context.Context, c client.Client, app *apiv1.App, secretNa
 			continue
 		}
 		def := app.Status.AppSpec.Secrets[secretName].Data[key]
-		value, err := prompt.Password(fmt.Sprintf("%s (default: %s)", key, def))
+		message := key
+		if def != "" {
+			message += fmt.Sprintf(" (default: %s)", def)
+		}
+		value, err := prompt.Password(message)
 		if err != nil {
 			return err
 		}
