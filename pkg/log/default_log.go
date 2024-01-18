@@ -47,11 +47,26 @@ func (d *DefaultLoggerImpl) AppStatus(ready bool, msg string, app *apiv1.App) {
 		d.lock.Lock()
 		defer d.lock.Unlock()
 		if app.Status.AppStatus.LoginRequired && app.Status.ObservedGeneration > d.lastLogin {
-			err := login.Secrets(d.ctx, d.client, app)
-			if err != nil {
-				go d.Errorf(err.Error())
-			} else {
-				d.lastLogin = app.Generation
+			// Wait until all containers in the app are defined in order to avoid a race condition.
+			// When deploying acorns to the SaaS, a race condition can occur where the user is prompted
+			// to enter the credentials for a secret multiple times, as the app changes upstream while the
+			// user is typing into the prompt. If we wait until all containers are defined before prompting
+			// the user, then the race condition is avoided.
+			allDefined := true
+			for _, c := range app.Status.AppStatus.Containers {
+				if !c.CommonStatus.Defined {
+					allDefined = false
+					break
+				}
+			}
+
+			if allDefined {
+				err := login.Secrets(d.ctx, d.client, app)
+				if err != nil {
+					go d.Errorf(err.Error())
+				} else {
+					d.lastLogin = app.Generation
+				}
 			}
 		}
 		pterm.Println(pterm.LightYellow(msg))
