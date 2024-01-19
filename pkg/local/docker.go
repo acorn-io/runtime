@@ -18,6 +18,8 @@ import (
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/acorn-io/runtime/pkg/term"
 	"github.com/acorn-io/z"
+	"github.com/docker/cli/cli/command"
+	cliflags "github.com/docker/cli/cli/flags"
 	"github.com/docker/cli/cli/streams"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -39,16 +41,19 @@ const (
 )
 
 type Container struct {
-	c *client.Client
+	c client.APIClient
 }
 
 func NewContainer(_ context.Context) (*Container, error) {
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	cli, err := command.NewDockerCli()
 	if err != nil {
 		return nil, err
 	}
+	if err := cli.Initialize(&cliflags.ClientOptions{}); err != nil {
+		return nil, err
+	}
 	return &Container{
-		c: cli,
+		c: cli.Client(),
 	}, nil
 }
 
