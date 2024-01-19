@@ -272,46 +272,58 @@ func DisplayRange(minVal, maxVal any) (string, error) {
 }
 
 func DefaultMemory(obj any) (string, error) {
-	b, ok := obj.(adminv1.ComputeClassMemory)
-	if !ok {
-		return "", fmt.Errorf("object passed is not a ComputeClassMemory struct")
+	switch b := obj.(type) {
+	case apiv1.ComputeClassMemory:
+		return defaultMemory(b.Default, b.Max), nil
+	case adminv1.ComputeClassMemory:
+		return defaultMemory(b.Default, b.Max), nil
+	default:
+		return "", fmt.Errorf("object passed cannot be converted into a ComputeClassMemory struct")
 	}
+}
 
-	result := b.Default
-	if b.Default == "0" || b.Default == "" {
-		result = b.Max
+func defaultMemory(def, max string) string {
+	result := def
+	if def == "0" || def == "" {
+		result = max
 		if result == "0" || result == "" {
 			result = "Unrestricted"
 		}
 	}
-	return result, nil
+	return result
 }
 
 func MemoryToRange(obj any) (string, error) {
-	b, ok := obj.(adminv1.ComputeClassMemory)
-	if !ok {
-		return "", fmt.Errorf("object passed is not a ComputeClassMemory struct")
+	switch b := obj.(type) {
+	case apiv1.ComputeClassMemory:
+		return memoryToRange(b.Min, b.Max, b.Values), nil
+	case adminv1.ComputeClassMemory:
+		return memoryToRange(b.Min, b.Max, b.Values), nil
+	default:
+		return "", fmt.Errorf("object passed cannot be converted into a ComputeClassMemory struct")
+	}
+}
+
+func memoryToRange(memoryMin, memoryMax string, values []string) string {
+	if len(values) != 0 {
+		return strings.Join(values, ",")
 	}
 
-	min := b.Min
-	if min == "" {
-		min = "0"
+	rangeMin := memoryMin
+	if rangeMin == "" {
+		rangeMin = "0"
 	}
 
-	max := b.Max
-	if max == "" || max == "0" {
-		max = "Unrestricted"
+	rangeMax := memoryMax
+	if rangeMax == "" || rangeMax == "0" {
+		rangeMax = "Unrestricted"
 	}
 
-	if len(b.Values) != 0 {
-		return strings.Join(b.Values, ","), nil
+	if rangeMin == "0" && rangeMax == "Unrestricted" {
+		return "Unrestricted"
 	}
 
-	if max == "Unrestricted" && min == "0" {
-		return "Unrestricted", nil
-	}
-
-	return fmt.Sprintf("%v-%v", min, max), nil
+	return fmt.Sprintf("%v-%v", rangeMin, rangeMax)
 }
 
 func AppGeneration(app apiv1.App, msg string) string {
