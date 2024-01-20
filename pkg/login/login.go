@@ -21,7 +21,9 @@ func Secrets(ctx context.Context, c client.Client, app *apiv1.App) (*apiv1.App, 
 			if err != nil {
 				return nil, err
 			}
-			app = updatedApp
+			if updatedApp != nil {
+				app = updatedApp
+			}
 		}
 	}
 
@@ -88,7 +90,7 @@ func bindSecret(ctx context.Context, c client.Client, app *apiv1.App, targetSecr
 	appName := parts[0]
 	targetSecretName = strings.Join(parts[1:], ".")
 
-	updatedApp, err := c.AppUpdate(ctx, appName, &client.AppUpdateOptions{
+	return c.AppUpdate(ctx, appName, &client.AppUpdateOptions{
 		Secrets: []v1.SecretBinding{
 			{
 				Secret: overrideSecretName,
@@ -96,7 +98,6 @@ func bindSecret(ctx context.Context, c client.Client, app *apiv1.App, targetSecr
 			},
 		},
 	})
-	return updatedApp, err
 }
 
 func createSecret(ctx context.Context, c client.Client, app *apiv1.App, secretName string) (*apiv1.App, error) {
