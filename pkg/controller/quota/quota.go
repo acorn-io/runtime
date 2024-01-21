@@ -142,7 +142,7 @@ func addCompute(containers map[string]v1.Container, appInstance *v1.AppInstance,
 		// Add the memory/cpu requests to the quota request for each container at the scale specified
 		for i := 0; i < replicas(container.Scale); i++ {
 			quotaRequest.Spec.Resources.CPU.Add(requirements.Requests["cpu"])
-			quotaRequest.Spec.Resources.Memory.Add(requirements.Requests["memory"])
+			quotaRequest.Spec.Resources.Memory.Add(requirements.Limits["memory"])
 		}
 
 		// Recurse over any sidecars. Since sidecars can't have sidecars, this is safe.

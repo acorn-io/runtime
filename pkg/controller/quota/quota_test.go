@@ -22,3 +22,7 @@ func TestDefaultStatusVolumeSize(t *testing.T) {
 func TestImplicitPVBind(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/implicit-pv-bind", EnsureQuotaRequest)
 }
+
+func TestOverProvisioned(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/over-provisioned", EnsureQuotaRequest)
+}
