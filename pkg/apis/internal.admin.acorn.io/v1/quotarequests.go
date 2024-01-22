@@ -110,9 +110,8 @@ func (current *QuotaRequestResources) Fits(incoming QuotaRequestResources) error
 
 // ToString will return a string representation of the QuotaRequestResources within the struct.
 func (current *QuotaRequestResources) ToString() string {
-	result := ResourcesToString(
+	result := CountResourcesToString(
 		map[string]int{"Secrets": current.Secrets},
-		nil,
 	)
 
 	if result != "" {
