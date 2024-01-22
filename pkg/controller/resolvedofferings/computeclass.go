@@ -74,61 +74,69 @@ func resolveComputeClasses(req router.Request, cfg *apiv1.Config, appInstance *v
 
 func resolveComputeClass(req router.Request, appInstance *v1.AppInstance, configDefault *int64, defaultCC *adminv1.ProjectComputeClassInstance, defaultCCName string, containers map[string]v1.Container) error {
 	for name, container := range containers {
-		var cpuScaler *float64
-		ccName := ""
-
-		// First, get the compute class for the workload
-		cc, err := computeclasses.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.ComputeClasses, container, name, appInstance.Namespace)
+		err, resolvedOfferings := resolveComputeClassForContainer(req, appInstance, configDefault, defaultCC, defaultCCName, name, container)
 		if err != nil {
 			return err
 		}
-		if cc == nil {
-			cc = defaultCC
-		}
-		if cc != nil {
-			ccName = cc.Name
-			cpuScaler = &cc.CPUScaler
-		} else {
-			ccName = defaultCCName
-		}
+		appInstance.Status.ResolvedOfferings.Containers[name] = resolvedOfferings
 
-		// Next, determine the memory request. This is the order of priority:
-		// 1. runtime-level overrides from the user (in app.Spec)
-		// 2. defaults in the acorn image
-		// 3. defaults from compute class
-		// 4. global default
-
-		memory := configDefault // set to global default first, then check the higher priority values
-
-		if appInstance.Spec.Memory[name] != nil { // runtime-level overrides from the user
-			memory = appInstance.Spec.Memory[name]
-		} else if appInstance.Spec.Memory[""] != nil { // runtime-level overrides from the user for all containers in the app
-			memory = appInstance.Spec.Memory[""]
-		} else if container.Memory != nil { // defaults in the acorn image
-			memory = container.Memory
-		} else if cc != nil { // defaults from compute class
-			parsedMemory, err := computeclasses.ParseComputeClassMemoryInternal(cc.Memory)
+		for sidecarName, sidecar := range container.Sidecars {
+			err, resolvedOfferingsSidecar := resolveComputeClassForContainer(req, appInstance, configDefault, defaultCC, defaultCCName, sidecarName, sidecar)
 			if err != nil {
 				return err
 			}
-			def := parsedMemory.Def.Value()
-			memory = &def
-		}
-
-		appInstance.Status.ResolvedOfferings.Containers[name] = v1.ContainerResolvedOffering{
-			Class:     ccName,
-			Memory:    memory,
-			CPUScaler: cpuScaler,
-		}
-
-		for sidecarName := range container.Sidecars {
-			appInstance.Status.ResolvedOfferings.Containers[sidecarName] = v1.ContainerResolvedOffering{
-				Class:     ccName,
-				Memory:    memory,
-				CPUScaler: cpuScaler,
-			}
+			appInstance.Status.ResolvedOfferings.Containers[sidecarName] = resolvedOfferingsSidecar
 		}
 	}
 
 	return nil
+}
+
+func resolveComputeClassForContainer(req router.Request, appInstance *v1.AppInstance, configDefault *int64, defaultCC *adminv1.ProjectComputeClassInstance, defaultCCName, containerName string, container v1.Container) (error, v1.ContainerResolvedOffering) {
+	var cpuScaler *float64
+	ccName := ""
+
+	// First, get the compute class for the workload
+	cc, err := computeclasses.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.ComputeClasses, container, containerName, appInstance.Namespace)
+	if err != nil {
+		return err, v1.ContainerResolvedOffering{}
+	}
+	if cc == nil {
+		cc = defaultCC
+	}
+	if cc != nil {
+		ccName = cc.Name
+		cpuScaler = &cc.CPUScaler
+	} else {
+		ccName = defaultCCName
+	}
+
+	// Next, determine the memory request. This is the order of priority:
+	// 1. runtime-level overrides from the user (in app.Spec)
+	// 2. defaults in the acorn image
+	// 3. defaults from compute class
+	// 4. global default
+
+	memory := configDefault // set to global default first, then check the higher priority values
+
+	if appInstance.Spec.Memory[containerName] != nil { // runtime-level overrides from the user
+		memory = appInstance.Spec.Memory[containerName]
+	} else if appInstance.Spec.Memory[""] != nil { // runtime-level overrides from the user for all containers in the app
+		memory = appInstance.Spec.Memory[""]
+	} else if container.Memory != nil { // defaults in the acorn image
+		memory = container.Memory
+	} else if cc != nil { // defaults from compute class
+		parsedMemory, err := computeclasses.ParseComputeClassMemoryInternal(cc.Memory)
+		if err != nil {
+			return err, v1.ContainerResolvedOffering{}
+		}
+		def := parsedMemory.Def.Value()
+		memory = &def
+	}
+
+	return nil, v1.ContainerResolvedOffering{
+		Class:     ccName,
+		Memory:    memory,
+		CPUScaler: cpuScaler,
+	}
 }
