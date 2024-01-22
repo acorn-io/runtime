@@ -561,8 +561,8 @@ func (i *Interpolator) getContainerOrJobName() string {
 	return i.jobName
 }
 
-// hasUnescapedDot checks if a string contains an unescaped dot (i.e., a dot not escaped by a backslash).
-func hasUnescapedDot(s string) bool {
+// HasUnescapedDot checks if a string contains an unescaped dot (i.e., a dot not escaped by a backslash).
+func HasUnescapedDot(s string) bool {
 	for i := 0; i < len(s); i++ {
 		if s[i] == '.' {
 			// Match if it's the first character or not escaped by a backslash
@@ -584,7 +584,7 @@ func (i *Interpolator) ToEnv(key, value string) (corev1.EnvVar, bool) {
 		return corev1.EnvVar{
 			Name:  key,
 			Value: value,
-		}, !hasUnescapedDot(key)
+		}, !HasUnescapedDot(key)
 	}
 
 	newValue, err := i.Replace(value)
@@ -593,13 +593,13 @@ func (i *Interpolator) ToEnv(key, value string) (corev1.EnvVar, bool) {
 		return corev1.EnvVar{
 			Name:  newKey,
 			Value: value,
-		}, !hasUnescapedDot(key)
+		}, !HasUnescapedDot(key)
 	}
 	if value == newValue {
 		return corev1.EnvVar{
 			Name:  newKey,
 			Value: value,
-		}, !hasUnescapedDot(newKey)
+		}, !HasUnescapedDot(newKey)
 	}
 
 	return corev1.EnvVar{
@@ -612,7 +612,7 @@ func (i *Interpolator) ToEnv(key, value string) (corev1.EnvVar, bool) {
 				Key: i.addContent(newValue),
 			},
 		},
-	}, !hasUnescapedDot(newKey)
+	}, !HasUnescapedDot(newKey)
 }
 
 func (i *Interpolator) Objects() []kclient.Object {
