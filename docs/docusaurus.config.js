@@ -30,6 +30,7 @@ const config = {
       ({
         docs: {
           versions: {
+			"0.9": {label: "0.9", banner: "none", path: "0.9"},
             "0.8": { label: "0.8", banner: "none", path: "0.8" },
             "0.7": { label: "0.7", banner: "none", path: "0.7" },
             "0.6": { label: "0.6", banner: "none", path: "0.6" },
