@@ -65,6 +65,7 @@ func secretIsOk(app *apiv1.App, secretName string) (string, bool) {
 }
 
 func printInstructions(app *apiv1.App, secretName string) error {
+	secretDisplayName := app.Name + "." + secretName
 	instructions := app.Status.AppStatus.Secrets[secretName].LoginInstructions
 	if instructions == "" {
 		return nil
@@ -80,6 +81,7 @@ func printInstructions(app *apiv1.App, secretName string) error {
 		return err
 	}
 
+	fmt.Printf("Please follow the instructions below to login to [%s]:\n", secretDisplayName)
 	fmt.Print(msg)
 	fmt.Println()
 	return nil
@@ -109,22 +111,26 @@ func createSecret(ctx context.Context, c client.Client, app *apiv1.App, secretNa
 
 	asked := map[string]struct{}{}
 	data := map[string][]byte{}
-	promptOrder, _ := app.Status.AppSpec.Secrets[secretName].Params.GetData()["promptOrder"].([]string)
-	for _, key := range promptOrder {
-		if def, ok := app.Status.AppSpec.Secrets[secretName].Data[key]; ok {
-			message := key
-			if def != "" {
-				message += fmt.Sprintf(" (default: %s)", def)
+	paramsData := app.Status.AppSpec.Secrets[secretName].Params.GetData()
+	if promptOrder, exists := paramsData["promptOrder"].([]interface{}); exists {
+		for _, k := range promptOrder {
+			if key, ok := k.(string); ok {
+				if def, ok := app.Status.AppSpec.Secrets[secretName].Data[key]; ok {
+					message := key
+					if def != "" {
+						message += fmt.Sprintf(" (default: %s)", def)
+					}
+					value, err := prompt.Password(message)
+					if err != nil {
+						return nil, err
+					}
+					if len(value) == 0 {
+						value = []byte(def)
+					}
+					data[key] = value
+					asked[key] = struct{}{}
+				}
 			}
-			value, err := prompt.Password(message)
-			if err != nil {
-				return nil, err
-			}
-			if len(value) == 0 {
-				value = []byte(def)
-			}
-			data[key] = value
-			asked[key] = struct{}{}
 		}
 	}
 	for _, key := range typed.SortedKeys(app.Status.AppSpec.Secrets[secretName].Data) {
@@ -186,7 +192,8 @@ func loginSecret(ctx context.Context, c client.Client, app *apiv1.App, secretNam
 
 	if len(secretChoiceName) > 0 {
 		def := "Enter a new credential"
-		choice, err := prompt.Choice("Choose an existing credential or enter a new one", append(displayText, def), def)
+		choice, err := prompt.Choice(fmt.Sprintf("Choose an existing credential or enter a new one for [%s]",
+			secretDisplayName), append(displayText, def), def)
 		if err != nil {
 			return nil, err
 		}
