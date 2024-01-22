@@ -53,7 +53,7 @@ status:
       "":
         memory: 1048576
       left:
-        memory: 2097152
+        memory: 1048576
       oneimage:
         memory: 2097152
     region: local
