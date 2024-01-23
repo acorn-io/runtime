@@ -119,8 +119,8 @@ github.com/acorn-io/broadcaster v0.0.0-20240105011354-bfadd4a7b45d h1:hfpNQkJ4I2
 github.com/acorn-io/broadcaster v0.0.0-20240105011354-bfadd4a7b45d/go.mod h1:WF6FYrEqW0+ZtY5OKb21JhSL0aeL5VJoVrm+u0d4gOE=
 github.com/acorn-io/cmd v0.0.0-20230929053520-ebe1b9879b38 h1:oJMGvI702ZW5L0JjJfGV9ekzU2IqqTGjmAQl4gkO6Ro=
 github.com/acorn-io/cmd v0.0.0-20230929053520-ebe1b9879b38/go.mod h1:bo9ONX4kagbQmXcG4bnfoK53MBFFtbUZ5fR7s9NfS+M=
-github.com/acorn-io/function-builder v0.0.0-20240111042311-041315dd7091 h1:l+cuQsOK7aoC8VIq6C+Q98Svq9OgmzNCWuCcWhRw27w=
-github.com/acorn-io/function-builder v0.0.0-20240111042311-041315dd7091/go.mod h1:b60OzYlyV4fuiTw3HExgOJITsXnfm0c0uIoywz7s+Y4=
+github.com/acorn-io/function-builder v0.0.0-20240123010942-72663ff4da5d h1:05AOdsXorztXfFnD/n/bUDXeyKQj6Tf1cZk9TxR4rIA=
+github.com/acorn-io/function-builder v0.0.0-20240123010942-72663ff4da5d/go.mod h1:b60OzYlyV4fuiTw3HExgOJITsXnfm0c0uIoywz7s+Y4=
 github.com/acorn-io/mink v0.0.0-20240105015834-b1f7af4fadea h1:HyH8nh7zZ7qZeWOjBGtK/iAI5gCu/c5iSnN703hlHHY=
 github.com/acorn-io/mink v0.0.0-20240105015834-b1f7af4fadea/go.mod h1:EmoDPUYsPyBEhEpSC+LpRGUs2GeSI5nPOTa7WO7jwlc=
 github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78 h1:5zs9L/CXNkuTdJSbhFWczAorbmx67nqlqswx5CQi7XI=
