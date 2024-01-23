@@ -131,6 +131,13 @@ func TestEnvironment(t *testing.T) {
 								Name:  "foo\\.bar",
 								Value: "baz",
 							},
+							{
+								Name: "foo\\.bar\\.baz",
+								Secret: v1.SecretReference{
+									Name: "somesecret",
+									Key:  "somesecretkey",
+								},
+							},
 						},
 					},
 				},
@@ -149,6 +156,17 @@ func TestEnvironment(t *testing.T) {
 		{
 			Name:  "foo.bar",
 			Value: "baz",
+		},
+		{
+			Name: "foo.bar.baz",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					Key: "somesecretkey",
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "somesecret",
+					},
+				},
+			},
 		},
 	}, dep.Spec.Template.Spec.Containers[0].Env)
 }
