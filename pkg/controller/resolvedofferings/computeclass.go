@@ -74,14 +74,14 @@ func resolveComputeClasses(req router.Request, cfg *apiv1.Config, appInstance *v
 
 func resolveComputeClass(req router.Request, appInstance *v1.AppInstance, configDefault *int64, defaultCC *adminv1.ProjectComputeClassInstance, defaultCCName string, containers map[string]v1.Container) error {
 	for name, container := range containers {
-		err, resolvedOfferings := resolveComputeClassForContainer(req, appInstance, configDefault, defaultCC, defaultCCName, name, container)
+		resolvedOfferings, err := resolveComputeClassForContainer(req, appInstance, configDefault, defaultCC, defaultCCName, name, container)
 		if err != nil {
 			return err
 		}
 		appInstance.Status.ResolvedOfferings.Containers[name] = resolvedOfferings
 
 		for sidecarName, sidecar := range container.Sidecars {
-			err, resolvedOfferingsSidecar := resolveComputeClassForContainer(req, appInstance, configDefault, defaultCC, defaultCCName, sidecarName, sidecar)
+			resolvedOfferingsSidecar, err := resolveComputeClassForContainer(req, appInstance, configDefault, defaultCC, defaultCCName, sidecarName, sidecar)
 			if err != nil {
 				return err
 			}
@@ -92,14 +92,16 @@ func resolveComputeClass(req router.Request, appInstance *v1.AppInstance, config
 	return nil
 }
 
-func resolveComputeClassForContainer(req router.Request, appInstance *v1.AppInstance, configDefault *int64, defaultCC *adminv1.ProjectComputeClassInstance, defaultCCName, containerName string, container v1.Container) (error, v1.ContainerResolvedOffering) {
-	var cpuScaler *float64
-	ccName := ""
+func resolveComputeClassForContainer(req router.Request, appInstance *v1.AppInstance, configDefault *int64, defaultCC *adminv1.ProjectComputeClassInstance, defaultCCName, containerName string, container v1.Container) (v1.ContainerResolvedOffering, error) {
+	var (
+		cpuScaler *float64
+		ccName    string
+	)
 
 	// First, get the compute class for the workload
 	cc, err := computeclasses.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.ComputeClasses, container, containerName, appInstance.Namespace)
 	if err != nil {
-		return err, v1.ContainerResolvedOffering{}
+		return v1.ContainerResolvedOffering{}, err
 	}
 	if cc == nil {
 		cc = defaultCC
@@ -128,15 +130,15 @@ func resolveComputeClassForContainer(req router.Request, appInstance *v1.AppInst
 	} else if cc != nil { // defaults from compute class
 		parsedMemory, err := computeclasses.ParseComputeClassMemoryInternal(cc.Memory)
 		if err != nil {
-			return err, v1.ContainerResolvedOffering{}
+			return v1.ContainerResolvedOffering{}, err
 		}
 		def := parsedMemory.Def.Value()
 		memory = &def
 	}
 
-	return nil, v1.ContainerResolvedOffering{
+	return v1.ContainerResolvedOffering{
 		Class:     ccName,
 		Memory:    memory,
 		CPUScaler: cpuScaler,
-	}
+	}, nil
 }
