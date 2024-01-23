@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.3-labs
+# syntax=docker/dockerfile:1.4
 
 FROM ghcr.io/acorn-io/images-mirror/tonistiigi/binfmt:qemu-v8.1.4 AS binfmt
 FROM ghcr.io/acorn-io/images-mirror/coredns/coredns:1.10.1 AS coredns
@@ -63,6 +63,12 @@ COPY /scripts/acorn-job-helper-init /usr/local/bin
 COPY /scripts/acorn-job-helper-shutdown /usr/local/bin
 COPY /scripts/acorn-job-get-output /usr/local/bin
 COPY /scripts/k3s-config.yaml /etc/rancher/k3s/config.yaml
+
+FROM base AS basewithrelease
+COPY acorn /usr/local/bin/acorn
+
+FROM scratch AS goreleaser
+COPY --link --from=basewithrelease / /
 CMD []
 WORKDIR /wd
 VOLUME /var/lib/buildkit
@@ -70,8 +76,11 @@ VOLUME /var/lib/rancher/k3s
 STOPSIGNAL SIGTERM
 ENTRYPOINT ["/usr/local/bin/acorn"]
 
-FROM base AS goreleaser
-COPY acorn /usr/local/bin/acorn
-
 FROM base
 COPY --from=build /src/bin/acorn /usr/local/bin/acorn
+CMD []
+WORKDIR /wd
+VOLUME /var/lib/buildkit
+VOLUME /var/lib/rancher/k3s
+STOPSIGNAL SIGTERM
+ENTRYPOINT ["/usr/local/bin/acorn"]
