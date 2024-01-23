@@ -54,7 +54,7 @@ status:
       left:
         class: sample-compute-class
         cpuScaler: 0.25
-        memory: 2097152
+        memory: 1048576
       oneimage:
         class: sample-compute-class
         cpuScaler: 0.25

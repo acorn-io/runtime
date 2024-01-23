@@ -52,7 +52,7 @@ status:
       "":
         memory: 0
       left:
-        memory: 0
+        memory: 1048576
       oneimage:
         memory: 0
     region: local
