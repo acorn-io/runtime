@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"sort"
 
 	"github.com/acorn-io/baaah/pkg/router"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
@@ -151,7 +150,7 @@ func GetClassForWorkload(ctx context.Context, c client.Client, computeClasses in
 	var err error
 	ccName := GetComputeClassNameForWorkload(workload, container, computeClasses)
 	if ccName == "" {
-		ccName, err = GetDefaultComputeClass(ctx, c, namespace)
+		ccName, err = internaladminv1.GetDefaultComputeClass(ctx, c, namespace)
 		if err != nil {
 			return nil, err
 		}
@@ -188,73 +187,4 @@ func GetAsProjectComputeClassInstance(ctx context.Context, c client.Client, name
 		return &cc, nil
 	}
 	return &projectComputeClass, nil
-}
-
-func getCurrentClusterComputeClassDefault(ctx context.Context, c client.Client) (*internaladminv1.ClusterComputeClassInstance, error) {
-	clusterComputeClasses := internaladminv1.ClusterComputeClassInstanceList{}
-	if err := c.List(ctx, &clusterComputeClasses, &client.ListOptions{}); err != nil {
-		return nil, err
-	}
-
-	sort.Slice(clusterComputeClasses.Items, func(i, j int) bool {
-		return clusterComputeClasses.Items[i].Name < clusterComputeClasses.Items[j].Name
-	})
-
-	var defaultCCC *internaladminv1.ClusterComputeClassInstance
-	for _, clusterComputeClass := range clusterComputeClasses.Items {
-		if clusterComputeClass.Default {
-			if defaultCCC != nil {
-				return nil, fmt.Errorf(
-					"cannot establish defaults because two default computeclasses exist: %v and %v",
-					defaultCCC.Name, clusterComputeClass.Name)
-			}
-			t := clusterComputeClass // Create a new variable that isn't being iterated on to get a pointer
-			defaultCCC = &t
-		}
-	}
-
-	return defaultCCC, nil
-}
-
-func getCurrentProjectComputeClassDefault(ctx context.Context, c client.Client, namespace string) (*internaladminv1.ProjectComputeClassInstance, error) {
-	projectComputeClasses := internaladminv1.ProjectComputeClassInstanceList{}
-	if err := c.List(ctx, &projectComputeClasses, &client.ListOptions{Namespace: namespace}); err != nil {
-		return nil, err
-	}
-
-	sort.Slice(projectComputeClasses.Items, func(i, j int) bool {
-		return projectComputeClasses.Items[i].Name < projectComputeClasses.Items[j].Name
-	})
-
-	var defaultPCC *internaladminv1.ProjectComputeClassInstance
-	for _, projectComputeClass := range projectComputeClasses.Items {
-		if projectComputeClass.Default {
-			if defaultPCC != nil {
-				return nil, fmt.Errorf(
-					"cannot establish defaults because two default computeclasses exist: %v and %v",
-					defaultPCC.Name, projectComputeClass.Name)
-			}
-			t := projectComputeClass // Create a new variable that isn't being iterated on to get a pointer
-			defaultPCC = &t
-		}
-	}
-
-	return defaultPCC, nil
-}
-
-func GetDefaultComputeClass(ctx context.Context, c client.Client, namespace string) (string, error) {
-	pcc, err := getCurrentProjectComputeClassDefault(ctx, c, namespace)
-	if err != nil {
-		return "", err
-	} else if pcc != nil {
-		return pcc.Name, nil
-	}
-
-	ccc, err := getCurrentClusterComputeClassDefault(ctx, c)
-	if err != nil {
-		return "", err
-	} else if ccc != nil {
-		return ccc.Name, nil
-	}
-	return "", nil
 }
