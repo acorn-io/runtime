@@ -68,14 +68,16 @@ func app(specImage, statusImageID, statusAvailableImage, statusConfirmUpgradeIma
 			NotifyUpgrade: &notifyUpgrade,
 		},
 		Status: v1.AppInstanceStatus{
-			Staged: v1.AppStatusStaged{
-				AppImage: v1.AppImage{
-					ID:   statusImageID,
-					Name: statusImageID,
+			EmbeddedAppStatus: v1.EmbeddedAppStatus{
+				Staged: v1.AppStatusStaged{
+					AppImage: v1.AppImage{
+						ID:   statusImageID,
+						Name: statusImageID,
+					},
 				},
+				AvailableAppImage:      statusAvailableImage,
+				ConfirmUpgradeAppImage: statusConfirmUpgradeImage,
 			},
-			AvailableAppImage:      statusAvailableImage,
-			ConfirmUpgradeAppImage: statusConfirmUpgradeImage,
 		},
 	}
 }

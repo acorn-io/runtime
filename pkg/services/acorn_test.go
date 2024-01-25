@@ -89,18 +89,22 @@ func Test_filterForPermissionsAndAssignStatus(t *testing.T) {
 				}},
 			}},
 		},
-		Status: v1.AppInstanceStatus{AppStatus: v1.AppStatus{
-			Services: map[string]v1.ServiceStatus{
-				"reject": {
-					MissingConsumerPermissions: []v1.Permissions{{
-						ServiceName: "reject",
-						Rules: []v1.PolicyRule{{PolicyRule: rbacv1.PolicyRule{
-							Verbs:     []string{"*"},
-							APIGroups: []string{"*"},
-							Resources: []string{"*"},
-						}}},
-					}}}},
-		}}}).Equal(t, app)
+		Status: v1.AppInstanceStatus{
+			EmbeddedAppStatus: v1.EmbeddedAppStatus{
+				AppStatus: v1.AppStatus{
+					Services: map[string]v1.ServiceStatus{
+						"reject": {
+							MissingConsumerPermissions: []v1.Permissions{{
+								ServiceName: "reject",
+								Rules: []v1.PolicyRule{{PolicyRule: rbacv1.PolicyRule{
+									Verbs:     []string{"*"},
+									APIGroups: []string{"*"},
+									Resources: []string{"*"},
+								}}},
+							}}}},
+				},
+			},
+		}}).Equal(t, app)
 
 	autogold.Expect([]kclient.Object{
 		serviceAllow,

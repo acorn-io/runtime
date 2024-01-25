@@ -45,17 +45,19 @@ func TestComputeMem(t *testing.T) {
 			},
 		},
 		Status: v1.AppInstanceStatus{
-			Namespace: "app-created-namespace",
-			AppImage: v1.AppImage{
-				ID: "foo",
-			},
-			AppSpec: v1.AppSpec{
-				Acorns: map[string]v1.Acorn{
-					"byname": {
-						Image: "foo",
-					},
-					"other": {
-						Image: "foo",
+			EmbeddedAppStatus: v1.EmbeddedAppStatus{
+				Namespace: "app-created-namespace",
+				AppImage: v1.AppImage{
+					ID: "foo",
+				},
+				AppSpec: v1.AppSpec{
+					Acorns: map[string]v1.Acorn{
+						"byname": {
+							Image: "foo",
+						},
+						"other": {
+							Image: "foo",
+						},
 					},
 				},
 			},

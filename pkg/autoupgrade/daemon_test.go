@@ -207,7 +207,15 @@ func TestRefreshImages(t *testing.T) {
 		app := v1.AppInstance{
 			ObjectMeta: metav1.ObjectMeta{Name: entry.Key, Namespace: "acorn"},
 			Spec:       v1.AppInstanceSpec{Image: entry.Value},
-			Status:     v1.AppInstanceStatus{Staged: v1.AppStatusStaged{AppImage: v1.AppImage{Digest: fmt.Sprintf("sha256:acorn1234%sabcd", strings.Split(entry.Value, ":")[0])}}},
+			Status: v1.AppInstanceStatus{
+				EmbeddedAppStatus: v1.EmbeddedAppStatus{
+					Staged: v1.AppStatusStaged{
+						AppImage: v1.AppImage{
+							Digest: fmt.Sprintf("sha256:acorn1234%sabcd", strings.Split(entry.Value, ":")[0]),
+						},
+					},
+				},
+			},
 		}
 		switch entry.Key {
 		case "enabled-app", "no-tag-app":

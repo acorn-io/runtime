@@ -184,7 +184,7 @@ func (m *MockClient) AppList(ctx context.Context) ([]apiv1.App, error) {
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{Name: "found"},
 		Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
-		Status:     v1.AppInstanceStatus{},
+		Status:     apiv1.AppStatus{},
 	}}, nil
 }
 
@@ -219,14 +219,14 @@ func (m *MockClient) AppGet(ctx context.Context, name string) (*apiv1.App, error
 			TypeMeta:   metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{Name: "found"},
 			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
-			Status:     v1.AppInstanceStatus{Ready: true},
+			Status:     apiv1.AppStatus{Ready: true},
 		}, nil
 	case "found.container":
 		return &apiv1.App{
 			TypeMeta:   metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{Name: "found.container"},
 			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
-			Status:     v1.AppInstanceStatus{},
+			Status:     apiv1.AppStatus{},
 		}, nil
 	}
 	return nil, nil
@@ -268,14 +268,14 @@ func (m *MockClient) AppRun(ctx context.Context, image string, opts *client.AppR
 			TypeMeta:   metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{Name: "found"},
 			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
-			Status:     v1.AppInstanceStatus{Ready: true},
+			Status:     apiv1.AppStatus{Ready: true},
 		}, nil
 	case "found.container":
 		return &apiv1.App{
 			TypeMeta:   metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{Name: "found.container"},
 			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
-			Status:     v1.AppInstanceStatus{},
+			Status:     apiv1.AppStatus{},
 		}, nil
 	}
 	return nil, fmt.Errorf("error: app %s does not exist", image)
@@ -293,14 +293,14 @@ func (m *MockClient) AppUpdate(ctx context.Context, name string, opts *client.Ap
 			TypeMeta:   metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{Name: "found"},
 			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
-			Status:     v1.AppInstanceStatus{},
+			Status:     apiv1.AppStatus{},
 		}, nil
 	case "found.container":
 		return &apiv1.App{
 			TypeMeta:   metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{Name: "found.container"},
 			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
-			Status:     v1.AppInstanceStatus{},
+			Status:     apiv1.AppStatus{},
 		}, nil
 	}
 	return nil, fmt.Errorf("error: app %s does not exist", name)

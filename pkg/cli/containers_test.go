@@ -54,7 +54,7 @@ var (
 			CreationTimestamp: metav1.NewTime(time.Now().AddDate(-10, 0, 0)),
 		},
 		Spec:   v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
-		Status: v1.AppInstanceStatus{Ready: true},
+		Status: apiv1.AppStatus{Ready: true},
 	}
 )
 

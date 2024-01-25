@@ -39,17 +39,19 @@ func TestOpaque_Gen(t *testing.T) {
 			Namespace: "app-ns",
 		},
 		Status: v1.AppInstanceStatus{
-			Namespace: "app-target-ns",
-			AppImage: v1.AppImage{
-				ID: "test",
-			},
-			AppSpec: v1.AppSpec{
-				Secrets: map[string]v1.Secret{
-					"pass": {
-						Type: "opaque",
-						Data: map[string]string{
-							"key1": "",
-							"key2": "value",
+			EmbeddedAppStatus: v1.EmbeddedAppStatus{
+				Namespace: "app-target-ns",
+				AppImage: v1.AppImage{
+					ID: "test",
+				},
+				AppSpec: v1.AppSpec{
+					Secrets: map[string]v1.Secret{
+						"pass": {
+							Type: "opaque",
+							Data: map[string]string{
+								"key1": "",
+								"key2": "value",
+							},
 						},
 					},
 				},
@@ -81,25 +83,27 @@ func TestBasic_Gen(t *testing.T) {
 			Namespace: "app-ns",
 		},
 		Status: v1.AppInstanceStatus{
-			Namespace: "app-target-ns",
-			AppImage: v1.AppImage{
-				ID: "test",
-			},
-			AppSpec: v1.AppSpec{
-				Secrets: map[string]v1.Secret{
-					"pass": {
-						Type: "basic",
-						Data: map[string]string{
-							// cue will populate empty string if not sent
-							"username": "",
-							"password": "",
+			EmbeddedAppStatus: v1.EmbeddedAppStatus{
+				Namespace: "app-target-ns",
+				AppImage: v1.AppImage{
+					ID: "test",
+				},
+				AppSpec: v1.AppSpec{
+					Secrets: map[string]v1.Secret{
+						"pass": {
+							Type: "basic",
+							Data: map[string]string{
+								// cue will populate empty string if not sent
+								"username": "",
+								"password": "",
+							},
 						},
-					},
-					"passuname": {
-						Type: "basic",
-						Data: map[string]string{
-							"username": "admin",
-							"password": "",
+						"passuname": {
+							Type: "basic",
+							Data: map[string]string{
+								"username": "admin",
+								"password": "",
+							},
 						},
 					},
 				},
@@ -139,16 +143,18 @@ func TestTemplateTokenMissing_Gen(t *testing.T) {
 			Image: "image",
 		},
 		Status: v1.AppInstanceStatus{
-			Namespace: "app-target-ns",
-			AppImage: v1.AppImage{
-				ID: "image",
-			},
-			AppSpec: v1.AppSpec{
-				Secrets: map[string]v1.Secret{
-					"template": {
-						Type: "template",
-						Data: map[string]string{
-							"template": "A happy little ${secret://pass/token} in a string",
+			EmbeddedAppStatus: v1.EmbeddedAppStatus{
+				Namespace: "app-target-ns",
+				AppImage: v1.AppImage{
+					ID: "image",
+				},
+				AppSpec: v1.AppSpec{
+					Secrets: map[string]v1.Secret{
+						"template": {
+							Type: "template",
+							Data: map[string]string{
+								"template": "A happy little ${secret://pass/token} in a string",
+							},
 						},
 					},
 				},
@@ -180,28 +186,30 @@ func TestTemplateToken_Gen(t *testing.T) {
 			Image: "image",
 		},
 		Status: v1.AppInstanceStatus{
-			Namespace: "app-target-ns",
-			AppImage: v1.AppImage{
-				ID: "image",
-			},
-			AppSpec: v1.AppSpec{
-				Secrets: map[string]v1.Secret{
-					"pass": {Type: "token",
-						Params: v1.NewGenericMap(map[string]any{
-							"characters": "abc",
-							"length":     int64(5),
-						}),
-					},
-					"pass2": {Type: "token",
-						Params: v1.NewGenericMap(map[string]any{
-							"characters": "xyz",
-							"length":     int64(6),
-						}),
-					},
-					"template": {
-						Type: "template",
-						Data: map[string]string{
-							"template": "A happy little ${secret://pass/token} in a string followed by ${secret://pass2/token}",
+			EmbeddedAppStatus: v1.EmbeddedAppStatus{
+				Namespace: "app-target-ns",
+				AppImage: v1.AppImage{
+					ID: "image",
+				},
+				AppSpec: v1.AppSpec{
+					Secrets: map[string]v1.Secret{
+						"pass": {Type: "token",
+							Params: v1.NewGenericMap(map[string]any{
+								"characters": "abc",
+								"length":     int64(5),
+							}),
+						},
+						"pass2": {Type: "token",
+							Params: v1.NewGenericMap(map[string]any{
+								"characters": "xyz",
+								"length":     int64(6),
+							}),
+						},
+						"template": {
+							Type: "template",
+							Data: map[string]string{
+								"template": "A happy little ${secret://pass/token} in a string followed by ${secret://pass2/token}",
+							},
 						},
 					},
 				},
@@ -286,38 +294,40 @@ func TestSecretLabelsAnnotations(t *testing.T) {
 			},
 		},
 		Status: v1.AppInstanceStatus{
-			Namespace: "app-target-ns",
-			AppImage: v1.AppImage{
-				ID: "test",
-			},
-			AppSpec: v1.AppSpec{
-				Labels: map[string]string{
-					"globalfromacornfile": "val",
+			EmbeddedAppStatus: v1.EmbeddedAppStatus{
+				Namespace: "app-target-ns",
+				AppImage: v1.AppImage{
+					ID: "test",
 				},
-				Annotations: map[string]string{
-					"globalfromacornfilea": "val",
-				},
-				Secrets: map[string]v1.Secret{
-					"secret1": {Type: "basic",
-						Labels: map[string]string{
-							"sec1fromacornfile": "val",
-						},
-						Annotations: map[string]string{
-							"sec1fromacornfilea": "val",
-						},
-						Data: map[string]string{
-							// cue will populate empty string if not sent
-							"username": "",
-							"password": "",
-						},
+				AppSpec: v1.AppSpec{
+					Labels: map[string]string{
+						"globalfromacornfile": "val",
 					},
-					"secret2": {
-						Labels:      nil,
-						Annotations: nil,
-						Type:        "basic",
-						Data: map[string]string{
-							"username": "",
-							"password": "",
+					Annotations: map[string]string{
+						"globalfromacornfilea": "val",
+					},
+					Secrets: map[string]v1.Secret{
+						"secret1": {Type: "basic",
+							Labels: map[string]string{
+								"sec1fromacornfile": "val",
+							},
+							Annotations: map[string]string{
+								"sec1fromacornfilea": "val",
+							},
+							Data: map[string]string{
+								// cue will populate empty string if not sent
+								"username": "",
+								"password": "",
+							},
+						},
+						"secret2": {
+							Labels:      nil,
+							Annotations: nil,
+							Type:        "basic",
+							Data: map[string]string{
+								"username": "",
+								"password": "",
+							},
 						},
 					},
 				},

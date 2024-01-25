@@ -79,31 +79,33 @@ func TestVolumeLabelsAnnotations(t *testing.T) {
 			Image: "image",
 		},
 		Status: v1.AppInstanceStatus{
-			Namespace: "app-target-ns",
-			AppImage: v1.AppImage{
-				ID: "image",
-			},
-			AppSpec: v1.AppSpec{
-				Labels: map[string]string{
-					"globalfromacornfile": "val",
+			EmbeddedAppStatus: v1.EmbeddedAppStatus{
+				Namespace: "app-target-ns",
+				AppImage: v1.AppImage{
+					ID: "image",
 				},
-				Annotations: map[string]string{
-					"globalfromacornfilea": "val",
-				},
-				Volumes: map[string]v1.VolumeRequest{
-					"volume1": {
-						Labels: map[string]string{
-							"vol1fromacornfile": "val",
-						},
-						Annotations: map[string]string{
-							"vol1fromacornfilea": "val",
-						},
-						AccessModes: []v1.AccessMode{v1.AccessModeReadWriteOnce},
+				AppSpec: v1.AppSpec{
+					Labels: map[string]string{
+						"globalfromacornfile": "val",
 					},
-					"volume2": {
-						Labels:      nil,
-						Annotations: nil,
-						AccessModes: []v1.AccessMode{v1.AccessModeReadWriteOnce},
+					Annotations: map[string]string{
+						"globalfromacornfilea": "val",
+					},
+					Volumes: map[string]v1.VolumeRequest{
+						"volume1": {
+							Labels: map[string]string{
+								"vol1fromacornfile": "val",
+							},
+							Annotations: map[string]string{
+								"vol1fromacornfilea": "val",
+							},
+							AccessModes: []v1.AccessMode{v1.AccessModeReadWriteOnce},
+						},
+						"volume2": {
+							Labels:      nil,
+							Annotations: nil,
+							AccessModes: []v1.AccessMode{v1.AccessModeReadWriteOnce},
+						},
 					},
 				},
 			},

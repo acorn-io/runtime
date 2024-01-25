@@ -10,37 +10,6 @@ import (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type App struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
-
-	Spec   v1.AppInstanceSpec   `json:"spec,omitempty"`
-	Status v1.AppInstanceStatus `json:"status,omitempty"`
-}
-
-func (in *App) GetStopped() bool {
-	return in.Spec.Stop != nil && *in.Spec.Stop && in.DeletionTimestamp.IsZero()
-}
-
-func (in *App) GetRegion() string {
-	if in.Spec.Region != "" {
-		return in.Spec.Region
-	}
-	return in.Status.Defaults.Region
-}
-
-type Acornfile v1.AppSpec
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-type AppList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []App `json:"items"`
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
 type ContainerReplica struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`

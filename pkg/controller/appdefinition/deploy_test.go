@@ -99,11 +99,13 @@ func ToDeploymentsTest(t *testing.T, appInstance *v1.AppInstance, tag name.Refer
 func TestEntrypointCommand(t *testing.T) {
 	dep := ToDeploymentsTest(t, &v1.AppInstance{
 		Status: v1.AppInstanceStatus{
-			AppSpec: v1.AppSpec{
-				Containers: map[string]v1.Container{
-					"test": {
-						Entrypoint: []string{"hi", "bye"},
-						Command:    []string{"hi2", "bye2"},
+			EmbeddedAppStatus: v1.EmbeddedAppStatus{
+				AppSpec: v1.AppSpec{
+					Containers: map[string]v1.Container{
+						"test": {
+							Entrypoint: []string{"hi", "bye"},
+							Command:    []string{"hi2", "bye2"},
+						},
 					},
 				},
 			},
@@ -116,26 +118,28 @@ func TestEntrypointCommand(t *testing.T) {
 func TestEnvironment(t *testing.T) {
 	dep := ToDeploymentsTest(t, &v1.AppInstance{
 		Status: v1.AppInstanceStatus{
-			AppSpec: v1.AppSpec{
-				Containers: map[string]v1.Container{
-					"test": {
-						Environment: []v1.EnvVar{
-							{
-								Name:  "hi",
-								Value: "bye",
-							},
-							{
-								Name: "foo",
-							},
-							{
-								Name:  "foo\\.bar",
-								Value: "baz",
-							},
-							{
-								Name: "foo\\.bar\\.baz",
-								Secret: v1.SecretReference{
-									Name: "somesecret",
-									Key:  "somesecretkey",
+			EmbeddedAppStatus: v1.EmbeddedAppStatus{
+				AppSpec: v1.AppSpec{
+					Containers: map[string]v1.Container{
+						"test": {
+							Environment: []v1.EnvVar{
+								{
+									Name:  "hi",
+									Value: "bye",
+								},
+								{
+									Name: "foo",
+								},
+								{
+									Name:  "foo\\.bar",
+									Value: "baz",
+								},
+								{
+									Name: "foo\\.bar\\.baz",
+									Secret: v1.SecretReference{
+										Name: "somesecret",
+										Key:  "somesecretkey",
+									},
 								},
 							},
 						},
@@ -174,10 +178,12 @@ func TestEnvironment(t *testing.T) {
 func TestWorkdir(t *testing.T) {
 	dep := ToDeploymentsTest(t, &v1.AppInstance{
 		Status: v1.AppInstanceStatus{
-			AppSpec: v1.AppSpec{
-				Containers: map[string]v1.Container{
-					"test": {
-						WorkingDir: "something",
+			EmbeddedAppStatus: v1.EmbeddedAppStatus{
+				AppSpec: v1.AppSpec{
+					Containers: map[string]v1.Container{
+						"test": {
+							WorkingDir: "something",
+						},
 					},
 				},
 			},
@@ -189,10 +195,12 @@ func TestWorkdir(t *testing.T) {
 func TestInteractive(t *testing.T) {
 	dep := ToDeploymentsTest(t, &v1.AppInstance{
 		Status: v1.AppInstanceStatus{
-			AppSpec: v1.AppSpec{
-				Containers: map[string]v1.Container{
-					"test": {
-						Interactive: true,
+			EmbeddedAppStatus: v1.EmbeddedAppStatus{
+				AppSpec: v1.AppSpec{
+					Containers: map[string]v1.Container{
+						"test": {
+							Interactive: true,
+						},
 					},
 				},
 			},
@@ -205,19 +213,21 @@ func TestInteractive(t *testing.T) {
 func TestSidecar(t *testing.T) {
 	dep := ToDeploymentsTest(t, &v1.AppInstance{
 		Status: v1.AppInstanceStatus{
-			AppSpec: v1.AppSpec{
-				Containers: map[string]v1.Container{
-					"test": {
-						Sidecars: map[string]v1.Container{
-							"left": {
-								Image: "sidecar",
-								Init:  true,
+			EmbeddedAppStatus: v1.EmbeddedAppStatus{
+				AppSpec: v1.AppSpec{
+					Containers: map[string]v1.Container{
+						"test": {
+							Sidecars: map[string]v1.Container{
+								"left": {
+									Image: "sidecar",
+									Init:  true,
+								},
+								"right": {
+									Image: "sidecar2",
+								},
 							},
-							"right": {
-								Image: "sidecar2",
-							},
+							WorkingDir: "something",
 						},
-						WorkingDir: "something",
 					},
 				},
 			},
@@ -230,26 +240,28 @@ func TestSidecar(t *testing.T) {
 func TestPorts(t *testing.T) {
 	dep := ToDeploymentsTest(t, &v1.AppInstance{
 		Status: v1.AppInstanceStatus{
-			AppSpec: v1.AppSpec{
-				Containers: map[string]v1.Container{
-					"test": {
-						Sidecars: map[string]v1.Container{
-							"left": {
-								Ports: []v1.PortDef{
-									{
-										Port:       90,
-										TargetPort: 91,
-										Protocol:   v1.ProtocolHTTP,
+			EmbeddedAppStatus: v1.EmbeddedAppStatus{
+				AppSpec: v1.AppSpec{
+					Containers: map[string]v1.Container{
+						"test": {
+							Sidecars: map[string]v1.Container{
+								"left": {
+									Ports: []v1.PortDef{
+										{
+											Port:       90,
+											TargetPort: 91,
+											Protocol:   v1.ProtocolHTTP,
+										},
 									},
 								},
 							},
-						},
-						WorkingDir: "something",
-						Ports: []v1.PortDef{
-							{
-								Port:       80,
-								TargetPort: 81,
-								Protocol:   v1.ProtocolHTTP,
+							WorkingDir: "something",
+							Ports: []v1.PortDef{
+								{
+									Port:       80,
+									TargetPort: 81,
+									Protocol:   v1.ProtocolHTTP,
+								},
 							},
 						},
 					},
@@ -270,40 +282,42 @@ func TestFiles(t *testing.T) {
 			UID:  "123",
 		},
 		Status: v1.AppInstanceStatus{
-			AppSpec: v1.AppSpec{
-				Containers: map[string]v1.Container{
-					"test2": {
-						Files: map[string]v1.File{
-							"/a2/b/c": {
-								Content: "ZA==",
+			EmbeddedAppStatus: v1.EmbeddedAppStatus{
+				AppSpec: v1.AppSpec{
+					Containers: map[string]v1.Container{
+						"test2": {
+							Files: map[string]v1.File{
+								"/a2/b/c": {
+									Content: "ZA==",
+								},
+								"/a1/b/c": {
+									Content: "ZQ==",
+								},
 							},
-							"/a1/b/c": {
-								Content: "ZQ==",
-							},
-						},
-						Sidecars: map[string]v1.Container{
-							"left": {
-								Files: map[string]v1.File{
-									"/a/b2//c":      {Content: "ZA=="},
-									"/a/b1/c2/../c": {Content: "ZQ=="},
+							Sidecars: map[string]v1.Container{
+								"left": {
+									Files: map[string]v1.File{
+										"/a/b2//c":      {Content: "ZA=="},
+										"/a/b1/c2/../c": {Content: "ZQ=="},
+									},
 								},
 							},
 						},
-					},
-					"test": {
-						Files: map[string]v1.File{
-							"/a2/b/c": {
-								Content: "ZA==",
+						"test": {
+							Files: map[string]v1.File{
+								"/a2/b/c": {
+									Content: "ZA==",
+								},
+								"/a1/b/c": {
+									Content: "ZQ==",
+								},
 							},
-							"/a1/b/c": {
-								Content: "ZQ==",
-							},
-						},
-						Sidecars: map[string]v1.Container{
-							"left": {
-								Files: map[string]v1.File{
-									"/a/b2//c":      {Content: "ZA=="},
-									"/a/b1/c2/../c": {Content: "ZQ=="},
+							Sidecars: map[string]v1.Container{
+								"left": {
+									Files: map[string]v1.File{
+										"/a/b2//c":      {Content: "ZA=="},
+										"/a/b1/c2/../c": {Content: "ZQ=="},
+									},
 								},
 							},
 						},
@@ -349,20 +363,22 @@ func TestFiles(t *testing.T) {
 func TestUserContext(t *testing.T) {
 	app := &v1.AppInstance{
 		Status: v1.AppInstanceStatus{
-			AppSpec: v1.AppSpec{
-				Containers: map[string]v1.Container{
-					"foo": {
-						Image: "foo:latest",
-						UserContext: &v1.UserContext{
-							UID: 1000,
-							GID: 2000,
-						},
-						Sidecars: map[string]v1.Container{
-							"bar": {
-								Image: "bar:latest",
-								UserContext: &v1.UserContext{
-									UID: 3000,
-									GID: 4000,
+			EmbeddedAppStatus: v1.EmbeddedAppStatus{
+				AppSpec: v1.AppSpec{
+					Containers: map[string]v1.Container{
+						"foo": {
+							Image: "foo:latest",
+							UserContext: &v1.UserContext{
+								UID: 1000,
+								GID: 2000,
+							},
+							Sidecars: map[string]v1.Container{
+								"bar": {
+									Image: "bar:latest",
+									UserContext: &v1.UserContext{
+										UID: 3000,
+										GID: 4000,
+									},
 								},
 							},
 						},
