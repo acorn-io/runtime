@@ -180,6 +180,7 @@ spec:
           - "--metrics.prometheus.entrypoint=metrics"
           - "--providers.kubernetesingress"
           - "--providers.kubernetesingress.ingressendpoint.publishedservice=acorn-system/traefik"
+          - "--providers.kubernetesingress.allowexternalnameservices=true"
           - "--entrypoints.websecure.http.tls=true"
       volumes:
         - name: data

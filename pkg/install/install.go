@@ -270,7 +270,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	s.Success()
 
 	if installIngressController {
-		if err := installTraefik(ctx, opts.Progress, c, apply); err != nil {
+		if err := installTraefik(ctx, opts.Progress, apply); err != nil {
 			return err
 		}
 	}
@@ -419,7 +419,7 @@ func missingIngressClass(ctx context.Context, client kclient.Client) (bool, erro
 	return len(ingressClassList.Items) <= 0, nil
 }
 
-func installTraefik(ctx context.Context, p progress.Builder, client kclient.WithWatch, apply apply.Apply) (err error) {
+func installTraefik(ctx context.Context, p progress.Builder, apply apply.Apply) (err error) {
 	pb := p.New("Installing Traefik Ingress Controller")
 	defer func() {
 		_ = pb.Fail(err)
