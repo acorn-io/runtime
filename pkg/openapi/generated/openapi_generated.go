@@ -8852,10 +8852,10 @@ func schema_pkg_apis_internalacornio_v1_ContainerResolvedOffering(ref common.Ref
 							Format: "int64",
 						},
 					},
-					"cpuScaler": {
+					"cpu": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"number"},
-							Format: "double",
+							Type:   []string{"integer"},
+							Format: "int64",
 						},
 					},
 				},

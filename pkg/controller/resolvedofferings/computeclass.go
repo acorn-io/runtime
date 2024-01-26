@@ -6,7 +6,10 @@ import (
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/computeclasses"
+	"github.com/acorn-io/z"
+
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/utils/strings/slices"
 )
 
@@ -45,19 +48,24 @@ func resolveComputeClasses(req router.Request, cfg *apiv1.Config, appInstance *v
 			return err
 		}
 		def := parsedMemory.Def.Value()
+		cpuQuantity := computeclasses.CalculateCPU(*cc, *parsedMemory.Def)
 		appInstance.Status.ResolvedOfferings.Containers[""] = v1.ContainerResolvedOffering{
-			Memory:    &def,
-			CPUScaler: &cc.CPUScaler,
-			Class:     appInstance.Status.ResolvedOfferings.Containers[""].Class,
+			Memory: &def,
+			CPU:    z.Pointer(cpuQuantity.MilliValue()),
+			Class:  appInstance.Status.ResolvedOfferings.Containers[""].Class,
 		}
 	}
 
 	// Check to see if the user overrode the memory for all containers
-	if appInstance.Spec.Memory[""] != nil {
+	if specificMemory := appInstance.Spec.Memory[""]; specificMemory != nil {
+		var cpuQuantity resource.Quantity
+		if cc != nil {
+			cpuQuantity = computeclasses.CalculateCPU(*cc, *resource.NewQuantity(*specificMemory, resource.BinarySI))
+		}
 		appInstance.Status.ResolvedOfferings.Containers[""] = v1.ContainerResolvedOffering{
-			Memory:    appInstance.Spec.Memory[""],
-			CPUScaler: appInstance.Status.ResolvedOfferings.Containers[""].CPUScaler,
-			Class:     appInstance.Status.ResolvedOfferings.Containers[""].Class,
+			Memory: appInstance.Spec.Memory[""],
+			CPU:    z.Pointer(cpuQuantity.MilliValue()),
+			Class:  appInstance.Status.ResolvedOfferings.Containers[""].Class,
 		}
 	}
 
@@ -105,10 +113,7 @@ func resolveComputeClass(req router.Request, appInstance *v1.AppInstance, config
 }
 
 func resolveComputeClassForContainer(req router.Request, appInstance *v1.AppInstance, configDefault *int64, defaultCC *adminv1.ProjectComputeClassInstance, defaultCCName, containerName string, container v1.Container) (v1.ContainerResolvedOffering, error) {
-	var (
-		cpuScaler *float64
-		ccName    string
-	)
+	var ccName string
 
 	// First, get the compute class for the workload
 	cc, err := computeclasses.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.ComputeClasses, container, containerName, appInstance.Namespace)
@@ -120,7 +125,6 @@ func resolveComputeClassForContainer(req router.Request, appInstance *v1.AppInst
 	}
 	if cc != nil {
 		ccName = cc.Name
-		cpuScaler = &cc.CPUScaler
 	} else {
 		ccName = defaultCCName
 	}
@@ -131,7 +135,10 @@ func resolveComputeClassForContainer(req router.Request, appInstance *v1.AppInst
 	// 3. defaults from compute class
 	// 4. global default
 
-	memory := configDefault // set to global default first, then check the higher priority values
+	var (
+		memory = configDefault // set to global default first, then check the higher priority values
+		cpu    *int64
+	)
 
 	if appInstance.Spec.Memory[containerName] != nil { // runtime-level overrides from the user
 		memory = appInstance.Spec.Memory[containerName]
@@ -148,9 +155,14 @@ func resolveComputeClassForContainer(req router.Request, appInstance *v1.AppInst
 		memory = &def
 	}
 
+	if cc != nil {
+		cpuQuantity := computeclasses.CalculateCPU(*cc, *resource.NewQuantity(*memory, resource.BinarySI))
+		cpu = z.Pointer(cpuQuantity.MilliValue())
+	}
+
 	return v1.ContainerResolvedOffering{
-		Class:     ccName,
-		Memory:    memory,
-		CPUScaler: cpuScaler,
+		Class:  ccName,
+		Memory: memory,
+		CPU:    cpu,
 	}, nil
 }

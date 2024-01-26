@@ -51,18 +51,11 @@ status:
       test:
         accessModes:
         - readWriteOnce
-  scheduling:
-    container-name:
-      requirements:
-        limits:
-          memory: 512Mi
-        requests:
-          cpu: 125m
-          memory: 512Mi
-    sidecar-name:
-      requirements:
-        limits:
-          memory: 512Mi
-        requests:
-          cpu: 125m
-          memory: 512Mi
+  resolvedOfferings:
+    containers:
+      container-name:
+        cpu: 125
+        memory: 536870912 # 512Mi
+      sidecar-name:
+        memory: 536870912 # 512Mi
+        cpu: 125

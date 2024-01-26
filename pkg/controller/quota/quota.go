@@ -8,7 +8,7 @@ import (
 	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/controller/appdefinition"
 	"github.com/acorn-io/runtime/pkg/labels"
-	corev1 "k8s.io/api/core/v1"
+	"github.com/acorn-io/z"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/acorn-io/runtime/pkg/condition"
@@ -124,7 +124,7 @@ func EnsureQuotaRequest(req router.Request, resp router.Response) error {
 // addContainers adds the number of containers and accounts for the scale of each container.
 func addContainers(containers map[string]v1.Container, quotaRequest *adminv1.QuotaRequestInstance) {
 	for _, container := range containers {
-		quotaRequest.Spec.Resources.Containers += replicas(container.Scale)
+		quotaRequest.Spec.Resources.Containers += int(replicas(container.Scale))
 	}
 }
 
@@ -132,18 +132,21 @@ func addContainers(containers map[string]v1.Container, quotaRequest *adminv1.Quo
 func addCompute(containers map[string]v1.Container, appInstance *v1.AppInstance, quotaRequest *adminv1.QuotaRequestInstance) {
 	// For each workload, add their memory/cpu requests to the quota request
 	for name, container := range containers {
-		var requirements corev1.ResourceRequirements
-		if specific, ok := appInstance.Status.Scheduling[name]; ok {
-			requirements = specific.Requirements
-		} else if all, ok := appInstance.Status.Scheduling[""]; ok {
-			requirements = all.Requirements
+		var cpu, memory resource.Quantity
+		if specific, ok := appInstance.Status.ResolvedOfferings.Containers[name]; ok {
+			memory = *resource.NewQuantity(z.Dereference(specific.Memory), resource.BinarySI)
+			cpu = *resource.NewMilliQuantity(z.Dereference(specific.CPU), resource.DecimalSI)
+		} else if all, ok := appInstance.Status.ResolvedOfferings.Containers[""]; ok {
+			cpu = *resource.NewMilliQuantity(z.Dereference(all.CPU), resource.DecimalSI)
+			memory = *resource.NewQuantity(z.Dereference(all.Memory), resource.BinarySI)
 		}
 
-		// Add the memory/cpu requests to the quota request for each container at the scale specified
-		for i := 0; i < replicas(container.Scale); i++ {
-			quotaRequest.Spec.Resources.CPU.Add(requirements.Requests["cpu"])
-			quotaRequest.Spec.Resources.Memory.Add(requirements.Requests["memory"])
-		}
+		// Multiply the memory/cpu requests by the scale of the container
+		cpu.Mul(replicas(container.Scale))
+		memory.Mul(replicas(container.Scale))
+
+		quotaRequest.Spec.Resources.CPU.Add(cpu)
+		quotaRequest.Spec.Resources.Memory.Add(memory)
 
 		// Recurse over any sidecars. Since sidecars can't have sidecars, this is safe.
 		addCompute(container.Sidecars, appInstance, quotaRequest)
@@ -256,9 +259,9 @@ func isEnforced(req router.Request, namespace string) (bool, error) {
 
 // replicas returns the number of replicas based on an int32 pointer. If the
 // pointer is nil, it is assumed to be 1.
-func replicas(s *int32) int {
+func replicas(s *int32) int64 {
 	if s != nil {
-		return int(*s)
+		return int64(*s)
 	}
 	return 1
 }

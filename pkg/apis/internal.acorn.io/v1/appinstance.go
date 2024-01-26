@@ -282,9 +282,9 @@ type VolumeResolvedOffering struct {
 }
 
 type ContainerResolvedOffering struct {
-	Class     string   `json:"class,omitempty"`
-	Memory    *int64   `json:"memory,omitempty"`
-	CPUScaler *float64 `json:"cpuScaler,omitempty"`
+	Class  string `json:"class,omitempty"`
+	Memory *int64 `json:"memory,omitempty"`
+	CPU    *int64 `json:"cpu,omitempty"`
 }
 
 type Scheduling struct {

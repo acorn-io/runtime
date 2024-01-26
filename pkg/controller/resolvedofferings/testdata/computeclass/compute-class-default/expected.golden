@@ -52,12 +52,12 @@ status:
         memory: 0
       left:
         class: sample-compute-class
-        cpuScaler: 0.25
-        memory: 1048576
+        cpu: 25
+        memory: 104857600
       oneimage:
         class: sample-compute-class
-        cpuScaler: 0.25
-        memory: 1048576
+        cpu: 25
+        memory: 104857600
     region: local
   staged:
     appImage:

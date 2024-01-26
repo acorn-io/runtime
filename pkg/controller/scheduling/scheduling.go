@@ -219,10 +219,7 @@ func ResourceRequirements(req router.Request, app *v1.AppInstance, containerName
 	}
 
 	if computeClass != nil {
-		cpuQuantity, err := computeclasses.CalculateCPU(*computeClass, memoryRequest)
-		if err != nil {
-			return nil, err
-		}
+		cpuQuantity := computeclasses.CalculateCPU(*computeClass, memoryRequest)
 		if cpuQuantity.Value() != 0 {
 			requirements.Requests[corev1.ResourceCPU] = cpuQuantity
 		}

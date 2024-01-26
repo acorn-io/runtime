@@ -1408,9 +1408,9 @@ func (in *ContainerResolvedOffering) DeepCopyInto(out *ContainerResolvedOffering
 		*out = new(int64)
 		**out = **in
 	}
-	if in.CPUScaler != nil {
-		in, out := &in.CPUScaler, &out.CPUScaler
-		*out = new(float64)
+	if in.CPU != nil {
+		in, out := &in.CPU, &out.CPU
+		*out = new(int64)
 		**out = **in
 	}
 }
