@@ -13,7 +13,7 @@ require (
 	github.com/acorn-io/mink v0.0.0-20240105015834-b1f7af4fadea
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
 	github.com/acorn-io/schemer v0.0.0-20240105014212-9739d5485208
-	github.com/acorn-io/z v0.0.0-20230714155009-a770ecbbdc45
+	github.com/acorn-io/z v0.0.0-20231104012607-4cab1b3ec5e5
 	github.com/adrg/xdg v0.4.0
 	github.com/aws/aws-sdk-go-v2 v1.20.0
 	github.com/aws/aws-sdk-go-v2/config v1.18.32
