@@ -146,11 +146,11 @@ func GetComputeClassNameForWorkload(workload string, container internalv1.Contai
 
 // GetClassForWorkload determines what ComputeClass should be used for the given appInstance, container and
 // workload.
-func GetClassForWorkload(ctx context.Context, c client.Client, computeClasses internalv1.ComputeClassMap, container internalv1.Container, workload, namespace string) (*internaladminv1.ProjectComputeClassInstance, error) {
+func GetClassForWorkload(ctx context.Context, c client.Client, computeClasses internalv1.ComputeClassMap, container internalv1.Container, workload, namespace, region string) (*internaladminv1.ProjectComputeClassInstance, error) {
 	var err error
 	ccName := GetComputeClassNameForWorkload(workload, container, computeClasses)
 	if ccName == "" {
-		ccName, err = internaladminv1.GetDefaultComputeClass(ctx, c, namespace)
+		ccName, err = internaladminv1.GetDefaultComputeClass(ctx, c, namespace, region)
 		if err != nil {
 			return nil, err
 		}

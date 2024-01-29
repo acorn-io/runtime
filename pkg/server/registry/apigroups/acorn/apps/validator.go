@@ -588,7 +588,7 @@ func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, proj
 	filteredComputeClasses := new(apiv1.ComputeClassList)
 	for _, cc := range computeClasses.Items {
 		// if the region is set in the spec then we aren't concerned with the defaultRegion
-		if (params.Spec.Region != "" && slices.Contains(cc.SupportedRegions, params.Spec.Region)) || slices.Contains(cc.SupportedRegions, defaultRegion) {
+		if (params.Spec.Region != "" && slices.Contains(cc.SupportedRegions, params.Spec.Region)) || (params.Spec.Region == "" && slices.Contains(cc.SupportedRegions, defaultRegion)) {
 			filteredComputeClasses.Items = append(filteredComputeClasses.Items, cc)
 		}
 	}
