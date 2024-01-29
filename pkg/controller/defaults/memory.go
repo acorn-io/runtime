@@ -22,15 +22,20 @@ func addDefaultMemory(req router.Request, cfg *apiv1.Config, appInstance *v1.App
 	)
 	if value, ok := appInstance.Spec.ComputeClasses[""]; ok {
 		defaultCC = value
-	} else {
+	} else if appInstance.Spec.Region != "" {
 		defaultCC, err = adminv1.GetDefaultComputeClass(req.Ctx, req.Client, appInstance.Namespace, appInstance.Spec.Region)
+		if err != nil {
+			return err
+		}
+	} else {
+		defaultCC, err = adminv1.GetDefaultComputeClass(req.Ctx, req.Client, appInstance.Namespace, appInstance.Status.Defaults.Region)
 		if err != nil {
 			return err
 		}
 	}
 
 	appInstance.Status.Defaults.Memory[""] = cfg.WorkloadMemoryDefault
-	cc, err := computeclasses.GetAsProjectComputeClassInstance(req.Ctx, req.Client, appInstance.Status.Namespace, defaultCC)
+	cc, err := computeclasses.GetAsProjectComputeClassInstance(req.Ctx, req.Client, appInstance.Namespace, defaultCC)
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
 			return err
