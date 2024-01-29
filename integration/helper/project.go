@@ -68,7 +68,6 @@ func TempProjectWithRegions(t *testing.T, client client.WithWatch, regions []str
 	})
 
 	return project
-
 }
 
 func TempProject(t *testing.T, client client.WithWatch) *v1.ProjectInstance {
