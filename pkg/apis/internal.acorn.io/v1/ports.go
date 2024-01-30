@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	nameRegexp = regexp.MustCompile("^[a-z][-a-z0-9.]+$")
+	nameRegexp = regexp.MustCompile("^[a-z0-9][-a-z0-9.]+$")
 )
 
 func validProto(p string) (Protocol, bool) {
