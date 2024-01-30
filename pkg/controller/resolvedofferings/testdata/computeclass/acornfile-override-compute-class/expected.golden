@@ -50,7 +50,8 @@ status:
     containers:
       "":
         class: sample-compute-class
-        memory: 0
+        cpuScaler: 0.25
+        memory: 1048576
       left:
         class: sample-compute-class
         cpuScaler: 0.25

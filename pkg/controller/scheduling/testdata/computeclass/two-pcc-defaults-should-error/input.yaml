@@ -6,6 +6,7 @@ metadata:
   uid: 1234567890abcdef
 spec:
   image: test
+  region: local
   memory:
     oneimage: 1048576 # 1Mi
 status:
