@@ -1497,10 +1497,7 @@ func TestUsingComputeClasses(t *testing.T) {
 				}
 
 				// Assign a name for the test case so no collisions occur
-				app, err := c.AppRun(ctx, image.ID, &client.AppRunOptions{
-					Name:   testcase,
-					Region: apiv1.LocalRegion,
-				})
+				app, err := c.AppRun(ctx, image.ID, &client.AppRunOptions{Name: testcase})
 				if err == nil && tt.fail {
 					t.Fatal("expected error, got nil")
 				} else if err != nil {
