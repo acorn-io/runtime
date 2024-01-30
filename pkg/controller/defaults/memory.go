@@ -22,13 +22,8 @@ func addDefaultMemory(req router.Request, cfg *apiv1.Config, appInstance *v1.App
 	)
 	if value, ok := appInstance.Spec.ComputeClasses[""]; ok {
 		defaultCC = value
-	} else if appInstance.Spec.Region != "" {
-		defaultCC, err = adminv1.GetDefaultComputeClass(req.Ctx, req.Client, appInstance.Namespace, appInstance.Spec.Region)
-		if err != nil {
-			return err
-		}
 	} else {
-		defaultCC, err = adminv1.GetDefaultComputeClass(req.Ctx, req.Client, appInstance.Namespace, appInstance.Status.Defaults.Region)
+		defaultCC, err = adminv1.GetDefaultComputeClass(req.Ctx, req.Client, appInstance.Namespace, appInstance.GetRegion())
 		if err != nil {
 			return err
 		}
@@ -65,7 +60,7 @@ func addDefaultMemory(req router.Request, cfg *apiv1.Config, appInstance *v1.App
 func addWorkloadMemoryDefault(req router.Request, appInstance *v1.AppInstance, configDefault *int64, containers map[string]v1.Container) error {
 	for name, container := range containers {
 		memory := configDefault
-		computeClass, err := computeclasses.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.ComputeClasses, container, name, appInstance.Namespace, appInstance.Spec.Region)
+		computeClass, err := computeclasses.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.ComputeClasses, container, name, appInstance.Namespace, appInstance.GetRegion())
 		if err != nil {
 			return err
 		}

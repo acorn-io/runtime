@@ -21,13 +21,8 @@ func resolveComputeClasses(req router.Request, cfg *apiv1.Config, appInstance *v
 	)
 	if value, ok := appInstance.Spec.ComputeClasses[""]; ok {
 		defaultCC = value
-	} else if appInstance.Spec.Region != "" {
-		defaultCC, err = adminv1.GetDefaultComputeClass(req.Ctx, req.Client, appInstance.Namespace, appInstance.Spec.Region)
-		if err != nil {
-			return err
-		}
 	} else {
-		defaultCC, err = adminv1.GetDefaultComputeClass(req.Ctx, req.Client, appInstance.Namespace, appInstance.Status.ResolvedOfferings.Region)
+		defaultCC, err = adminv1.GetDefaultComputeClass(req.Ctx, req.Client, appInstance.Namespace, appInstance.GetRegion())
 		if err != nil {
 			return err
 		}
@@ -104,7 +99,7 @@ func resolveComputeClassForContainer(req router.Request, appInstance *v1.AppInst
 	)
 
 	// First, get the compute class for the workload
-	cc, err := computeclasses.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.ComputeClasses, container, containerName, appInstance.Namespace, appInstance.Spec.Region)
+	cc, err := computeclasses.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.ComputeClasses, container, containerName, appInstance.Namespace, appInstance.GetRegion())
 	if err != nil {
 		return v1.ContainerResolvedOffering{}, err
 	}

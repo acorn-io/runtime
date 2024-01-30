@@ -971,10 +971,11 @@ func TestMultipleDefaultComputeClass(t *testing.T) {
 					},
 					SupportedRegions: []string{apiv1.LocalRegion},
 				},
-				{ObjectMeta: metav1.ObjectMeta{
-					Name:      "acorn-test-custom-2",
-					Namespace: c.GetNamespace(),
-				},
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "acorn-test-custom-2",
+						Namespace: c.GetNamespace(),
+					},
 					Default: true,
 					Memory: adminv1.ComputeClassMemory{
 						Default: "513Mi",
