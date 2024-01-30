@@ -433,7 +433,7 @@ func TestAcornContainerCompletion(t *testing.T) {
 	for _, entry := range typed.Sorted(names) {
 		apps = append(apps, apiv1.App{
 			ObjectMeta: metav1.ObjectMeta{Name: entry.Key},
-			Status: acornv1.AppInstanceStatus{
+			Status: apiv1.AppStatus{
 				AppSpec: acornv1.AppSpec{Containers: entry.Value},
 			},
 		})
@@ -500,7 +500,7 @@ func TestOnlyAppsWithAcornContainer(t *testing.T) {
 		appName := entry.Key
 		apps = append(apps, apiv1.App{
 			ObjectMeta: metav1.ObjectMeta{Name: appName},
-			Status: acornv1.AppInstanceStatus{
+			Status: apiv1.AppStatus{
 				AppSpec: acornv1.AppSpec{Containers: entry.Value},
 			},
 		})

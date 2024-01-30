@@ -58,7 +58,9 @@ func TestResolve(t *testing.T) {
 				Namespace: "project-name",
 			},
 			Status: v1.AppInstanceStatus{
-				Namespace: "app-namespace",
+				EmbeddedAppStatus: v1.EmbeddedAppStatus{
+					Namespace: "app-namespace",
+				},
 			},
 		},
 		&v1.AppInstance{
@@ -71,7 +73,9 @@ func TestResolve(t *testing.T) {
 				},
 			},
 			Status: v1.AppInstanceStatus{
-				Namespace: "child-app-random-ns",
+				EmbeddedAppStatus: v1.EmbeddedAppStatus{
+					Namespace: "child-app-random-ns",
+				},
 			},
 		},
 		&v1.ServiceInstance{
@@ -115,7 +119,9 @@ func TestResolve(t *testing.T) {
 				},
 			},
 			Status: v1.AppInstanceStatus{
-				Namespace: "grandchild-app-random-ns",
+				EmbeddedAppStatus: v1.EmbeddedAppStatus{
+					Namespace: "grandchild-app-random-ns",
+				},
 			},
 		},
 		&corev1.Secret{

@@ -236,7 +236,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 							Spec: v1.AppInstanceSpec{
 								Region: "my-region",
 							},
-							Status: v1.AppInstanceStatus{
+							Status: apiv1.AppStatus{
 								ResolvedOfferings: v1.ResolvedOfferings{
 									Region: "my-region",
 								},
@@ -277,7 +277,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 							Spec: v1.AppInstanceSpec{
 								Region: "my-region",
 							},
-							Status: v1.AppInstanceStatus{
+							Status: apiv1.AppStatus{
 								ResolvedOfferings: v1.ResolvedOfferings{
 									Region: "my-region",
 								},
@@ -323,7 +323,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 							Spec: v1.AppInstanceSpec{
 								Region: "my-other-region",
 							},
-							Status: v1.AppInstanceStatus{
+							Status: apiv1.AppStatus{
 								ResolvedOfferings: v1.ResolvedOfferings{
 									Region: "my-other-region",
 								},
@@ -411,7 +411,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 								Name:      "my-app",
 								Namespace: "my-project",
 							},
-							Status: v1.AppInstanceStatus{
+							Status: apiv1.AppStatus{
 								ResolvedOfferings: v1.ResolvedOfferings{
 									Region: "my-other-region",
 								},
@@ -461,7 +461,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 							Spec: v1.AppInstanceSpec{
 								Region: "my-other-region",
 							},
-							Status: v1.AppInstanceStatus{
+							Status: apiv1.AppStatus{
 								ResolvedOfferings: v1.ResolvedOfferings{
 									Region: "my-other-region",
 								},
@@ -508,7 +508,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 							Spec: v1.AppInstanceSpec{
 								Region: "my-other-region",
 							},
-							Status: v1.AppInstanceStatus{
+							Status: apiv1.AppStatus{
 								ResolvedOfferings: v1.ResolvedOfferings{
 									Region: "my-other-region",
 								},
@@ -522,7 +522,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 							Spec: v1.AppInstanceSpec{
 								Region: "my-region",
 							},
-							Status: v1.AppInstanceStatus{
+							Status: apiv1.AppStatus{
 								ResolvedOfferings: v1.ResolvedOfferings{
 									Region: "my-region",
 								},
@@ -569,7 +569,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 							Spec: v1.AppInstanceSpec{
 								Region: "my-other-region",
 							},
-							Status: v1.AppInstanceStatus{
+							Status: apiv1.AppStatus{
 								ResolvedOfferings: v1.ResolvedOfferings{
 									Region: "my-other-region",
 								},
@@ -614,7 +614,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 							Spec: v1.AppInstanceSpec{
 								Region: "my-other-region",
 							},
-							Status: v1.AppInstanceStatus{
+							Status: apiv1.AppStatus{
 								ResolvedOfferings: v1.ResolvedOfferings{
 									Region: "my-other-region",
 								},

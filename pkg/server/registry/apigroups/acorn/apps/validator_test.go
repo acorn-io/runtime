@@ -93,7 +93,7 @@ func TestCannotChangeAppRegion(t *testing.T) {
 		{
 			name: "Cannot change region from calculated default",
 			oldApp: apiv1.App{
-				Status: internalv1.AppInstanceStatus{
+				Status: apiv1.AppStatus{
 					Defaults: internalv1.Defaults{
 						Region: "old-acorn-test-region",
 					},

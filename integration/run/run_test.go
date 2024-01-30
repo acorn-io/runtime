@@ -40,7 +40,7 @@ func TestVolume(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kclient := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(kclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	image, err := c.AcornImageBuild(ctx, "./testdata/volume/Acornfile", &client.AcornImageBuildOptions{
@@ -55,7 +55,7 @@ func TestVolume(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	pv := helper.Wait(t, kclient.Watch, &corev1.PersistentVolumeList{}, func(obj *corev1.PersistentVolume) bool {
+	pv := helper.Wait(t, kc.Watch, &corev1.PersistentVolumeList{}, func(obj *corev1.PersistentVolume) bool {
 		return obj.Labels[labels.AcornAppName] == app.Name &&
 			obj.Labels[labels.AcornAppNamespace] == app.Namespace &&
 			obj.Labels[labels.AcornManaged] == "true" &&
@@ -85,7 +85,7 @@ func TestVolume(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	helper.WaitForObject(t, kclient.Watch, &corev1.PersistentVolumeList{}, pv, func(obj *corev1.PersistentVolume) bool {
+	helper.WaitForObject(t, kc.Watch, &corev1.PersistentVolumeList{}, pv, func(obj *corev1.PersistentVolume) bool {
 		return obj.Status.Phase == corev1.VolumeBound &&
 			obj.Labels[labels.AcornAppName] == app.Name &&
 			obj.Labels[labels.AcornAppNamespace] == app.Namespace &&
@@ -123,7 +123,7 @@ func TestServiceConsumer(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	c, _ := helper.ClientAndProject(t)
-	kclient := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(kclient.Default)
 
 	image, err := c.AcornImageBuild(ctx, "./testdata/serviceconsumer/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/serviceconsumer/",
@@ -151,9 +151,8 @@ func TestServiceConsumer(t *testing.T) {
 				}},
 			}},
 		},
-		Status: v1.AppInstanceStatus{},
 	}
-	if err := kclient.Create(ctx, appInstance); err != nil {
+	if err := kc.Create(ctx, appInstance); err != nil {
 		t.Fatal(err)
 	}
 
@@ -171,11 +170,11 @@ func TestVolumeBadClassInImageBoundToGoodClass(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kclient := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(kclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
-	err := kclient.List(ctx, storageClasses)
+	err := kc.List(ctx, storageClasses)
 	if err != nil || len(storageClasses.Items) == 0 {
 		t.Skip("No storage classes, so skipping VolumeBadClassInImageBoundToGoodClass")
 		return
@@ -186,11 +185,11 @@ func TestVolumeBadClassInImageBoundToGoodClass(t *testing.T) {
 		StorageClassName: getStorageClassName(t, storageClasses),
 		SupportedRegions: []string{apiv1.LocalRegion},
 	}
-	if err = kclient.Create(ctx, &volumeClass); err != nil {
+	if err = kc.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
 	}
 	defer func() {
-		if err = kclient.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
+		if err = kc.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
 			t.Fatal(err)
 		}
 	}()
@@ -214,7 +213,7 @@ func TestVolumeBadClassInImageBoundToGoodClass(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	helper.Wait(t, kclient.Watch, &corev1.PersistentVolumeClaimList{}, func(obj *corev1.PersistentVolumeClaim) bool {
+	helper.Wait(t, kc.Watch, &corev1.PersistentVolumeClaimList{}, func(obj *corev1.PersistentVolumeClaim) bool {
 		return obj.Labels[labels.AcornAppName] == app.Name &&
 			obj.Labels[labels.AcornAppNamespace] == app.Namespace &&
 			obj.Labels[labels.AcornManaged] == "true" &&
@@ -232,11 +231,11 @@ func TestVolumeBoundBadClass(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kclient := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(kclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
-	if err := kclient.List(ctx, storageClasses); err != nil {
+	if err := kc.List(ctx, storageClasses); err != nil {
 		t.Fatal(err)
 	}
 
@@ -246,11 +245,11 @@ func TestVolumeBoundBadClass(t *testing.T) {
 		SupportedRegions: []string{apiv1.LocalRegion},
 	}
 
-	if err := kclient.Create(ctx, &volumeClass); err != nil {
+	if err := kc.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
 	}
 	defer func() {
-		if err := kclient.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
+		if err := kc.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
 			t.Fatal(err)
 		}
 	}()
@@ -279,7 +278,7 @@ func TestVolumeClassInactive(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kclient := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(kclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	volumeClass := adminapiv1.ClusterVolumeClass{
@@ -287,11 +286,11 @@ func TestVolumeClassInactive(t *testing.T) {
 		Inactive:         true,
 		SupportedRegions: []string{apiv1.LocalRegion},
 	}
-	if err := kclient.Create(ctx, &volumeClass); err != nil {
+	if err := kc.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
 	}
 	defer func() {
-		if err := kclient.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
+		if err := kc.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
 			t.Fatal(err)
 		}
 	}()
@@ -313,7 +312,7 @@ func TestVolumeClassSizeTooSmall(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kclient := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(kclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	volumeClass := adminapiv1.ClusterVolumeClass{
@@ -324,11 +323,11 @@ func TestVolumeClassSizeTooSmall(t *testing.T) {
 		},
 		SupportedRegions: []string{apiv1.LocalRegion},
 	}
-	if err := kclient.Create(ctx, &volumeClass); err != nil {
+	if err := kc.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
 	}
 	defer func() {
-		if err := kclient.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
+		if err := kc.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
 			t.Fatal(err)
 		}
 	}()
@@ -357,7 +356,7 @@ func TestVolumeClassSizeTooLarge(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kclient := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(kclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	volumeClass := adminapiv1.ClusterVolumeClass{
@@ -368,11 +367,11 @@ func TestVolumeClassSizeTooLarge(t *testing.T) {
 		},
 		SupportedRegions: []string{apiv1.LocalRegion},
 	}
-	if err := kclient.Create(ctx, &volumeClass); err != nil {
+	if err := kc.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
 	}
 	defer func() {
-		if err := kclient.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
+		if err := kc.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
 			t.Fatal(err)
 		}
 	}()
@@ -401,11 +400,11 @@ func TestVolumeClassRemoved(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kclient := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(kclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
-	err := kclient.List(ctx, storageClasses)
+	err := kc.List(ctx, storageClasses)
 	if err != nil || len(storageClasses.Items) == 0 {
 		t.Skip("No storage classes, so skipping VolumeClassRemoved")
 		return
@@ -416,11 +415,11 @@ func TestVolumeClassRemoved(t *testing.T) {
 		StorageClassName: getStorageClassName(t, storageClasses),
 		SupportedRegions: []string{apiv1.LocalRegion},
 	}
-	if err = kclient.Create(ctx, &volumeClass); err != nil {
+	if err = kc.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
 	}
 	defer func() {
-		if err = kclient.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
+		if err = kc.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
 			t.Fatal(err)
 		}
 	}()
@@ -437,7 +436,7 @@ func TestVolumeClassRemoved(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	helper.Wait(t, kclient.Watch, &corev1.PersistentVolumeClaimList{}, func(obj *corev1.PersistentVolumeClaim) bool {
+	helper.Wait(t, kc.Watch, &corev1.PersistentVolumeClaimList{}, func(obj *corev1.PersistentVolumeClaim) bool {
 		return obj.Labels[labels.AcornAppName] == app.Name &&
 			obj.Labels[labels.AcornAppNamespace] == app.Namespace &&
 			obj.Labels[labels.AcornManaged] == "true" &&
@@ -449,7 +448,7 @@ func TestVolumeClassRemoved(t *testing.T) {
 		done := obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
 			obj.Status.Condition(v1.AppInstanceConditionVolumes).Success
 		if done {
-			if err = kclient.Delete(ctx, &volumeClass); err != nil {
+			if err = kc.Delete(ctx, &volumeClass); err != nil {
 				t.Fatal(err)
 			}
 		}
@@ -934,13 +933,8 @@ func TestDeployParam(t *testing.T) {
 
 func TestUsingComputeClasses(t *testing.T) {
 	helper.StartController(t)
-	cfg := helper.StartAPI(t)
-	project := helper.TempProject(t, helper.MustReturn(kclient.Default))
+	c, _ := helper.ClientAndProject(t)
 	kclient := helper.MustReturn(kclient.Default)
-	c, err := client.New(cfg, "", project.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	ctx := helper.GetCTX(t)
 
@@ -950,7 +944,7 @@ func TestUsingComputeClasses(t *testing.T) {
 		testDataDirectory string
 		computeClass      adminv1.ProjectComputeClassInstance
 		expected          map[string]v1.Scheduling
-		waitFor           func(obj *apiv1.App) bool
+		waitFor           func(obj *v1.AppInstance) bool
 		fail              bool
 	}{
 		{
@@ -993,7 +987,7 @@ func TestUsingComputeClasses(t *testing.T) {
 					},
 				}},
 			},
-			waitFor: func(obj *apiv1.App) bool {
+			waitFor: func(obj *v1.AppInstance) bool {
 				return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
 					obj.Status.Condition(v1.AppInstanceConditionScheduling).Success
 			},
@@ -1027,7 +1021,7 @@ func TestUsingComputeClasses(t *testing.T) {
 						Operator: corev1.TolerationOpExists,
 					},
 				}}},
-			waitFor: func(obj *apiv1.App) bool {
+			waitFor: func(obj *v1.AppInstance) bool {
 				return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
 					obj.Status.Condition(v1.AppInstanceConditionScheduling).Success
 			},
@@ -1066,7 +1060,7 @@ func TestUsingComputeClasses(t *testing.T) {
 					},
 				}},
 			},
-			waitFor: func(obj *apiv1.App) bool {
+			waitFor: func(obj *v1.AppInstance) bool {
 				return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
 					obj.Status.Condition(v1.AppInstanceConditionScheduling).Success
 			},
@@ -1104,7 +1098,7 @@ func TestUsingComputeClasses(t *testing.T) {
 					},
 				}},
 			},
-			waitFor: func(obj *apiv1.App) bool {
+			waitFor: func(obj *v1.AppInstance) bool {
 				return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
 					obj.Status.Condition(v1.AppInstanceConditionScheduling).Success
 			},
@@ -1131,7 +1125,7 @@ func TestUsingComputeClasses(t *testing.T) {
 					},
 				}},
 			},
-			waitFor: func(obj *apiv1.App) bool {
+			waitFor: func(obj *v1.AppInstance) bool {
 				return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
 					obj.Status.Condition(v1.AppInstanceConditionScheduling).Success
 			},
@@ -1176,7 +1170,7 @@ func TestUsingComputeClasses(t *testing.T) {
 
 					// Clean-up and gurantee the computeclass doesn't exist after this test run
 					t.Cleanup(func() {
-						if err = kclient.Delete(context.Background(), computeClass); err != nil && !apierrors.IsNotFound(err) {
+						if err := kclient.Delete(context.Background(), computeClass); err != nil && !apierrors.IsNotFound(err) {
 							t.Fatal(err)
 						}
 						err := helper.EnsureDoesNotExist(ctx, func() (crClient.Object, error) {
@@ -1225,8 +1219,14 @@ func TestUsingComputeClasses(t *testing.T) {
 				}
 
 				if tt.waitFor != nil {
-					app = helper.WaitForObject(t, helper.Watcher(t, c), new(apiv1.AppList), app, tt.waitFor)
-					assert.EqualValues(t, app.Status.Scheduling, tt.expected, "generated scheduling rules are incorrect")
+					appInstance := &v1.AppInstance{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      app.Name,
+							Namespace: app.Namespace,
+						},
+					}
+					appInstance = helper.WaitForObject(t, kclient.Watch, new(v1.AppInstanceList), appInstance, tt.waitFor)
+					assert.EqualValues(t, appInstance.Status.Scheduling, tt.expected, "generated scheduling rules are incorrect")
 				}
 			})
 		}
@@ -1745,8 +1745,8 @@ func TestAutoUpgradeLocalImage(t *testing.T) {
 	if err != nil {
 		t.Fatal("error while getting rest config:", err)
 	}
-	kclient := helper.MustReturn(kclient.Default)
-	project := helper.TempProject(t, kclient)
+	kc := helper.MustReturn(kclient.Default)
+	project := helper.TempProject(t, kc)
 
 	c, err := client.New(restConfig, project.Name, project.Name)
 	if err != nil {
@@ -1797,10 +1797,10 @@ func TestIgnoreResourceRequirements(t *testing.T) {
 	if err != nil {
 		t.Fatal("error while getting rest config:", err)
 	}
-	kclient := helper.MustReturn(kclient.Default)
-	project := helper.TempProject(t, kclient)
+	kc := helper.MustReturn(kclient.Default)
+	project := helper.TempProject(t, kc)
 
-	helper.SetIgnoreResourceRequirementsWithRestore(t, ctx, kclient)
+	helper.SetIgnoreResourceRequirementsWithRestore(t, ctx, kc)
 
 	c, err := client.New(restConfig, project.Name, project.Name)
 	if err != nil {
@@ -1824,8 +1824,14 @@ func TestIgnoreResourceRequirements(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+	appInstance := &v1.AppInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      app.Name,
+			Namespace: app.Namespace,
+		},
+	}
+	appInstance = helper.WaitForObject(t, helper.Watcher(t, c), &v1.AppInstanceList{}, appInstance, func(obj *v1.AppInstance) bool {
 		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success
 	})
-	assert.Empty(t, app.Status.Scheduling["simple"].Requirements)
+	assert.Empty(t, appInstance.Status.Scheduling["simple"].Requirements)
 }

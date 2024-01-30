@@ -17,34 +17,36 @@ func TestSecretDirsToMounts(t *testing.T) {
 			Name: "app",
 		},
 		Status: v1.AppInstanceStatus{
-			AppImage: v1.AppImage{
-				ID: "test",
-			},
-			AppSpec: v1.AppSpec{
-				Containers: map[string]v1.Container{
-					"test": {
-						Dirs: map[string]v1.VolumeMount{
-							"/dir": {
-								Secret: v1.VolumeSecretMount{
-									Name: "dir-secret",
+			EmbeddedAppStatus: v1.EmbeddedAppStatus{
+				AppImage: v1.AppImage{
+					ID: "test",
+				},
+				AppSpec: v1.AppSpec{
+					Containers: map[string]v1.Container{
+						"test": {
+							Dirs: map[string]v1.VolumeMount{
+								"/dir": {
+									Secret: v1.VolumeSecretMount{
+										Name: "dir-secret",
+									},
 								},
 							},
-						},
-						Sidecars: map[string]v1.Container{
-							"left": {
-								Dirs: map[string]v1.VolumeMount{
-									"/dir-side": {
-										Secret: v1.VolumeSecretMount{
-											Name: "dir-side-secret",
+							Sidecars: map[string]v1.Container{
+								"left": {
+									Dirs: map[string]v1.VolumeMount{
+										"/dir-side": {
+											Secret: v1.VolumeSecretMount{
+												Name: "dir-side-secret",
+											},
 										},
 									},
 								},
 							},
 						},
 					},
-				},
-				Secrets: map[string]v1.Secret{
-					"dir-side-secret": {},
+					Secrets: map[string]v1.Secret{
+						"dir-side-secret": {},
+					},
 				},
 			},
 		},

@@ -191,31 +191,39 @@ type AppColumns struct {
 	Created   string `json:"created,omitempty" column:"name=Created,jsonpath=.metadata.creationTimestamp"`
 }
 
-func (a AppInstanceStatus) GetDevMode() bool {
-	return a.DevSession != nil
+type AppInstanceStatus struct {
+	EmbeddedAppStatus `json:",inline"`
+	Scheduling        map[string]Scheduling `json:"scheduling,omitempty"`
 }
 
-type AppInstanceStatus struct {
-	DevSession                *DevSessionInstanceSpec `json:"devSession,omitempty"`
-	ObservedGeneration        int64                   `json:"observedGeneration,omitempty"`
-	ObservedImageDigest       string                  `json:"observedImageDigest,omitempty"`
-	ObservedAutoUpgrade       bool                    `json:"observedAutoUpgrade,omitempty"`
-	Columns                   AppColumns              `json:"columns,omitempty"`
-	Ready                     bool                    `json:"ready,omitempty"`
-	Namespace                 string                  `json:"namespace,omitempty"`
-	Staged                    AppStatusStaged         `json:"staged,omitempty"`
-	AppImage                  AppImage                `json:"appImage,omitempty"`
-	AvailableAppImage         string                  `json:"availableAppImage,omitempty"`
-	ConfirmUpgradeAppImage    string                  `json:"confirmUpgradeAppImage,omitempty"`
-	AppSpec                   AppSpec                 `json:"appSpec,omitempty"`
-	AppStatus                 AppStatus               `json:"appStatus,omitempty"`
-	Scheduling                map[string]Scheduling   `json:"scheduling,omitempty"`
-	Conditions                []Condition             `json:"conditions,omitempty"`
-	Defaults                  Defaults                `json:"defaults,omitempty"`
-	ResolvedOfferings         ResolvedOfferings       `json:"resolvedOfferings,omitempty"`
-	Summary                   CommonSummary           `json:"summary,omitempty"`
-	Permissions               []Permissions           `json:"permissions,omitempty"`               // Permissions given to this appInstance (only containers within, not nested Acorns/Services)
-	DeniedConsumerPermissions []Permissions           `json:"deniedConsumerPermissions,omitempty"` // Permissions given to this appInstance by a consumed service, which it is not authorized to have
+type EmbeddedAppStatus struct {
+	DevSession             *DevSessionInstanceSpec `json:"devSession,omitempty"`
+	ObservedGeneration     int64                   `json:"observedGeneration,omitempty"`
+	ObservedImageDigest    string                  `json:"observedImageDigest,omitempty"`
+	ObservedAutoUpgrade    bool                    `json:"observedAutoUpgrade,omitempty"`
+	Columns                AppColumns              `json:"columns,omitempty"`
+	Ready                  bool                    `json:"ready,omitempty"`
+	Namespace              string                  `json:"namespace,omitempty"`
+	Staged                 AppStatusStaged         `json:"staged,omitempty"`
+	AppImage               AppImage                `json:"appImage,omitempty"`
+	AvailableAppImage      string                  `json:"availableAppImage,omitempty"`
+	ConfirmUpgradeAppImage string                  `json:"confirmUpgradeAppImage,omitempty"`
+	AppSpec                AppSpec                 `json:"appSpec,omitempty"`
+	AppStatus              AppStatus               `json:"appStatus,omitempty"`
+	Conditions             []Condition             `json:"conditions,omitempty"`
+	Defaults               Defaults                `json:"defaults,omitempty"`
+	ResolvedOfferings      ResolvedOfferings       `json:"resolvedOfferings,omitempty"`
+	Summary                CommonSummary           `json:"summary,omitempty"`
+
+	// Permissions granted to the app (only containers within, not nested Acorns/Services).
+	Permissions []Permissions `json:"permissions,omitempty"`
+
+	// Permissions required by services the app, but have not been granted to the App.
+	DeniedConsumerPermissions []Permissions `json:"deniedConsumerPermissions,omitempty"`
+}
+
+func (in EmbeddedAppStatus) GetDevMode() bool {
+	return in.DevSession != nil
 }
 
 type AppStatusStaged struct {

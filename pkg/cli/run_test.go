@@ -49,17 +49,14 @@ func TestRun(t *testing.T) {
 					return nil, fmt.Errorf("error: app %s does not exist", name)
 				case "found":
 					return &apiv1.App{
-						TypeMeta:   metav1.TypeMeta{},
 						ObjectMeta: metav1.ObjectMeta{Name: "found"},
 						Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
-						Status:     v1.AppInstanceStatus{Ready: true},
+						Status:     apiv1.AppStatus{Ready: true},
 					}, nil
 				case "found.container":
 					return &apiv1.App{
-						TypeMeta:   metav1.TypeMeta{},
 						ObjectMeta: metav1.ObjectMeta{Name: "found.container"},
 						Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
-						Status:     v1.AppInstanceStatus{},
 					}, nil
 				}
 				return nil, nil
@@ -71,17 +68,14 @@ func TestRun(t *testing.T) {
 					return nil, fmt.Errorf("error: app %s does not exist", image)
 				case "found":
 					return &apiv1.App{
-						TypeMeta:   metav1.TypeMeta{},
 						ObjectMeta: metav1.ObjectMeta{Name: "found"},
 						Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
-						Status:     v1.AppInstanceStatus{Ready: true},
+						Status:     apiv1.AppStatus{Ready: true},
 					}, nil
 				case "found.container":
 					return &apiv1.App{
-						TypeMeta:   metav1.TypeMeta{},
 						ObjectMeta: metav1.ObjectMeta{Name: "found.container"},
 						Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
-						Status:     v1.AppInstanceStatus{},
 					}, nil
 				}
 				return nil, fmt.Errorf("error: app %s does not exist", image)
@@ -140,13 +134,7 @@ func TestRun(t *testing.T) {
 			},
 			prepare: func(t *testing.T, f *mocks.MockClient) {
 				t.Helper()
-				f.EXPECT().Info(gomock.Any()).Return(
-					[]apiv1.Info{
-						{
-							TypeMeta:   metav1.TypeMeta{},
-							ObjectMeta: metav1.ObjectMeta{},
-						},
-					}, nil)
+				f.EXPECT().Info(gomock.Any()).Return([]apiv1.Info{{}}, nil)
 			},
 			wantErr: true,
 			wantOut: "directory ./folder does not exist",
@@ -162,13 +150,7 @@ func TestRun(t *testing.T) {
 			},
 			prepare: func(t *testing.T, f *mocks.MockClient) {
 				t.Helper()
-				f.EXPECT().Info(gomock.Any()).Return(
-					[]apiv1.Info{
-						{
-							TypeMeta:   metav1.TypeMeta{},
-							ObjectMeta: metav1.ObjectMeta{},
-						},
-					}, nil)
+				f.EXPECT().Info(gomock.Any()).Return([]apiv1.Info{{}}, nil)
 			},
 			wantErr: true,
 			wantOut: "open Acornfile: no such file or directory",
@@ -184,13 +166,7 @@ func TestRun(t *testing.T) {
 			},
 			prepare: func(t *testing.T, f *mocks.MockClient) {
 				t.Helper()
-				f.EXPECT().Info(gomock.Any()).Return(
-					[]apiv1.Info{
-						{
-							TypeMeta:   metav1.TypeMeta{},
-							ObjectMeta: metav1.ObjectMeta{},
-						},
-					}, nil)
+				f.EXPECT().Info(gomock.Any()).Return([]apiv1.Info{{}}, nil)
 			},
 			wantErr: true,
 			wantOut: "open Acornfile: no such file or directory",
@@ -226,13 +202,7 @@ func TestRun(t *testing.T) {
 					t.Fatal()
 				}
 
-				f.EXPECT().Info(gomock.Any()).Return(
-					[]apiv1.Info{
-						{
-							TypeMeta:   metav1.TypeMeta{},
-							ObjectMeta: metav1.ObjectMeta{},
-						},
-					}, nil)
+				f.EXPECT().Info(gomock.Any()).Return([]apiv1.Info{{}}, nil)
 			},
 			wantErr: true,
 			wantOut: "Acornfile_temp is not a directory",
@@ -249,13 +219,7 @@ func TestRun(t *testing.T) {
 			wantOut: "error: app dne does not exist",
 			prepare: func(t *testing.T, f *mocks.MockClient) {
 				t.Helper()
-				f.EXPECT().Info(gomock.Any()).Return(
-					[]apiv1.Info{
-						{
-							TypeMeta:   metav1.TypeMeta{},
-							ObjectMeta: metav1.ObjectMeta{},
-						},
-					}, nil)
+				f.EXPECT().Info(gomock.Any()).Return([]apiv1.Info{{}}, nil)
 			},
 		},
 	}
