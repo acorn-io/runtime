@@ -7,6 +7,7 @@ import (
 	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/computeclasses"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/utils/strings/slices"
 )
 
 // resolveComputeClasses resolves the compute class information for each container in the AppInstance
@@ -67,6 +68,17 @@ func resolveComputeClasses(req router.Request, cfg *apiv1.Config, appInstance *v
 
 	if err := resolveComputeClass(req, appInstance, cfg.WorkloadMemoryDefault, cc, defaultCC, appInstance.Status.AppSpec.Jobs); err != nil {
 		return err
+	}
+
+	// Remove any resolved offerings for containers that are no longer defined in the app.
+	allContainers := appInstance.GetAllContainerNames()
+	for containerName := range appInstance.Status.ResolvedOfferings.Containers {
+		if containerName == "" {
+			continue
+		}
+		if !slices.Contains(allContainers, containerName) {
+			delete(appInstance.Status.ResolvedOfferings.Containers, containerName)
+		}
 	}
 
 	return nil

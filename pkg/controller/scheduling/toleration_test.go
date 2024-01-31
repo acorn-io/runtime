@@ -14,3 +14,7 @@ func TestContainerTolerations(t *testing.T) {
 func TestJobTolerations(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/tolerations/job", Calculate)
 }
+
+func TestRemovedContainerTolerations(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/tolerations/removed-container", Calculate)
+}

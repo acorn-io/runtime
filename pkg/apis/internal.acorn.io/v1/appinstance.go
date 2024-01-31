@@ -5,6 +5,7 @@ package v1
 import (
 	"strings"
 
+	"golang.org/x/exp/maps"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -120,6 +121,18 @@ func (in *AppInstanceSpec) GetGrantedPermissions() []Permissions {
 
 func (in *AppInstance) GetStopped() bool {
 	return in.Spec.Stop != nil && *in.Spec.Stop && in.DeletionTimestamp.IsZero()
+}
+
+// GetAllContainerNames returns a string slice containing the name of every container, job, and sidecar defined in Status.AppSpec.
+func (in *AppInstance) GetAllContainerNames() []string {
+	allContainers := append(maps.Keys(in.Status.AppSpec.Containers), maps.Keys(in.Status.AppSpec.Jobs)...)
+	for _, container := range in.Status.AppSpec.Containers {
+		allContainers = append(allContainers, maps.Keys(container.Sidecars)...)
+	}
+	for _, job := range in.Status.AppSpec.Jobs {
+		allContainers = append(allContainers, maps.Keys(job.Sidecars)...)
+	}
+	return allContainers
 }
 
 func (in *AppInstanceSpec) GetAutoUpgrade() bool {
