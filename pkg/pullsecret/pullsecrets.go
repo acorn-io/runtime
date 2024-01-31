@@ -13,7 +13,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/authn/kubernetes"
 	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -73,12 +72,6 @@ func Keychain(ctx context.Context, c client.Reader, namespace string) (authn.Key
 		keychainSecrets = append(keychainSecrets, secrets...)
 	}
 
-	var pullSecretNameAndNamespace []string
-	for _, secret := range keychainSecrets {
-		pullSecretNameAndNamespace = append(pullSecretNameAndNamespace, fmt.Sprintf("%s/%s", secret.Namespace, secret.Name))
-	}
-
-	logrus.Infof("Using pull secrets: %v for builder namespace %s", pullSecretNameAndNamespace, namespace)
 	return kubernetes.NewFromPullSecrets(ctx, keychainSecrets)
 }
 
