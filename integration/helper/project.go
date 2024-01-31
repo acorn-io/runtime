@@ -14,7 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func TempProjectWithRegions(t *testing.T, client client.WithWatch, regions []string) *v1.ProjectInstance {
+func TempProject(t *testing.T, client client.WithWatch) *v1.ProjectInstance {
 	t.Helper()
 	project := &v1.ProjectInstance{
 		ObjectMeta: metav1.ObjectMeta{
@@ -26,7 +26,7 @@ func TempProjectWithRegions(t *testing.T, client client.WithWatch, regions []str
 		},
 		Spec: v1.ProjectInstanceSpec{
 			DefaultRegion:    apiv1.LocalRegion,
-			SupportedRegions: regions,
+			SupportedRegions: []string{apiv1.LocalRegion},
 		},
 	}
 
@@ -68,11 +68,6 @@ func TempProjectWithRegions(t *testing.T, client client.WithWatch, regions []str
 	})
 
 	return project
-}
-
-func TempProject(t *testing.T, client client.WithWatch) *v1.ProjectInstance {
-	t.Helper()
-	return TempProjectWithRegions(t, client, []string{apiv1.LocalRegion})
 }
 
 // createAllowAllIAR creates an ImageAllowRule that allows all images and has no extra rules
