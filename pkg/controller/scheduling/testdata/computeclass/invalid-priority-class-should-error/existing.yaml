@@ -6,5 +6,4 @@ metadata:
 description: Simple description for a simple ComputeClass
 cpuScaler: 0.25
 default: true
-supportedRegions: [local]
 priorityClassName: does-not-exist
