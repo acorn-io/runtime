@@ -584,13 +584,22 @@ func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, proj
 		return append(validationErrors, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, fmt.Sprintf("error listing compute classes: %v", err)))
 	}
 
+	// filter compute classes that don't match the relevant regions
+	filteredComputeClasses := new(apiv1.ComputeClassList)
+	for _, cc := range computeClasses.Items {
+		// if the region is set in the spec then we aren't concerned with the defaultRegion
+		if (params.Spec.Region != "" && slices.Contains(cc.SupportedRegions, params.Spec.Region)) || slices.Contains(cc.SupportedRegions, defaultRegion) {
+			filteredComputeClasses.Items = append(filteredComputeClasses.Items, cc)
+		}
+	}
+
 	err := validateMemoryRunFlags(memory, workloads)
 	if err != nil {
 		validationErrors = append(validationErrors, err...)
 	}
 
 	for workload, container := range workloads {
-		cc, err := getClassForWorkload(computeClasses, computeClass, container, workload)
+		cc, err := getClassForWorkload(filteredComputeClasses, computeClass, container, workload)
 		if err != nil {
 			validationErrors = append(validationErrors, field.NotFound(field.NewPath("computeclass"), err.Error()))
 		}

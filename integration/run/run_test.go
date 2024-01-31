@@ -1132,7 +1132,7 @@ func TestUsingComputeClasses(t *testing.T) {
 		},
 		{
 			name:              "unsupported-region",
-			testDataDirectory: "./testdata/simple",
+			testDataDirectory: "./testdata/computeclass",
 			computeClass: adminv1.ProjectComputeClassInstance{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "acorn-test-custom",
