@@ -10,7 +10,7 @@ require (
 	github.com/acorn-io/baaah v0.0.0-20240119160309-2a58ee757bbd
 	github.com/acorn-io/broadcaster v0.0.0-20240105011354-bfadd4a7b45d
 	github.com/acorn-io/function-builder v0.0.0-20240123010942-72663ff4da5d
-	github.com/acorn-io/mink v0.0.0-20240105015834-b1f7af4fadea
+	github.com/acorn-io/mink v0.0.0-20240131091749-7b9449e58c00
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
 	github.com/acorn-io/schemer v0.0.0-20240105014212-9739d5485208
 	github.com/acorn-io/z v0.0.0-20230714155009-a770ecbbdc45
