@@ -42,3 +42,7 @@ func TestAllSetOverwrite(t *testing.T) {
 func TestSameGenerationMemory(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/memory/same-generation", Calculate)
 }
+
+func TestRemovedContainerMemory(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/memory/removed-container", Calculate)
+}

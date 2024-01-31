@@ -114,3 +114,7 @@ func TestInvalidPriorityClassShouldError(t *testing.T) {
 
 	assert.True(t, resp.NoPrune, "NoPrune should be true when error occurs")
 }
+
+func TestRemovedContainerComputeClass(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/removed-container", Calculate)
+}

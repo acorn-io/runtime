@@ -7,6 +7,7 @@ import (
 	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/computeclasses"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/utils/strings/slices"
 )
 
 // defaultMemory calculates the default that should be used and considers the defaults from the Config, ComputeClass, and
@@ -52,6 +53,17 @@ func addDefaultMemory(req router.Request, cfg *apiv1.Config, appInstance *v1.App
 
 	if err := addWorkloadMemoryDefault(req, appInstance, cfg.WorkloadMemoryDefault, appInstance.Status.AppSpec.Jobs); err != nil {
 		return err
+	}
+
+	// Remove any memory defaults for containers that are no longer defined in the app.
+	allContainers := appInstance.GetAllContainerNames()
+	for containerName := range appInstance.Status.Defaults.Memory {
+		if containerName == "" {
+			continue
+		}
+		if !slices.Contains(allContainers, containerName) {
+			delete(appInstance.Status.Defaults.Memory, containerName)
+		}
 	}
 
 	return nil

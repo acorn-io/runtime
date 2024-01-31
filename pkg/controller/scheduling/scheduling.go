@@ -13,6 +13,7 @@ import (
 	nodev1 "k8s.io/api/node/v1"
 	schedulingv1 "k8s.io/api/scheduling/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/utils/strings/slices"
 )
 
 // Calculate is a handler that sets the scheduling rules for an AppInstance to its
@@ -49,6 +50,15 @@ func calculate(req router.Request, appInstance *v1.AppInstance) error {
 	if err := addScheduling(req, appInstance, appInstance.Status.AppSpec.Jobs); err != nil {
 		return err
 	}
+
+	// Remove any scheduling information for containers that are no longer defined in the app.
+	allContainers := appInstance.GetAllContainerNames()
+	for containerName := range appInstance.Status.Scheduling {
+		if !slices.Contains(allContainers, containerName) {
+			delete(appInstance.Status.Scheduling, containerName)
+		}
+	}
+
 	return nil
 }
 

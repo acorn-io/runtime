@@ -72,3 +72,7 @@ func TestTwoPCCDefaultsShouldError(t *testing.T) {
 
 	assert.True(t, resp.NoPrune, "NoPrune should be true when error occurs")
 }
+
+func TestRemovedContainer(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/memory/removed-container", Calculate)
+}
