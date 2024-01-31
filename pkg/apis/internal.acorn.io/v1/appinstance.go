@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -132,6 +133,7 @@ func (in *AppInstance) GetAllContainerNames() []string {
 	for _, job := range in.Status.AppSpec.Jobs {
 		allContainers = append(allContainers, maps.Keys(job.Sidecars)...)
 	}
+	slices.Sort[[]string](allContainers)
 	return allContainers
 }
 
