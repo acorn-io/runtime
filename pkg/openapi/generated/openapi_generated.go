@@ -11460,6 +11460,12 @@ func schema_pkg_apis_internalacornio_v1_ProjectInstanceSpec(ref common.Reference
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
+					"defaultComputeClass": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"defaultRegion": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
@@ -11493,6 +11499,12 @@ func schema_pkg_apis_internalacornio_v1_ProjectInstanceStatus(ref common.Referen
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
 					"namespace": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"defaultComputeClass": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",

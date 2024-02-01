@@ -560,7 +560,7 @@ type InfoList struct {
 
 type Project v1.ProjectInstance
 
-func (p *Project) NamespaceScoped() bool {
+func (*Project) NamespaceScoped() bool {
 	return false
 }
 

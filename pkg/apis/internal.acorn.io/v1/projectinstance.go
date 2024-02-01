@@ -15,13 +15,15 @@ type ProjectInstance struct {
 }
 
 type ProjectInstanceSpec struct {
-	DefaultRegion    string   `json:"defaultRegion,omitempty"`
-	SupportedRegions []string `json:"supportedRegions,omitempty"`
+	DefaultComputeClass string   `json:"defaultComputeClass,omitempty"`
+	DefaultRegion       string   `json:"defaultRegion,omitempty"`
+	SupportedRegions    []string `json:"supportedRegions,omitempty"`
 }
 
 type ProjectInstanceStatus struct {
-	Namespace     string `json:"namespace,omitempty"`
-	DefaultRegion string `json:"defaultRegion,omitempty"`
+	Namespace           string `json:"namespace,omitempty"`
+	DefaultComputeClass string `json:"defaultComputeClass,omitempty"`
+	DefaultRegion       string `json:"defaultRegion,omitempty"`
 	// SupportedRegions on the status field should be an explicit list of supported regions.
 	// That is, if the user specifies "*" for supported regions, then the status value should be the list of all regions.
 	// This is to avoid having to make another call to explicitly list all regions.
