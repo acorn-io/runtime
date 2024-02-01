@@ -124,7 +124,7 @@ func EnsureQuotaRequest(req router.Request, resp router.Response) error {
 // addContainers adds the number of containers and accounts for the scale of each container.
 func addContainers(containers map[string]v1.Container, quotaRequest *adminv1.QuotaRequestInstance) {
 	for _, container := range containers {
-		quotaRequest.Spec.Resources.Containers += int(replicas(container.Scale))
+		quotaRequest.Spec.Resources.Containers += replicas(container.Scale)
 	}
 }
 
@@ -139,21 +139,11 @@ func addCompute(containers map[string]v1.Container, appInstance *v1.AppInstance,
 			requirements = all.Requirements
 		}
 
-		computeClass := appInstance.Status.ResolvedOfferings.Containers[name].Class
-
-		// Multiply the memory/cpu requests by the scale of the container
-		cpu, memory := requirements.Requests["cpu"], requirements.Requests["memory"]
-		cpu.Mul(replicas(container.Scale))
-		memory.Mul(replicas(container.Scale))
-
-		// Add the compute resources to the quota request
-		quotaRequest.Spec.Resources.Add(adminv1.QuotaRequestResources{BaseResources: adminv1.BaseResources{ComputeClasses: adminv1.ComputeClassResources{
-			computeClass: {
-				Memory: memory,
-				CPU:    cpu,
-			},
-		},
-		}})
+		// Add the memory/cpu requests to the quota request for each container at the scale specified
+		for i := 0; i < replicas(container.Scale); i++ {
+			quotaRequest.Spec.Resources.CPU.Add(requirements.Requests["cpu"])
+			quotaRequest.Spec.Resources.Memory.Add(requirements.Requests["memory"])
+		}
 
 		// Recurse over any sidecars. Since sidecars can't have sidecars, this is safe.
 		addCompute(container.Sidecars, appInstance, quotaRequest)
@@ -198,11 +188,7 @@ func addStorage(req router.Request, appInstance *v1.AppInstance, quotaRequest *a
 			sizeQuantity = parsedQuantity
 		}
 
-		volumeClass := appInstance.Status.ResolvedOfferings.Volumes[name].Class
-		quotaRequest.Spec.Resources.Add(adminv1.QuotaRequestResources{
-			BaseResources: adminv1.BaseResources{VolumeClasses: adminv1.VolumeClassResources{
-				volumeClass: {VolumeStorage: sizeQuantity},
-			}}})
+		quotaRequest.Spec.Resources.VolumeStorage.Add(sizeQuantity)
 	}
 
 	// Add the secrets needed to the quota request. We only parse net new secrets, not
@@ -270,9 +256,9 @@ func isEnforced(req router.Request, namespace string) (bool, error) {
 
 // replicas returns the number of replicas based on an int32 pointer. If the
 // pointer is nil, it is assumed to be 1.
-func replicas(s *int32) int64 {
+func replicas(s *int32) int {
 	if s != nil {
-		return int64(*s)
+		return int(*s)
 	}
 	return 1
 }

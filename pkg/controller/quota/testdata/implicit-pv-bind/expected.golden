@@ -9,24 +9,23 @@ metadata:
 spec:
   resources:
     apps: 0
-    computeClasses:
-      "":
-        cpu: "0"
-        memory: "0"
     containers: 1
+    cpu: "0"
     images: 0
     jobs: 0
+    memory: "0"
     secrets: 1
-    volumeClasses: {}
+    volumeStorage: "0"
     volumes: 1
 status:
   allocatedResources:
     apps: 0
-    computeClasses: null
     containers: 0
+    cpu: "0"
     images: 0
     jobs: 0
+    memory: "0"
     secrets: 0
-    volumeClasses: null
+    volumeStorage: "0"
     volumes: 0
 `

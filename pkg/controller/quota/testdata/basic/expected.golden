@@ -9,26 +9,23 @@ metadata:
 spec:
   resources:
     apps: 0
-    computeClasses:
-      default-compute-class:
-        cpu: 250m
-        memory: 1Gi
     containers: 1
+    cpu: 250m
     images: 0
     jobs: 1
+    memory: 1Gi
     secrets: 1
-    volumeClasses:
-      default-volume-class:
-        volumeStorage: 10G
+    volumeStorage: 10G
     volumes: 1
 status:
   allocatedResources:
     apps: 0
-    computeClasses: null
     containers: 0
+    cpu: "0"
     images: 0
     jobs: 0
+    memory: "0"
     secrets: 0
-    volumeClasses: null
+    volumeStorage: "0"
     volumes: 0
 `

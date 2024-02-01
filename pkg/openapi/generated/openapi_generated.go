@@ -244,7 +244,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ClusterVolumeClassInstance":                schema_pkg_apis_internaladminacornio_v1_ClusterVolumeClassInstance(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ClusterVolumeClassInstanceList":            schema_pkg_apis_internaladminacornio_v1_ClusterVolumeClassInstanceList(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory":                        schema_pkg_apis_internaladminacornio_v1_ComputeClassMemory(ref),
-		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ComputeResources":                          schema_pkg_apis_internaladminacornio_v1_ComputeResources(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstance":            schema_pkg_apis_internaladminacornio_v1_ImageRoleAuthorizationInstance(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceList":        schema_pkg_apis_internaladminacornio_v1_ImageRoleAuthorizationInstanceList(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceSpec":        schema_pkg_apis_internaladminacornio_v1_ImageRoleAuthorizationInstanceSpec(ref),
@@ -261,7 +260,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleAuthorizations":                        schema_pkg_apis_internaladminacornio_v1_RoleAuthorizations(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleRef":                                   schema_pkg_apis_internaladminacornio_v1_RoleRef(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize":                           schema_pkg_apis_internaladminacornio_v1_VolumeClassSize(ref),
-		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.VolumeResources":                           schema_pkg_apis_internaladminacornio_v1_VolumeResources(ref),
 		"k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource":                                                       schema_k8sio_api_core_v1_AWSElasticBlockStoreVolumeSource(ref),
 		"k8s.io/api/core/v1.Affinity":                                    schema_k8sio_api_core_v1_Affinity(ref),
 		"k8s.io/api/core/v1.AttachedVolume":                              schema_k8sio_api_core_v1_AttachedVolume(ref),
@@ -14021,41 +14019,27 @@ func schema_pkg_apis_internaladminacornio_v1_BaseResources(ref common.ReferenceC
 							Format:  "int32",
 						},
 					},
-					"computeClasses": {
+					"volumeStorage": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ComputeClasses and VolumeClasses are used to track the amount of compute and volume storage per their respective classes",
-							Type:        []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ComputeResources"),
-									},
-								},
-							},
+							Ref: ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
 						},
 					},
-					"volumeClasses": {
+					"memory": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.VolumeResources"),
-									},
-								},
-							},
+							Ref: ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
+						},
+					},
+					"cpu": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
 						},
 					},
 				},
-				Required: []string{"apps", "containers", "jobs", "volumes", "images", "computeClasses", "volumeClasses"},
+				Required: []string{"apps", "containers", "jobs", "volumes", "images", "volumeStorage", "memory", "cpu"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ComputeResources", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.VolumeResources"},
+			"k8s.io/apimachinery/pkg/api/resource.Quantity"},
 	}
 }
 
@@ -14500,30 +14484,6 @@ func schema_pkg_apis_internaladminacornio_v1_ComputeClassMemory(ref common.Refer
 				},
 			},
 		},
-	}
-}
-
-func schema_pkg_apis_internaladminacornio_v1_ComputeResources(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"memory": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
-						},
-					},
-					"cpu": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/api/resource.Quantity"},
 	}
 }
 
@@ -15171,33 +15131,19 @@ func schema_pkg_apis_internaladminacornio_v1_QuotaRequestResources(ref common.Re
 							Format:  "int32",
 						},
 					},
-					"computeClasses": {
+					"volumeStorage": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ComputeClasses and VolumeClasses are used to track the amount of compute and volume storage per their respective classes",
-							Type:        []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ComputeResources"),
-									},
-								},
-							},
+							Ref: ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
 						},
 					},
-					"volumeClasses": {
+					"memory": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.VolumeResources"),
-									},
-								},
-							},
+							Ref: ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
+						},
+					},
+					"cpu": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
 						},
 					},
 					"secrets": {
@@ -15208,11 +15154,11 @@ func schema_pkg_apis_internaladminacornio_v1_QuotaRequestResources(ref common.Re
 						},
 					},
 				},
-				Required: []string{"apps", "containers", "jobs", "volumes", "images", "computeClasses", "volumeClasses", "secrets"},
+				Required: []string{"apps", "containers", "jobs", "volumes", "images", "volumeStorage", "memory", "cpu", "secrets"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ComputeResources", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.VolumeResources"},
+			"k8s.io/apimachinery/pkg/api/resource.Quantity"},
 	}
 }
 
@@ -15308,26 +15254,6 @@ func schema_pkg_apis_internaladminacornio_v1_VolumeClassSize(ref common.Referenc
 				},
 			},
 		},
-	}
-}
-
-func schema_pkg_apis_internaladminacornio_v1_VolumeResources(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"volumeStorage": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
-						},
-					},
-				},
-				Required: []string{"volumeStorage"},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/api/resource.Quantity"},
 	}
 }
 
