@@ -51,7 +51,6 @@ status:
   resolvedOfferings:
     containers:
       "":
-        class: sample-compute-class
         memory: 0
       left:
         class: sample-compute-class
