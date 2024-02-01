@@ -14,7 +14,20 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func SetProjectSupportedRegions(req router.Request, resp router.Response) error {
+// SetDefaultComputeClass sets the default compute class status field of a [v1.ProjectInstance] to the value of its spec
+// field if set.
+func SetDefaultComputeClass(req router.Request, resp router.Response) error {
+	project := req.Object.(*v1.ProjectInstance)
+	if cc := project.Spec.DefaultComputeClass; cc != "" &&
+		project.Status.DefaultComputeClass != cc {
+		project.Status.DefaultComputeClass = cc
+	}
+
+	resp.Objects(req.Object)
+	return nil
+}
+
+func SetSupportedRegions(req router.Request, resp router.Response) error {
 	project := req.Object.(*v1.ProjectInstance)
 	project.SetDefaultRegion(apiv1.LocalRegion)
 	if slices.Contains(project.Status.SupportedRegions, apiv1.AllRegions) {
