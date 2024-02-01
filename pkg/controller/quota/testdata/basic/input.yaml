@@ -66,3 +66,21 @@ status:
         requests:
           cpu: 125m
           memory: 512Mi
+  resolvedOfferings:
+    containers:
+      "":
+        class: default-compute-class
+        cpuScaler: 0.25
+        memory: 123456789
+      container-name:
+        class: default-compute-class
+        cpuScaler: 0.25
+        memory: 536870912
+      sidecar-name:
+        class: default-compute-class
+        cpuScaler: 0.25
+        memory: 536870912
+    volumes:
+      test:
+        class: default-volume-class
+        size: 536870912
