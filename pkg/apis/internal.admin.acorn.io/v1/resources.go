@@ -64,7 +64,7 @@ func SubQuantity(c, i resource.Quantity) resource.Quantity {
 	}
 	c.Sub(i)
 	if c.CmpInt64(0) < 0 {
-		return *resource.NewQuantity(0, c.Format)
+		c.Set(0)
 	}
 	return c
 }
@@ -83,9 +83,9 @@ func FitsQuantity(current, incoming resource.Quantity) bool {
 	return true
 }
 
-// CountResourcesToString will return a string representation of the resource and value
+// ResourceToString will return a string representation of the resource and value
 // if its value is greater than 0.
-func CountResourcesToString(resources map[string]int) string {
+func ResourcesToString(resources map[string]int, quantityResources map[string]resource.Quantity) string {
 	var resourceStrings []string
 
 	for _, resource := range typed.Sorted(resources) {
@@ -97,15 +97,14 @@ func CountResourcesToString(resources map[string]int) string {
 		}
 	}
 
-	return strings.Join(resourceStrings, ", ")
-}
-
-func QuantityResourceToString(name string, quantity resource.Quantity) string {
-	switch {
-	case quantity.CmpInt64(0) > 0:
-		return fmt.Sprintf("%s: %s", name, quantity.String())
-	case quantity.Equal(comparableUnlimitedQuantity):
-		return fmt.Sprintf("%s: unlimited", name)
+	for _, resource := range typed.Sorted(quantityResources) {
+		switch {
+		case resource.Value.CmpInt64(0) > 0:
+			resourceStrings = append(resourceStrings, fmt.Sprintf("%s: %s", resource.Key, resource.Value.String()))
+		case resource.Value.Equal(comparableUnlimitedQuantity):
+			resourceStrings = append(resourceStrings, fmt.Sprintf("%s: unlimited", resource.Key))
+		}
 	}
-	return ""
+
+	return strings.Join(resourceStrings, ", ")
 }

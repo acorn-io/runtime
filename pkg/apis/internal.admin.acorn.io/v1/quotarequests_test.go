@@ -21,17 +21,15 @@ func TestQuotaRequestResourcesAdd(t *testing.T) {
 			current: QuotaRequestResources{},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:          1,
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
 			expected: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:          1,
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
@@ -40,27 +38,26 @@ func TestQuotaRequestResourcesAdd(t *testing.T) {
 			name: "add to existing QuotaRequestResources",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					ComputeClasses: ComputeClassResources{"compute-class": {CPU: resource.MustParse("20m")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:          1,
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					Images:         1,
-					ComputeClasses: ComputeClassResources{"compute-class": {CPU: resource.MustParse("20m")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:          1,
+					Images:        1,
+					VolumeStorage: resource.MustParse("1Mi"),
+					CPU:           resource.MustParse("20m"),
 				},
 				Secrets: 1,
 			},
 			expected: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           2,
-					Images:         1,
-					ComputeClasses: ComputeClassResources{"compute-class": {CPU: resource.MustParse("40m")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("2Mi")}},
+					Apps:          2,
+					Images:        1,
+					VolumeStorage: resource.MustParse("2Mi"),
+					CPU:           resource.MustParse("20m"),
 				},
 				Secrets: 2,
 			},
@@ -69,25 +66,22 @@ func TestQuotaRequestResourcesAdd(t *testing.T) {
 			name: "add where current has a resource specified with unlimited",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           Unlimited,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: UnlimitedQuantity()}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {UnlimitedQuantity()}},
+					Apps:   Unlimited,
+					Memory: UnlimitedQuantity(),
 				},
 				Secrets: Unlimited,
 			},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:   1,
+					Memory: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
 			expected: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           Unlimited,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: UnlimitedQuantity()}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {UnlimitedQuantity()}},
+					Apps:   Unlimited,
+					Memory: UnlimitedQuantity(),
 				},
 				Secrets: Unlimited,
 			},
@@ -96,25 +90,22 @@ func TestQuotaRequestResourcesAdd(t *testing.T) {
 			name: "add where incoming has a resource specified with unlimited",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:   1,
+					Memory: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           Unlimited,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: UnlimitedQuantity()}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {UnlimitedQuantity()}},
+					Apps:   Unlimited,
+					Memory: UnlimitedQuantity(),
 				},
 				Secrets: Unlimited,
 			},
 			expected: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           Unlimited,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: UnlimitedQuantity()}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {UnlimitedQuantity()}},
+					Apps:   Unlimited,
+					Memory: UnlimitedQuantity(),
 				},
 				Secrets: Unlimited,
 			},
@@ -123,25 +114,22 @@ func TestQuotaRequestResourcesAdd(t *testing.T) {
 			name: "add where current and incoming have a resource specified with unlimited",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           Unlimited,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: UnlimitedQuantity()}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {UnlimitedQuantity()}},
+					Apps:   Unlimited,
+					Memory: UnlimitedQuantity(),
 				},
 				Secrets: Unlimited,
 			},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           Unlimited,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: UnlimitedQuantity()}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {UnlimitedQuantity()}},
+					Apps:   Unlimited,
+					Memory: UnlimitedQuantity(),
 				},
 				Secrets: Unlimited,
 			},
 			expected: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           Unlimited,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: UnlimitedQuantity()}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {UnlimitedQuantity()}},
+					Apps:   Unlimited,
+					Memory: UnlimitedQuantity(),
 				},
 				Secrets: Unlimited,
 			},
@@ -169,9 +157,8 @@ func TestQuotaRequestResourcesRemove(t *testing.T) {
 			current: QuotaRequestResources{},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:   1,
+					Memory: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
@@ -182,17 +169,17 @@ func TestQuotaRequestResourcesRemove(t *testing.T) {
 			all:  true,
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:          1,
+					Memory:        resource.MustParse("1Mi"),
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           2,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("2Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("2Mi")}},
+					Apps:          2,
+					Memory:        resource.MustParse("2Mi"),
+					VolumeStorage: resource.MustParse("2Mi"),
 				},
 				Secrets: 2,
 			},
@@ -204,15 +191,13 @@ func TestQuotaRequestResourcesRemove(t *testing.T) {
 			name: "removes persistent resources with all",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
@@ -225,21 +210,19 @@ func TestQuotaRequestResourcesRemove(t *testing.T) {
 			name: "does not remove persistent resources without all",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
 			expected: QuotaRequestResources{
 				BaseResources: BaseResources{
-					VolumeClasses: VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
@@ -248,25 +231,22 @@ func TestQuotaRequestResourcesRemove(t *testing.T) {
 			name: "remove where current has a resource specified with unlimited",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           Unlimited,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: UnlimitedQuantity()}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {UnlimitedQuantity()}},
+					Apps:   Unlimited,
+					Memory: UnlimitedQuantity(),
 				},
 				Secrets: Unlimited,
 			},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: UnlimitedQuantity()}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {UnlimitedQuantity()}},
+					Apps:   1,
+					Memory: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
 			expected: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           Unlimited,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: UnlimitedQuantity()}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {UnlimitedQuantity()}},
+					Apps:   Unlimited,
+					Memory: UnlimitedQuantity(),
 				},
 				Secrets: Unlimited,
 			},
@@ -275,25 +255,22 @@ func TestQuotaRequestResourcesRemove(t *testing.T) {
 			name: "remove where incoming has a resource specified with unlimited",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:   1,
+					Memory: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           Unlimited,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: UnlimitedQuantity()}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {UnlimitedQuantity()}},
+					Apps:   Unlimited,
+					Memory: UnlimitedQuantity(),
 				},
 				Secrets: Unlimited,
 			},
 			expected: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:   1,
+					Memory: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
@@ -302,23 +279,20 @@ func TestQuotaRequestResourcesRemove(t *testing.T) {
 			name: "remove where current and incoming have a resource specified with unlimited",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           Unlimited,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: UnlimitedQuantity()}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {UnlimitedQuantity()}},
+					Apps:   Unlimited,
+					Memory: UnlimitedQuantity(),
 				},
 			},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           Unlimited,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: UnlimitedQuantity()}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {UnlimitedQuantity()}},
+					Apps:   Unlimited,
+					Memory: UnlimitedQuantity(),
 				},
 			},
 			expected: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           Unlimited,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: UnlimitedQuantity()}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {UnlimitedQuantity()}},
+					Apps:   Unlimited,
+					Memory: UnlimitedQuantity(),
 				},
 			},
 		},
@@ -349,17 +323,15 @@ func TestQuotaRequestResourcesEquals(t *testing.T) {
 			name: "equal QuotaRequestResources",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:          1,
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:          1,
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
@@ -369,17 +341,15 @@ func TestQuotaRequestResourcesEquals(t *testing.T) {
 			name: "unequal QuotaRequestResources only",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:          1,
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:          1,
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 			},
 			expected: false,
@@ -388,18 +358,16 @@ func TestQuotaRequestResourcesEquals(t *testing.T) {
 			name: "unequal base resources only",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					Containers:     1,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:          1,
+					Containers:    1,
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:          1,
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
@@ -409,17 +377,15 @@ func TestQuotaRequestResourcesEquals(t *testing.T) {
 			name: "unequal QuotaRequestResources",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:          1,
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           2,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:          2,
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 2,
 			},
@@ -429,17 +395,15 @@ func TestQuotaRequestResourcesEquals(t *testing.T) {
 			name: "equal QuotaRequestResources with unlimited values",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           Unlimited,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: UnlimitedQuantity()}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {UnlimitedQuantity()}},
+					Apps:          Unlimited,
+					VolumeStorage: UnlimitedQuantity(),
 				},
 				Secrets: Unlimited,
 			},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           Unlimited,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: UnlimitedQuantity()}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {UnlimitedQuantity()}},
+					Apps:          Unlimited,
+					VolumeStorage: UnlimitedQuantity(),
 				},
 				Secrets: Unlimited,
 			},
@@ -470,17 +434,15 @@ func TestQuotaRequestResourcesFits(t *testing.T) {
 			name: "fits BaseResources",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:          1,
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:          1,
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
@@ -489,17 +451,15 @@ func TestQuotaRequestResourcesFits(t *testing.T) {
 			name: "does not fit QuotaRequestResources",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:          1,
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           2,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:          2,
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 2,
 			},
@@ -519,16 +479,14 @@ func TestQuotaRequestResourcesFits(t *testing.T) {
 			name: "false as expected with only base resources",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           1,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:          1,
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 			},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           2,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("1Mi")}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:          2,
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 			},
 			expectedErr: ErrExceededResources,
@@ -537,16 +495,15 @@ func TestQuotaRequestResourcesFits(t *testing.T) {
 			name: "fits QuotaRequestResources with specified unlimited values",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           Unlimited,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: UnlimitedQuantity()}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {UnlimitedQuantity()}},
+					Apps:          Unlimited,
+					VolumeStorage: UnlimitedQuantity(),
 				},
 				Secrets: Unlimited,
 			},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps:           2,
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: resource.MustParse("2Mi")}},
+					Apps:          2,
+					VolumeStorage: resource.MustParse("2Mi"),
 				},
 				Secrets: 2,
 			},
@@ -573,13 +530,13 @@ func TestQuotaRequestResourcesFits(t *testing.T) {
 			name: "fits quantity QuotaRequestResources with specified unlimited values but not others",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					ComputeClasses: ComputeClassResources{"compute-class": {Memory: UnlimitedQuantity()}},
-					VolumeClasses:  VolumeClassResources{"volume-class": {UnlimitedQuantity()}},
+					VolumeStorage: UnlimitedQuantity(),
 				},
 			},
 			incoming: QuotaRequestResources{
 				BaseResources: BaseResources{
-					ComputeClasses: ComputeClassResources{"compute-class": {CPU: resource.MustParse("100m")}},
+					CPU:           resource.MustParse("100m"),
+					VolumeStorage: resource.MustParse("2Mi"),
 				},
 			},
 			expectedErr: ErrExceededResources,
@@ -612,31 +569,23 @@ func TestQuotaRequestResourcesToString(t *testing.T) {
 			name: "populated BaseResources",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps: 1,
-					ComputeClasses: ComputeClassResources{"compute-class": {
-						Memory: resource.MustParse("1Mi"),
-						CPU:    resource.MustParse("1Mi"),
-					}},
-					VolumeClasses: VolumeClassResources{"volume-class": {resource.MustParse("1Mi")}},
+					Apps:          1,
+					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 1,
 			},
-			expected: "Secrets: 1, Apps: 1, ComputeClasses: \"compute-class\": { Memory: 1Mi, CPU: 1Mi }, VolumeClasses: \"volume-class\": { VolumeStorage: 1Mi }",
+			expected: "Secrets: 1, Apps: 1, VolumeStorage: 1Mi",
 		},
 		{
 			name: "populated BaseResources with unlimited values",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
-					Apps: Unlimited,
-					ComputeClasses: ComputeClassResources{"compute-class": {
-						Memory: UnlimitedQuantity(),
-						CPU:    UnlimitedQuantity(),
-					}},
-					VolumeClasses: VolumeClassResources{"volume-class": {UnlimitedQuantity()}},
+					Apps:          Unlimited,
+					VolumeStorage: UnlimitedQuantity(),
 				},
 				Secrets: Unlimited,
 			},
-			expected: "Secrets: unlimited, Apps: unlimited, ComputeClasses: \"compute-class\": { Memory: unlimited, CPU: unlimited }, VolumeClasses: \"volume-class\": { VolumeStorage: unlimited }",
+			expected: "Secrets: unlimited, Apps: unlimited, VolumeStorage: unlimited",
 		},
 	}
 
