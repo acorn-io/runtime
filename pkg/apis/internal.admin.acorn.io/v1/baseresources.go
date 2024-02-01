@@ -1,10 +1,9 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 	"strings"
-
-	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 // BaseResources defines resources that should be tracked at any scoped. The two main exclusions
@@ -16,9 +15,10 @@ type BaseResources struct {
 	Volumes    int `json:"volumes"`
 	Images     int `json:"images"`
 
-	VolumeStorage resource.Quantity `json:"volumeStorage"`
-	Memory        resource.Quantity `json:"memory"`
-	CPU           resource.Quantity `json:"cpu"`
+	// ComputeClasses and VolumeClasses are used to track the amount of compute and volume storage per their
+	// respective classes
+	ComputeClasses ComputeClassResources `json:"computeClasses"`
+	VolumeClasses  VolumeClassResources  `json:"volumeClasses"`
 }
 
 // Add will add the BaseResources of another BaseResources struct into the current one.
@@ -29,9 +29,14 @@ func (current *BaseResources) Add(incoming BaseResources) {
 	current.Volumes = Add(current.Volumes, incoming.Volumes)
 	current.Images = Add(current.Images, incoming.Images)
 
-	current.VolumeStorage = AddQuantity(current.VolumeStorage, incoming.VolumeStorage)
-	current.Memory = AddQuantity(current.Memory, incoming.Memory)
-	current.CPU = AddQuantity(current.CPU, incoming.CPU)
+	if current.ComputeClasses == nil {
+		current.ComputeClasses = ComputeClassResources{}
+	}
+	if current.VolumeClasses == nil {
+		current.VolumeClasses = VolumeClassResources{}
+	}
+	current.ComputeClasses.Add(incoming.ComputeClasses)
+	current.VolumeClasses.Add(incoming.VolumeClasses)
 }
 
 // Remove will remove the BaseResources of another BaseResources struct from the current one. Calling remove
@@ -42,13 +47,9 @@ func (current *BaseResources) Remove(incoming BaseResources, all bool) {
 	current.Jobs = Sub(current.Jobs, incoming.Jobs)
 	current.Volumes = Sub(current.Volumes, incoming.Volumes)
 	current.Images = Sub(current.Images, incoming.Images)
-
-	current.Memory = SubQuantity(current.Memory, incoming.Memory)
-	current.CPU = SubQuantity(current.CPU, incoming.CPU)
-
-	// Only remove persistent resources if all is true.
+	current.ComputeClasses.Remove(incoming.ComputeClasses)
 	if all {
-		current.VolumeStorage = SubQuantity(current.VolumeStorage, incoming.VolumeStorage)
+		current.VolumeClasses.Remove(incoming.VolumeClasses)
 	}
 }
 
@@ -58,6 +59,7 @@ func (current *BaseResources) Remove(incoming BaseResources, all bool) {
 // If the current BaseResources defines unlimited, then it will always fit.
 func (current *BaseResources) Fits(incoming BaseResources) error {
 	var exceededResources []string
+	var errs []error
 
 	// Check if any of the resources are exceeded
 	for _, r := range []struct {
@@ -75,31 +77,26 @@ func (current *BaseResources) Fits(incoming BaseResources) error {
 		}
 	}
 
-	// Check if any of the quantity resources are exceeded
-	for _, r := range []struct {
-		resource          string
-		current, incoming resource.Quantity
-	}{
-		{"VolumeStorage", current.VolumeStorage, incoming.VolumeStorage},
-		{"Memory", current.Memory, incoming.Memory},
-		{"Cpu", current.CPU, incoming.CPU},
-	} {
-		if !FitsQuantity(r.current, r.incoming) {
-			exceededResources = append(exceededResources, r.resource)
-		}
+	if len(exceededResources) != 0 {
+		errs = append(errs, fmt.Errorf("%w: %s", ErrExceededResources, strings.Join(exceededResources, ", ")))
+	}
+
+	if err := current.ComputeClasses.Fits(incoming.ComputeClasses); err != nil {
+		errs = append(errs, err)
+	}
+
+	if err := current.VolumeClasses.Fits(incoming.VolumeClasses); err != nil {
+		errs = append(errs, err)
 	}
 
 	// Build an aggregated error message for the exceeded resources
-	if len(exceededResources) > 0 {
-		return fmt.Errorf("%w: %s", ErrExceededResources, strings.Join(exceededResources, ", "))
-	}
-
-	return nil
+	return errors.Join(errs...)
 }
 
 // ToString will return a string representation of the BaseResources within the struct.
 func (current *BaseResources) ToString() string {
-	return ResourcesToString(
+	// make sure that an empty string doesn't have a comma
+	result := CountResourcesToString(
 		map[string]int{
 			"Apps":       current.Apps,
 			"Containers": current.Containers,
@@ -107,11 +104,24 @@ func (current *BaseResources) ToString() string {
 			"Volumes":    current.Volumes,
 			"Images":     current.Images,
 		},
-		map[string]resource.Quantity{
-			"VolumeStorage": current.VolumeStorage,
-			"Memory":        current.Memory,
-			"Cpu":           current.CPU,
-		})
+	)
+
+	for _, resource := range []struct {
+		name     string
+		asString string
+	}{
+		{"ComputeClasses", current.ComputeClasses.ToString()},
+		{"VolumeClasses", current.VolumeClasses.ToString()},
+	} {
+		if result != "" && resource.asString != "" {
+			result += ", "
+		}
+		if resource.asString != "" {
+			result += fmt.Sprintf("%s: %s", resource.name, resource.asString)
+		}
+	}
+
+	return result
 }
 
 // Equals will check if the current BaseResources struct is equal to another. This is useful
@@ -122,7 +132,6 @@ func (current *BaseResources) Equals(incoming BaseResources) bool {
 		current.Jobs == incoming.Jobs &&
 		current.Volumes == incoming.Volumes &&
 		current.Images == incoming.Images &&
-		current.VolumeStorage.Cmp(incoming.VolumeStorage) == 0 &&
-		current.Memory.Cmp(incoming.Memory) == 0 &&
-		current.CPU.Cmp(incoming.CPU) == 0
+		current.ComputeClasses.Equals(incoming.ComputeClasses) &&
+		current.VolumeClasses.Equals(incoming.VolumeClasses)
 }

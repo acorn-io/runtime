@@ -145,8 +145,15 @@ func addCompute(containers map[string]v1.Container, appInstance *v1.AppInstance,
 		cpu.Mul(replicas(container.Scale))
 		memory.Mul(replicas(container.Scale))
 
-		quotaRequest.Spec.Resources.CPU.Add(cpu)
-		quotaRequest.Spec.Resources.Memory.Add(memory)
+		// Add the compute resources to the quota request
+		computeClass := appInstance.Status.ResolvedOfferings.Containers[name].Class
+		quotaRequest.Spec.Resources.Add(adminv1.QuotaRequestResources{BaseResources: adminv1.BaseResources{ComputeClasses: adminv1.ComputeClassResources{
+			computeClass: {
+				Memory: memory,
+				CPU:    cpu,
+			},
+		},
+		}})
 
 		// Recurse over any sidecars. Since sidecars can't have sidecars, this is safe.
 		addCompute(container.Sidecars, appInstance, quotaRequest)
@@ -191,7 +198,11 @@ func addStorage(req router.Request, appInstance *v1.AppInstance, quotaRequest *a
 			sizeQuantity = parsedQuantity
 		}
 
-		quotaRequest.Spec.Resources.VolumeStorage.Add(sizeQuantity)
+		volumeClass := appInstance.Status.ResolvedOfferings.Volumes[name].Class
+		quotaRequest.Spec.Resources.Add(adminv1.QuotaRequestResources{
+			BaseResources: adminv1.BaseResources{VolumeClasses: adminv1.VolumeClassResources{
+				volumeClass: {VolumeStorage: sizeQuantity},
+			}}})
 	}
 
 	// Add the secrets needed to the quota request. We only parse net new secrets, not
