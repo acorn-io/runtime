@@ -28,7 +28,9 @@ type RegionSpec struct {
 }
 
 type RegionStatus struct {
-	Conditions []v1.Condition `json:"conditions,omitempty"`
+	Conditions     []v1.Condition `json:"conditions,omitempty"`
+	AppLogEndpoint string         `json:"appLogEndpoint,omitempty"`
+	AppLogSecret   string         `json:"appLogSecret,omitempty"`
 }
 
 func (in *Region) NamespaceScoped() bool {
