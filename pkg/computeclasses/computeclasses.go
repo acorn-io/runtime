@@ -123,13 +123,13 @@ func Validate(cc apiv1.ComputeClass, memory resource.Quantity, memDefault *int64
 	return nil
 }
 
-func CalculateCPU(cc internaladminv1.ProjectComputeClassInstance, memory resource.Quantity) (resource.Quantity, error) {
+func CalculateCPU(cc internaladminv1.ProjectComputeClassInstance, memory resource.Quantity) resource.Quantity {
 	// The CPU scaler calculates the CPUs per Gi of memory so get the memory in a ratio of Gi
 	memoryInGi := memory.AsApproximateFloat64() / gi
 	// Since we're putting this in to mili-cpu's, multiply memoryInGi by the scaler and by 1000
 	value := cc.CPUScaler * memoryInGi * 1000
 
-	return *resource.NewMilliQuantity(int64(math.Ceil(value)), resource.DecimalSI), nil
+	return *resource.NewMilliQuantity(int64(math.Ceil(value)), resource.DecimalSI)
 }
 
 func GetComputeClassNameForWorkload(workload string, container internalv1.Container, computeClasses internalv1.ComputeClassMap) string {

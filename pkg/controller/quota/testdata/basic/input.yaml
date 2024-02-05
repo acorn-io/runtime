@@ -51,18 +51,32 @@ status:
       test:
         accessModes:
         - readWriteOnce
+  resolvedOfferings:
+    containers:
+      "":
+        class: sample-compute-class
+        cpu: 125
+        memory: 536870912
+      container-name:
+        class: sample-compute-class
+        cpu: 125
+        memory: 536870912
+      sidecar-name:
+        class: sample-compute-class
+        cpu: 125
+        memory: 536870912
   scheduling:
     container-name:
       requirements:
         limits:
           memory: 512Mi
         requests:
-          cpu: 125m
-          memory: 512Mi
+          cpu: 75m
+          memory: 128Mi # simulate requestScaler
     sidecar-name:
       requirements:
         limits:
           memory: 512Mi
         requests:
-          cpu: 125m
-          memory: 512Mi
+          cpu: 75m
+          memory: 128Mi # simulate requestScaler

@@ -50,6 +50,7 @@ status:
   resolvedOfferings:
     containers:
       "":
+        cpu: 0
         memory: 1048576
       left:
         memory: 1048576

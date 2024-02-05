@@ -51,6 +51,7 @@ status:
   resolvedOfferings:
     containers:
       "":
+        cpu: 0
         memory: 3145728
       left:
         memory: 3145728

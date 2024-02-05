@@ -17,9 +17,9 @@ description: Simple description for a simple ComputeClass
 cpuScaler: 0.25
 default: true
 memory:
-  min: 1Mi # 1Mi
-  max: 2Mi # 2Mi
-  default: 1Mi # 1Mi
+  min: 100Mi # 100Mi
+  max: 200Mi # 200Mi
+  default: 100Mi # 100Mi
 affinity:
   nodeAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
