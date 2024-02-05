@@ -5354,6 +5354,18 @@ func schema_pkg_apis_apiacornio_v1_RegionStatus(ref common.ReferenceCallback) co
 							},
 						},
 					},
+					"appLogEndpoint": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"appLogSecret": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 				},
 			},
 		},
