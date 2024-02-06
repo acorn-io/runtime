@@ -34,9 +34,9 @@ func New() *cobra.Command {
 	}
 	root.AddCommand(
 		NewAll(cmdContext),
-		NewApiServer(cmdContext),
+		NewAPIServer(cmdContext),
 		NewBuild(cmdContext),
-		NewBuildServer(cmdContext),
+		NewBuildServer(),
 		NewCheck(cmdContext),
 		NewContainer(cmdContext),
 		NewJob(cmdContext),
@@ -71,10 +71,10 @@ func New() *cobra.Command {
 		NewTag(cmdContext),
 		NewVolume(cmdContext),
 		NewWait(cmdContext),
-		NewVersion(cmdContext),
+		NewVersion(),
 		NewKubectl(cmdContext),
 		NewDashboard(cmdContext),
-		NewLocal(cmdContext),
+		NewLocal(),
 	)
 	// This will produce an error if the project flag doesn't exist or a completion function has already
 	// been registered for this flag. Not returning the error since neither of these is likely occur.
@@ -136,6 +136,6 @@ func (a *Acorn) PersistentPre(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-func (a *Acorn) Run(cmd *cobra.Command, args []string) error {
+func (a *Acorn) Run(cmd *cobra.Command, _ []string) error {
 	return cmd.Help()
 }

@@ -40,7 +40,7 @@ func NewImageSource(acornConfig string, file, argsFile string, args, platforms [
 	result.Platforms = platforms
 
 	// If the image is a pattern, auto-upgrade is on, so assume no default registry
-	_, isPattern := autoupgrade.AutoUpgradePattern(result.Image)
+	_, isPattern := autoupgrade.Pattern(result.Image)
 	result.NoDefaultRegistry = noDefaultReg || isPattern
 	return
 }

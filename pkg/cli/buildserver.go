@@ -13,7 +13,7 @@ import (
 	"inet.af/tcpproxy"
 )
 
-func NewBuildServer(c CommandContext) *cobra.Command {
+func NewBuildServer() *cobra.Command {
 	cmd := cli.Command(&BuildServer{}, cobra.Command{
 		Use:          "build-server [flags] DIRECTORY",
 		Hidden:       true,

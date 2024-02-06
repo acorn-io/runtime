@@ -18,15 +18,15 @@ import (
 func TestImageAllowRules(t *testing.T) {
 	// TODO(@iwilltry42): Add test for auto-upgrade pattern
 	helper.StartController(t)
-	registry, close := helper.StartRegistry(t)
-	defer close()
+	registry, cancel := helper.StartRegistry(t)
+	defer cancel()
 
 	ctx := helper.GetCTX(t)
 	c, project := helper.ClientAndProject(t)
 	kclient := helper.MustReturn(kclient.Default)
 
 	// enable image allow rules in acorn config
-	helper.EnableFeatureWithRestore(t, ctx, kclient, profiles.FeatureImageAllowRules)
+	helper.EnableFeatureWithRestore(ctx, t, kclient, profiles.FeatureImageAllowRules)
 
 	// Delete any existing IARs from this project namespace
 	err := kclient.DeleteAllOf(ctx, &internalv1.ImageAllowRuleInstance{}, cclient.InNamespace(c.GetNamespace()))

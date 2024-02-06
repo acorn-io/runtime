@@ -58,7 +58,7 @@ func Name(obj any) (string, error) {
 	return "", fmt.Errorf("invalid obj %T", obj)
 }
 
-func Noop(obj any) string {
+func Noop(any) string {
 	return ""
 }
 

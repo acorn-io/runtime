@@ -44,9 +44,8 @@ func (a *ProjectCreate) Run(cmd *cobra.Command, args []string) error {
 	for _, projectName := range args {
 		if err := project.Create(cmd.Context(), a.client.Options(), projectName, a.DefaultRegion, a.SupportedRegions); err != nil {
 			return err
-		} else {
-			fmt.Println(projectName)
 		}
+		fmt.Println(projectName)
 	}
 	return nil
 }

@@ -1,15 +1,13 @@
 package cli
 
 import (
-	"context"
-
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/imagesource"
 	"github.com/acorn-io/runtime/pkg/tags"
 	"github.com/google/go-containerregistry/pkg/name"
 )
 
-func getAuthForImage(ctx context.Context, clientFactory ClientFactory, image string) (*apiv1.RegistryAuth, error) {
+func getAuthForImage(clientFactory ClientFactory, image string) (*apiv1.RegistryAuth, error) {
 	if tags.IsLocalReference(image) {
 		return nil, nil
 	}
@@ -30,6 +28,6 @@ func getAuthForImage(ctx context.Context, clientFactory ClientFactory, image str
 		return nil, err
 	}
 
-	auth, _, err := creds(ctx, ref.Context().RegistryStr())
+	auth, _, err := creds(ref.Context().RegistryStr())
 	return auth, err
 }

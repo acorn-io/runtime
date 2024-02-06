@@ -8,7 +8,7 @@ import (
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 )
 
-func ReleaseVolume(req router.Request, resp router.Response) error {
+func ReleaseVolume(req router.Request, _ router.Response) error {
 	pv := req.Object.(*corev1.PersistentVolume)
 	if pv.Labels[labels.AcornManaged] == "true" &&
 		pv.Status.Phase == corev1.VolumeReleased &&

@@ -147,36 +147,36 @@ type MockClient struct {
 	EventItem        *apiv1.Event
 }
 
-func (m *MockClient) KubeConfig(ctx context.Context, opts *client.KubeProxyAddressOptions) ([]byte, error) {
+func (m *MockClient) KubeConfig(*client.KubeProxyAddressOptions) ([]byte, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (m *MockClient) KubeProxyAddress(ctx context.Context, opts *client.KubeProxyAddressOptions) (string, error) {
+func (m *MockClient) KubeProxyAddress(context.Context, *client.KubeProxyAddressOptions) (string, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (m *MockClient) DevSessionRenew(ctx context.Context, name string, client v1.DevSessionInstanceClient) error {
+func (m *MockClient) DevSessionRenew(context.Context, string, v1.DevSessionInstanceClient) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (m *MockClient) DevSessionRelease(ctx context.Context, name string) error {
+func (m *MockClient) DevSessionRelease(context.Context, string) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (m *MockClient) AppInfo(ctx context.Context, name string) (string, error) {
+func (m *MockClient) AppInfo(context.Context, string) (string, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (m *MockClient) AppPullImage(ctx context.Context, name string) error {
+func (m *MockClient) AppPullImage(context.Context, string) error {
 	return nil
 }
 
-func (m *MockClient) AppList(ctx context.Context) ([]apiv1.App, error) {
+func (m *MockClient) AppList(context.Context) ([]apiv1.App, error) {
 	if m.Apps != nil {
 		return m.Apps, nil
 	}
@@ -188,7 +188,7 @@ func (m *MockClient) AppList(ctx context.Context) ([]apiv1.App, error) {
 	}}, nil
 }
 
-func (m *MockClient) AppDelete(ctx context.Context, name string) (*apiv1.App, error) {
+func (m *MockClient) AppDelete(_ context.Context, name string) (*apiv1.App, error) {
 	if m.AppItem != nil {
 		return m.AppItem, nil
 	}
@@ -203,11 +203,11 @@ func (m *MockClient) AppDelete(ctx context.Context, name string) (*apiv1.App, er
 	return nil, nil
 }
 
-func (m *MockClient) AppIgnoreDeleteCleanup(ctx context.Context, name string) error {
+func (m *MockClient) AppIgnoreDeleteCleanup(context.Context, string) error {
 	return nil
 }
 
-func (m *MockClient) AppGet(ctx context.Context, name string) (*apiv1.App, error) {
+func (m *MockClient) AppGet(_ context.Context, name string) (*apiv1.App, error) {
 	if m.AppItem != nil {
 		return m.AppItem, nil
 	}
@@ -232,7 +232,7 @@ func (m *MockClient) AppGet(ctx context.Context, name string) (*apiv1.App, error
 	return nil, nil
 }
 
-func (m *MockClient) AppStop(ctx context.Context, name string) error {
+func (m *MockClient) AppStop(_ context.Context, name string) error {
 	switch name {
 	case "dne":
 		return fmt.Errorf("error: app %s does not exist", name)
@@ -244,7 +244,7 @@ func (m *MockClient) AppStop(ctx context.Context, name string) error {
 	return fmt.Errorf("error: app %s does not exist", name)
 }
 
-func (m *MockClient) AppStart(ctx context.Context, name string) error {
+func (m *MockClient) AppStart(_ context.Context, name string) error {
 	switch name {
 	case "dne":
 		return fmt.Errorf("error: app %s does not exist", name)
@@ -256,7 +256,7 @@ func (m *MockClient) AppStart(ctx context.Context, name string) error {
 	return fmt.Errorf("error: app %s does not exist", name)
 }
 
-func (m *MockClient) AppRun(ctx context.Context, image string, opts *client.AppRunOptions) (*apiv1.App, error) {
+func (m *MockClient) AppRun(_ context.Context, image string, _ *client.AppRunOptions) (*apiv1.App, error) {
 	if m.AppItem != nil {
 		return m.AppItem, nil
 	}
@@ -281,7 +281,7 @@ func (m *MockClient) AppRun(ctx context.Context, image string, opts *client.AppR
 	return nil, fmt.Errorf("error: app %s does not exist", image)
 }
 
-func (m *MockClient) AppUpdate(ctx context.Context, name string, opts *client.AppUpdateOptions) (*apiv1.App, error) {
+func (m *MockClient) AppUpdate(_ context.Context, name string, _ *client.AppUpdateOptions) (*apiv1.App, error) {
 	if m.AppItem != nil {
 		return m.AppItem, nil
 	}
@@ -306,7 +306,7 @@ func (m *MockClient) AppUpdate(ctx context.Context, name string, opts *client.Ap
 	return nil, fmt.Errorf("error: app %s does not exist", name)
 }
 
-func (m *MockClient) AppLog(ctx context.Context, name string, opts *client.LogOptions) (<-chan apiv1.LogMessage, error) {
+func (m *MockClient) AppLog(_ context.Context, name string, _ *client.LogOptions) (<-chan apiv1.LogMessage, error) {
 	switch name {
 	case "found":
 		progresses := make(chan apiv1.LogMessage)
@@ -323,11 +323,11 @@ func (m *MockClient) AppLog(ctx context.Context, name string, opts *client.LogOp
 	}
 }
 
-func (m *MockClient) CredentialCreate(ctx context.Context, serverAddress, username, password string, skipChecks bool) (*apiv1.Credential, error) {
+func (m *MockClient) CredentialCreate(context.Context, string, string, string, bool) (*apiv1.Credential, error) {
 	return nil, nil
 }
 
-func (m *MockClient) CredentialList(ctx context.Context) ([]apiv1.Credential, error) {
+func (m *MockClient) CredentialList(context.Context) ([]apiv1.Credential, error) {
 	if m.Credentials != nil {
 		return m.Credentials, nil
 	}
@@ -341,7 +341,7 @@ func (m *MockClient) CredentialList(ctx context.Context) ([]apiv1.Credential, er
 
 }
 
-func (m *MockClient) CredentialGet(ctx context.Context, serverAddress string) (*apiv1.Credential, error) {
+func (m *MockClient) CredentialGet(_ context.Context, serverAddress string) (*apiv1.Credential, error) {
 	if m.CredentialItem != nil {
 		return m.CredentialItem, nil
 	}
@@ -362,28 +362,28 @@ func (m *MockClient) CredentialGet(ctx context.Context, serverAddress string) (*
 
 }
 
-func (m *MockClient) CredentialUpdate(ctx context.Context, serverAddress, username, password string, skipChecks bool) (*apiv1.Credential, error) {
+func (m *MockClient) CredentialUpdate(context.Context, string, string, string, bool) (*apiv1.Credential, error) {
 	if m.CredentialItem != nil {
 		return m.CredentialItem, nil
 	}
 	return nil, nil
 }
 
-func (m *MockClient) CredentialDelete(ctx context.Context, serverAddress string) (*apiv1.Credential, error) {
+func (m *MockClient) CredentialDelete(context.Context, string) (*apiv1.Credential, error) {
 	if m.CredentialItem != nil {
 		return m.CredentialItem, nil
 	}
 	return nil, nil
 }
 
-func (m *MockClient) SecretCreate(ctx context.Context, name, secretType string, data map[string][]byte) (*apiv1.Secret, error) {
+func (m *MockClient) SecretCreate(context.Context, string, string, map[string][]byte) (*apiv1.Secret, error) {
 	if m.SecretItem != nil {
 		return m.SecretItem, nil
 	}
 	return nil, nil
 }
 
-func (m *MockClient) SecretList(ctx context.Context) ([]apiv1.Secret, error) {
+func (m *MockClient) SecretList(context.Context) ([]apiv1.Secret, error) {
 	if m.Secrets != nil {
 		return m.Secrets, nil
 	}
@@ -396,7 +396,7 @@ func (m *MockClient) SecretList(ctx context.Context) ([]apiv1.Secret, error) {
 	}}, nil
 }
 
-func (m *MockClient) SecretGet(ctx context.Context, name string) (*apiv1.Secret, error) {
+func (m *MockClient) SecretGet(_ context.Context, name string) (*apiv1.Secret, error) {
 	if m.SecretItem != nil {
 		return m.SecretItem, nil
 	}
@@ -415,7 +415,7 @@ func (m *MockClient) SecretGet(ctx context.Context, name string) (*apiv1.Secret,
 	return nil, nil
 }
 
-func (m *MockClient) SecretReveal(ctx context.Context, name string) (*apiv1.Secret, error) {
+func (m *MockClient) SecretReveal(_ context.Context, name string) (*apiv1.Secret, error) {
 	if m.SecretItem != nil {
 		return m.SecretItem, nil
 	}
@@ -454,14 +454,14 @@ func (m *MockClient) SecretReveal(ctx context.Context, name string) (*apiv1.Secr
 	return nil, nil
 }
 
-func (m *MockClient) SecretUpdate(ctx context.Context, name string, data map[string][]byte) (*apiv1.Secret, error) {
+func (m *MockClient) SecretUpdate(context.Context, string, map[string][]byte) (*apiv1.Secret, error) {
 	if m.SecretItem != nil {
 		return m.SecretItem, nil
 	}
 	return nil, nil
 }
 
-func (m *MockClient) SecretDelete(ctx context.Context, name string) (*apiv1.Secret, error) {
+func (m *MockClient) SecretDelete(_ context.Context, name string) (*apiv1.Secret, error) {
 	if m.SecretItem != nil {
 		return m.SecretItem, nil
 	}
@@ -474,7 +474,7 @@ func (m *MockClient) SecretDelete(ctx context.Context, name string) (*apiv1.Secr
 	return nil, nil
 }
 
-func (m *MockClient) ContainerReplicaList(ctx context.Context, opts *client.ContainerReplicaListOptions) ([]apiv1.ContainerReplica, error) {
+func (m *MockClient) ContainerReplicaList(_ context.Context, opts *client.ContainerReplicaListOptions) ([]apiv1.ContainerReplica, error) {
 	if m.Containers != nil {
 		if opts == nil {
 			return m.Containers, nil
@@ -496,7 +496,7 @@ func (m *MockClient) ContainerReplicaList(ctx context.Context, opts *client.Cont
 	}}, nil
 }
 
-func (m *MockClient) ContainerReplicaGet(ctx context.Context, name string) (*apiv1.ContainerReplica, error) {
+func (m *MockClient) ContainerReplicaGet(_ context.Context, name string) (*apiv1.ContainerReplica, error) {
 	if m.ContainerItem != nil {
 		return m.ContainerItem, nil
 	}
@@ -522,7 +522,7 @@ func (m *MockClient) ContainerReplicaGet(ctx context.Context, name string) (*api
 	return nil, nil
 }
 
-func (m *MockClient) ContainerReplicaDelete(ctx context.Context, name string) (*apiv1.ContainerReplica, error) {
+func (m *MockClient) ContainerReplicaDelete(_ context.Context, name string) (*apiv1.ContainerReplica, error) {
 	if m.ContainerItem != nil {
 		return m.ContainerItem, nil
 	}
@@ -535,15 +535,15 @@ func (m *MockClient) ContainerReplicaDelete(ctx context.Context, name string) (*
 	return nil, nil
 }
 
-func (m *MockClient) ContainerReplicaExec(ctx context.Context, name string, args []string, tty bool, opts *client.ContainerReplicaExecOptions) (*term.ExecIO, error) {
+func (m *MockClient) ContainerReplicaExec(context.Context, string, []string, bool, *client.ContainerReplicaExecOptions) (*term.ExecIO, error) {
 	return nil, nil
 }
 
-func (m *MockClient) ContainerReplicaPortForward(ctx context.Context, name string, port int) (client.PortForwardDialer, error) {
+func (m *MockClient) ContainerReplicaPortForward(context.Context, string, int) (client.PortForwardDialer, error) {
 	return nil, nil
 }
 
-func (m *MockClient) JobList(ctx context.Context, opts *client.JobListOptions) ([]apiv1.Job, error) {
+func (m *MockClient) JobList(_ context.Context, opts *client.JobListOptions) ([]apiv1.Job, error) {
 	if m.Jobs != nil {
 		if opts == nil {
 			return m.Jobs, nil
@@ -565,7 +565,7 @@ func (m *MockClient) JobList(ctx context.Context, opts *client.JobListOptions) (
 	}}, nil
 }
 
-func (m *MockClient) JobGet(ctx context.Context, name string) (*apiv1.Job, error) {
+func (m *MockClient) JobGet(_ context.Context, name string) (*apiv1.Job, error) {
 	if m.JobItem != nil {
 		return m.JobItem, nil
 	}
@@ -583,11 +583,11 @@ func (m *MockClient) JobGet(ctx context.Context, name string) (*apiv1.Job, error
 	return nil, nil
 }
 
-func (m *MockClient) JobRestart(ctx context.Context, name string) error {
+func (m *MockClient) JobRestart(context.Context, string) error {
 	return nil
 }
 
-func (m *MockClient) VolumeList(ctx context.Context) ([]apiv1.Volume, error) {
+func (m *MockClient) VolumeList(context.Context) ([]apiv1.Volume, error) {
 	if m.Volumes != nil {
 		return m.Volumes, nil
 	}
@@ -607,7 +607,7 @@ func (m *MockClient) VolumeList(ctx context.Context) ([]apiv1.Volume, error) {
 	}}, nil
 }
 
-func (m *MockClient) VolumeGet(ctx context.Context, name string) (*apiv1.Volume, error) {
+func (m *MockClient) VolumeGet(_ context.Context, name string) (*apiv1.Volume, error) {
 	if m.VolumeItem != nil {
 		return m.VolumeItem, nil
 	}
@@ -636,7 +636,7 @@ func (m *MockClient) VolumeGet(ctx context.Context, name string) (*apiv1.Volume,
 	return nil, nil
 }
 
-func (m *MockClient) VolumeDelete(ctx context.Context, name string) (*apiv1.Volume, error) {
+func (m *MockClient) VolumeDelete(_ context.Context, name string) (*apiv1.Volume, error) {
 	if m.VolumeItem != nil {
 		return m.VolumeItem, nil
 	}
@@ -651,7 +651,7 @@ func (m *MockClient) VolumeDelete(ctx context.Context, name string) (*apiv1.Volu
 	return nil, nil
 }
 
-func (m *MockClient) ImageList(ctx context.Context) ([]apiv1.Image, error) {
+func (m *MockClient) ImageList(_ context.Context) ([]apiv1.Image, error) {
 	if m.Images != nil {
 		return m.Images, nil
 	}
@@ -672,7 +672,7 @@ func (m *MockClient) ImageList(ctx context.Context) ([]apiv1.Image, error) {
 	}}, nil
 }
 
-func (m *MockClient) ImageGet(ctx context.Context, name string) (*apiv1.Image, error) {
+func (m *MockClient) ImageGet(context.Context, string) (*apiv1.Image, error) {
 	if m.ImageItem != nil {
 		return m.ImageItem, nil
 	}
@@ -684,7 +684,7 @@ func (m *MockClient) ImageGet(ctx context.Context, name string) (*apiv1.Image, e
 	}, nil
 }
 
-func (m *MockClient) ImageDelete(ctx context.Context, name string, opts *client.ImageDeleteOptions) (*apiv1.Image, []string, error) {
+func (m *MockClient) ImageDelete(_ context.Context, name string, opts *client.ImageDeleteOptions) (*apiv1.Image, []string, error) {
 	if m.ImageItem != nil {
 		return m.ImageItem, m.ImageItem.Tags, nil
 	}
@@ -708,7 +708,7 @@ func (m *MockClient) ImageDelete(ctx context.Context, name string, opts *client.
 	return nil, nil, apierrors.NewNotFound(schema.GroupResource{Group: "acorn", Resource: "images"}, name)
 }
 
-func (m *MockClient) ImagePush(ctx context.Context, tagName string, opts *client.ImagePushOptions) (<-chan client.ImageProgress, error) {
+func (m *MockClient) ImagePush(_ context.Context, tagName string, _ *client.ImagePushOptions) (<-chan client.ImageProgress, error) {
 	switch tagName {
 	case "found":
 		progresses := make(chan client.ImageProgress)
@@ -727,7 +727,7 @@ func (m *MockClient) ImagePush(ctx context.Context, tagName string, opts *client
 
 }
 
-func (m *MockClient) ImagePull(ctx context.Context, name string, opts *client.ImagePullOptions) (<-chan client.ImageProgress, error) {
+func (m *MockClient) ImagePull(_ context.Context, name string, _ *client.ImagePullOptions) (<-chan client.ImageProgress, error) {
 	switch name {
 	case "found":
 		progresses := make(chan client.ImageProgress)
@@ -744,7 +744,7 @@ func (m *MockClient) ImagePull(ctx context.Context, name string, opts *client.Im
 	}
 }
 
-func (m *MockClient) ImageTag(ctx context.Context, image, tag string) error {
+func (m *MockClient) ImageTag(_ context.Context, image, _ string) error {
 	switch image {
 	case "dne":
 		return fmt.Errorf("error: tag %s does not exist", image)
@@ -754,7 +754,7 @@ func (m *MockClient) ImageTag(ctx context.Context, image, tag string) error {
 	return nil
 }
 
-func (m *MockClient) ImageDetails(ctx context.Context, imageName string, opts *client.ImageDetailsOptions) (*client.ImageDetails, error) {
+func (m *MockClient) ImageDetails(_ context.Context, imageName string, _ *client.ImageDetailsOptions) (*client.ImageDetails, error) {
 	return &client.ImageDetails{
 		AppImage: v1.AppImage{ID: imageName, ImageData: v1.ImagesData{
 			Containers: map[string]v1.ContainerData{"test-image-running-container": {
@@ -770,7 +770,7 @@ func (m *MockClient) ImageDetails(ctx context.Context, imageName string, opts *c
 	}, nil
 }
 
-func (m *MockClient) ImageSign(ctx context.Context, image string, payload []byte, signatureB64 string, opts *client.ImageSignOptions) (*apiv1.ImageSignature, error) {
+func (m *MockClient) ImageSign(context.Context, string, []byte, string, *client.ImageSignOptions) (*apiv1.ImageSignature, error) {
 	return &apiv1.ImageSignature{
 		TypeMeta:        metav1.TypeMeta{},
 		ObjectMeta:      metav1.ObjectMeta{Name: "found-image1234567"},
@@ -778,24 +778,24 @@ func (m *MockClient) ImageSign(ctx context.Context, image string, payload []byte
 	}, nil
 }
 
-func (m *MockClient) ImageVerify(ctx context.Context, image string, opts *client.ImageVerifyOptions) (*apiv1.ImageSignature, error) {
+func (m *MockClient) ImageVerify(context.Context, string, *client.ImageVerifyOptions) (*apiv1.ImageSignature, error) {
 	return nil, nil
 }
 
-func (m *MockClient) BuilderCreate(ctx context.Context) (*apiv1.Builder, error) { return nil, nil }
+func (m *MockClient) BuilderCreate(context.Context) (*apiv1.Builder, error) { return nil, nil }
 
-func (m *MockClient) BuilderGet(ctx context.Context) (*apiv1.Builder, error) { return nil, nil }
+func (m *MockClient) BuilderGet(context.Context) (*apiv1.Builder, error) { return nil, nil }
 
-func (m *MockClient) BuilderDelete(ctx context.Context) (*apiv1.Builder, error) { return nil, nil }
+func (m *MockClient) BuilderDelete(context.Context) (*apiv1.Builder, error) { return nil, nil }
 
-func (m *MockClient) BuilderDialer(ctx context.Context) (func(ctx context.Context) (net.Conn, error), error) {
+func (m *MockClient) BuilderDialer(context.Context) (func(context.Context) (net.Conn, error), error) {
 	return nil, nil
 }
-func (m *MockClient) BuilderRegistryDialer(ctx context.Context) (func(ctx context.Context) (net.Conn, error), error) {
+func (m *MockClient) BuilderRegistryDialer(context.Context) (func(context.Context) (net.Conn, error), error) {
 	return nil, nil
 }
 
-func (m *MockClient) Info(ctx context.Context) ([]apiv1.Info, error) {
+func (m *MockClient) Info(context.Context) ([]apiv1.Info, error) {
 	return []apiv1.Info{
 		{
 			TypeMeta:   metav1.TypeMeta{},
@@ -808,35 +808,35 @@ func (m *MockClient) GetNamespace() string { return "" }
 
 func (m *MockClient) GetClient() (kclient.WithWatch, error) { return nil, nil }
 
-func (m *MockClient) PromptUser(s string) error {
+func (m *MockClient) PromptUser(string) error {
 	return nil
 }
 
-func (m *MockClient) AppConfirmUpgrade(ctx context.Context, name string) error {
+func (m *MockClient) AppConfirmUpgrade(context.Context, string) error {
 	return nil
 }
 
-func (m *MockClient) AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
+func (m *MockClient) AcornImageBuildGet(context.Context, string) (*apiv1.AcornImageBuild, error) {
 	// TODO implement me
 	panic("implement me")
 }
 
-func (m *MockClient) AcornImageBuildList(ctx context.Context) ([]apiv1.AcornImageBuild, error) {
+func (m *MockClient) AcornImageBuildList(context.Context) ([]apiv1.AcornImageBuild, error) {
 	// TODO implement me
 	panic("implement me")
 }
 
-func (m *MockClient) AcornImageBuildDelete(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
+func (m *MockClient) AcornImageBuildDelete(context.Context, string) (*apiv1.AcornImageBuild, error) {
 	// TODO implement me
 	panic("implement me")
 }
 
-func (m *MockClient) AcornImageBuild(ctx context.Context, file string, opts *client.AcornImageBuildOptions) (*v1.AppImage, error) {
+func (m *MockClient) AcornImageBuild(context.Context, string, *client.AcornImageBuildOptions) (*v1.AppImage, error) {
 	// TODO implement me
 	panic("implement me")
 }
 
-func (m *MockClient) ProjectList(ctx context.Context) ([]apiv1.Project, error) {
+func (m *MockClient) ProjectList(context.Context) ([]apiv1.Project, error) {
 	if m.Projects != nil {
 		return m.Projects, nil
 	}
@@ -874,24 +874,24 @@ func (m *MockClient) GetProject() string {
 	return ""
 }
 
-func (m *MockClient) ProjectGet(ctx context.Context, name string) (*apiv1.Project, error) {
+func (m *MockClient) ProjectGet(context.Context, string) (*apiv1.Project, error) {
 	if m.ProjectItem != nil {
 		return m.ProjectItem, nil
 	}
 	return nil, nil
 }
 
-func (m *MockClient) ProjectCreate(ctx context.Context, name string, region string, supportedRegions []string) (*apiv1.Project, error) {
+func (m *MockClient) ProjectCreate(context.Context, string, string, []string) (*apiv1.Project, error) {
 	// TODO implement me
 	panic("implement me")
 }
 
-func (m *MockClient) ProjectDelete(ctx context.Context, name string) (*apiv1.Project, error) {
+func (m *MockClient) ProjectDelete(context.Context, string) (*apiv1.Project, error) {
 	// TODO implement me
 	panic("implement me")
 }
 
-func (m *MockClient) ProjectUpdate(ctx context.Context, project *apiv1.Project, defaultRegion string, supportedRegions []string) (*apiv1.Project, error) {
+func (m *MockClient) ProjectUpdate(context.Context, *apiv1.Project, string, []string) (*apiv1.Project, error) {
 	// TODO implement me
 	panic("implement me")
 }

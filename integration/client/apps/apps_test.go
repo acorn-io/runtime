@@ -411,6 +411,7 @@ func TestAppLog(t *testing.T) {
 	assert.NotEqual(t, "", msg1.Line)
 
 	go func() {
+		//nolint:revive
 		for range msgs {
 		}
 	}()

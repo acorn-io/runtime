@@ -2,7 +2,6 @@ package appdefinition
 
 import (
 	"crypto/sha256"
-	_ "embed"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -98,36 +97,41 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 	} else if len(objs) > 0 {
 		result = append(result, objs...)
 	}
-	if objs, err := ToFunctions(req, appInstance, tag, pullSecrets, interpolator); err != nil {
+	objs, err := ToFunctions(req, appInstance, tag, pullSecrets, interpolator)
+	if err != nil {
 		return err
-	} else {
-		result = append(result, objs...)
 	}
-	if objs, err := toRouters(req.Ctx, req.Client, appInstance); err != nil {
+	result = append(result, objs...)
+
+	objs, err = toRouters(req.Ctx, req.Client, appInstance)
+	if err != nil {
 		return err
-	} else {
-		result = append(result, objs...)
 	}
-	if objs, err := toJobs(req, appInstance, pullSecrets, tag, interpolator); err != nil {
+	result = append(result, objs...)
+
+	objs, err = toJobs(req, appInstance, pullSecrets, tag, interpolator)
+	if err != nil {
 		return err
-	} else {
-		result = append(result, objs...)
 	}
-	if objs, err := services.ToAcornServices(req.Ctx, req.Client, interpolator, appInstance); err != nil {
+	result = append(result, objs...)
+
+	objs, err = services.ToAcornServices(req.Ctx, req.Client, interpolator, appInstance)
+	if err != nil {
 		return err
-	} else {
-		result = append(result, objs...)
 	}
-	if objs, err := toPVCs(req, appInstance); err != nil {
+	result = append(result, objs...)
+
+	objs, err = toPVCs(req, appInstance)
+	if err != nil {
 		return err
-	} else {
-		result = append(result, objs...)
 	}
-	if objs, err := toAcorns(req, appInstance, tag, pullSecrets); err != nil {
+	result = append(result, objs...)
+
+	objs, err = toAcorns(req, appInstance, tag, pullSecrets)
+	if err != nil {
 		return err
-	} else {
-		result = append(result, objs...)
 	}
+	result = append(result, objs...)
 
 	// Secrets go in first so that they are created/updated before things that depend on them.
 	resp.Objects(pullSecrets.Objects()...)

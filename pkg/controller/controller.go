@@ -30,7 +30,7 @@ import (
 )
 
 var (
-	dnsRenewPeriodHours = 24 * time.Hour
+	dnsRenewPeriod = 24 * time.Hour
 )
 
 type Controller struct {
@@ -76,7 +76,7 @@ func New(ctx context.Context) (*Controller, error) {
 		return nil, err
 	}
 
-	err = routes(router, cfg, registryTransport, event.NewRecorder(client))
+	err = routes(router, cfg, registryTransport)
 	if err != nil {
 		return nil, err
 	}
@@ -101,15 +101,14 @@ func (c *Controller) Start(ctx context.Context) error {
 			if _, err := config.Get(ctx, c.Router.Backend()); err == nil {
 				success = true
 				break
-			} else {
-				time.Sleep(time.Millisecond * 100)
 			}
+			time.Sleep(time.Millisecond * 100)
 		}
 		if !success {
 			panic("couldn't initialize client cache")
 		}
 		dnsInit := dns.NewDaemon(c.Router.Backend())
-		go wait.UntilWithContext(ctx, dnsInit.RenewAndSync, dnsRenewPeriodHours)
+		go wait.UntilWithContext(ctx, dnsInit.RenewAndSync, dnsRenewPeriod)
 
 		autoupgrade.StartSync(ctx, c.Router.Backend())
 	}()

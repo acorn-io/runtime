@@ -31,7 +31,7 @@ func (s *Strategy) New() types.Object {
 	return &apiv1.Info{}
 }
 
-func (s *Strategy) List(ctx context.Context, namespace string, options storage.ListOptions) (types.ObjectList, error) {
+func (s *Strategy) List(ctx context.Context, _ string, _ storage.ListOptions) (types.ObjectList, error) {
 	var publicKeys []apiv1.EncryptionKey
 	ns, _ := request.NamespaceFrom(ctx)
 	if ns != "" {

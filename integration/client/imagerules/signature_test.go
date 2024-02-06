@@ -16,8 +16,8 @@ import (
 
 func TestImageSignVerify(t *testing.T) {
 	helper.StartController(t)
-	registry, close := helper.StartRegistry(t)
-	defer close()
+	registry, cancel := helper.StartRegistry(t)
+	defer cancel()
 
 	ctx := helper.GetCTX(t)
 	c, project := helper.ClientAndProject(t)

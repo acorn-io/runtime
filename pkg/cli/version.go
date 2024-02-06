@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewVersion(c CommandContext) *cobra.Command {
+func NewVersion() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "version",
 		Short:   "Version information for acorn",

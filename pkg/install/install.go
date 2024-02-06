@@ -184,7 +184,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	}
 
 	// Validate the http-endpoint-pattern
-	if err := publish.ValidateEndpointPattern(*finalConfForValidation.HttpEndpointPattern); err != nil {
+	if err := publish.ValidateEndpointPattern(*finalConfForValidation.HTTPEndpointPattern); err != nil {
 		return err
 	}
 

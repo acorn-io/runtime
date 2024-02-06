@@ -301,7 +301,7 @@ func buildAcorns(ctx *buildContext, acorns map[string]v1.AcornBuilderSpec) (map[
 
 	for _, entry := range typed.Sorted(acorns) {
 		key, acornImage := entry.Key, entry.Value
-		if _, auto := autoupgrade.AutoUpgradePattern(acornImage.Image); auto || acornImage.AutoUpgrade {
+		if _, auto := autoupgrade.Pattern(acornImage.Image); auto || acornImage.AutoUpgrade {
 			// skip auto upgrade
 			continue
 		}

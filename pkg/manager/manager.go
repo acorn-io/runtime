@@ -111,9 +111,8 @@ func Login(ctx context.Context, cfg *config.CLIConfig, password, address string)
 				user = tokenRequest.Spec.AccountName
 				pass = tokenRequest.Status.Token
 				break
-			} else {
-				logrus.Debugf("tokenRequest.Status.Token is empty")
 			}
+			logrus.Debugf("tokenRequest.Status.Token is empty")
 		} else if passwordIsSpecified && errors.Is(err, ErrTokenNotFound) {
 			return "", "", fmt.Errorf("specified token does not exist; please create a token via the web UI or omit the --password flag to request one via your browser")
 		} else {
@@ -142,11 +141,11 @@ func Login(ctx context.Context, cfg *config.CLIConfig, password, address string)
 	}
 
 	// reload config, could have changed
-	if newCfg, err := config.ReadCLIConfig(cfg.AcornConfigFile, false); err != nil {
+	newCfg, err := config.ReadCLIConfig(cfg.AcornConfigFile, false)
+	if err != nil {
 		return user, pass, err
-	} else {
-		*cfg = *newCfg
 	}
+	*cfg = *newCfg
 	return user, pass, nil
 }
 

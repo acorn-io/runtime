@@ -28,7 +28,7 @@ func ExpireDevSession(req router.Request, resp router.Response) error {
 
 func OverlayDevSession(next router.Handler) router.Handler {
 	return router.HandlerFunc(func(req router.Request, resp router.Response) error {
-		oldGeneration, err := updateAppForDevSession(req, resp)
+		oldGeneration, err := updateAppForDevSession(req)
 		if err != nil {
 			return err
 		}
@@ -78,7 +78,7 @@ func mergeSecretBindings(base, overlay v1.AppInstanceSpec) (result []v1.SecretBi
 	return
 }
 
-func updateAppForDevSession(req router.Request, resp router.Response) (int64, error) {
+func updateAppForDevSession(req router.Request) (int64, error) {
 	if req.Object == nil {
 		return 0, nil
 	}

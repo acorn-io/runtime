@@ -170,12 +170,12 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 				volumeClassName = pv.Labels[labels.AcornVolumeClass]
 			}
 
-			if volClass, ok := volumeClasses[volumeClassName]; !ok {
+			volClass, ok := volumeClasses[volumeClassName]
+			if !ok {
 				return nil, fmt.Errorf("%s has an invalid volume class %s", vol, volumeBinding.Class)
-			} else {
-				pvc.Spec.StorageClassName = &volClass.StorageClassName
-				pvc.Labels[labels.AcornVolumeClass] = volClass.Name
 			}
+			pvc.Spec.StorageClassName = &volClass.StorageClassName
+			pvc.Labels[labels.AcornVolumeClass] = volClass.Name
 
 			if volumeBinding.Size != "" {
 				pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.MustParseResourceQuantity(volumeBinding.Size)
@@ -183,12 +183,12 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 		} else {
 			if volumeRequest.Class != "" {
 				// Specifically allowing volume classes that are inactive.
-				if volClass, ok := volumeClasses[volumeRequest.Class]; !ok && volumeBinding.Class == "" {
+				volClass, ok := volumeClasses[volumeRequest.Class]
+				if !ok {
 					return nil, fmt.Errorf("%s has an invalid volume class %s", vol, volumeRequest.Class)
-				} else {
-					pvc.Spec.StorageClassName = &volClass.StorageClassName
-					pvc.Labels[labels.AcornVolumeClass] = volClass.Name
 				}
+				pvc.Spec.StorageClassName = &volClass.StorageClassName
+				pvc.Labels[labels.AcornVolumeClass] = volClass.Name
 			}
 			pvName, err := LookupExistingPV(req, appInstance, vol)
 			if err != nil {

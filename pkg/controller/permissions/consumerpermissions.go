@@ -115,7 +115,7 @@ func CheckConsumerPermsAuthorized(ctx context.Context, c kclient.Client, appInst
 	return denied, nil
 }
 
-func ConsumerPermissions(req router.Request, resp router.Response) error {
+func ConsumerPermissions(req router.Request, _ router.Response) error {
 	app := req.Object.(*v1.AppInstance)
 
 	iraEnabled, err := config.GetFeature(req.Ctx, req.Client, profiles.FeatureImageRoleAuthorizations)

@@ -2588,8 +2588,8 @@ func (in *Permissions) DeepCopyInto(out *Permissions) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	if in.ZZ_ClusterRules != nil {
-		in, out := &in.ZZ_ClusterRules, &out.ZZ_ClusterRules
+	if in.ZZClusterRules != nil {
+		in, out := &in.ZZClusterRules, &out.ZZClusterRules
 		*out = make([]PolicyRule, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])

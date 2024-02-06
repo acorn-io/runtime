@@ -101,7 +101,7 @@ func (c *ContainerExec) connect(podName, podNamespace, containerName string, exe
 	}), nil
 }
 
-func (c *ContainerExec) Connect(ctx context.Context, id string, options runtime.Object, r registryrest.Responder) (http.Handler, error) {
+func (c *ContainerExec) Connect(ctx context.Context, id string, options runtime.Object, _ registryrest.Responder) (http.Handler, error) {
 	execOpt := options.(*apiv1.ContainerReplicaExecOptions)
 
 	container := &apiv1.ContainerReplica{}

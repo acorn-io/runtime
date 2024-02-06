@@ -1425,8 +1425,8 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 	})
 
 	// determine pod IPs so we can test network connections
-	fooIP := getPodIPFromAppName(t, ctx, &kc, fooApp.Name, fooApp.Status.Namespace)
-	barIP := getPodIPFromAppName(t, ctx, &kc, barApp.Name, barApp.Status.Namespace)
+	fooIP := getPodIPFromAppName(ctx, t, &kc, fooApp.Name, fooApp.Status.Namespace)
+	barIP := getPodIPFromAppName(ctx, t, &kc, barApp.Name, barApp.Status.Namespace)
 
 	// build an Acorn that just runs a job with the official curl container
 	curlImage1, err := proj1Client.AcornImageBuild(ctx, "testdata/networkpolicy/curl.Acornfile", nil)
@@ -1500,7 +1500,7 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 	}
 }
 
-func getPodIPFromAppName(t *testing.T, ctx context.Context, kc *crClient.WithWatch, appName, namespace string) string {
+func getPodIPFromAppName(ctx context.Context, t *testing.T, kc *crClient.WithWatch, appName, namespace string) string {
 	t.Helper()
 	selector, err := k8slabels.Parse(fmt.Sprintf("%s=%s", labels.AcornAppName, appName))
 	if err != nil {
@@ -1800,7 +1800,7 @@ func TestIgnoreResourceRequirements(t *testing.T) {
 	kc := helper.MustReturn(kclient.Default)
 	project := helper.TempProject(t, kc)
 
-	helper.SetIgnoreResourceRequirementsWithRestore(t, ctx, kc)
+	helper.SetIgnoreResourceRequirementsWithRestore(ctx, t, kc)
 
 	c, err := client.New(restConfig, project.Name, project.Name)
 	if err != nil {

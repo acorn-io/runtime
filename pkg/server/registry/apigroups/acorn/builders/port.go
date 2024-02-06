@@ -53,7 +53,7 @@ func (c *BuilderPort) NewConnectOptions() (runtime.Object, bool, string) {
 	return nil, false, ""
 }
 
-func (c *BuilderPort) Connect(ctx context.Context, id string, options runtime.Object, r registryrest.Responder) (http.Handler, error) {
+func (c *BuilderPort) Connect(ctx context.Context, id string, _ runtime.Object, _ registryrest.Responder) (http.Handler, error) {
 	ns, _ := request.NamespaceFrom(ctx)
 
 	cfg, err := config.Get(ctx, c.client)

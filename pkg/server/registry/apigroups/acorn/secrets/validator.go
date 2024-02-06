@@ -14,7 +14,7 @@ import (
 type Validator struct {
 }
 
-func (v *Validator) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
+func (v *Validator) Validate(_ context.Context, obj runtime.Object) (result field.ErrorList) {
 	sec := obj.(*apiv1.Secret)
 	if sec.Type != "" {
 		if !v1.SecretTypes[corev1.SecretType(v1.SecretTypePrefix+sec.Type)] && !strings.HasPrefix(sec.Type, v1.SecretTypeCredentialPrefix) {
@@ -24,6 +24,6 @@ func (v *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 	return
 }
 
-func (v *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object) field.ErrorList {
+func (v *Validator) ValidateUpdate(ctx context.Context, obj, _ runtime.Object) field.ErrorList {
 	return v.Validate(ctx, obj)
 }

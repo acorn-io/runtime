@@ -16,11 +16,11 @@ import (
 type Strategy struct {
 }
 
-func (s *Strategy) PrepareForUpdate(ctx context.Context, obj, old runtime.Object) {
+func (s *Strategy) PrepareForUpdate(ctx context.Context, obj, _ runtime.Object) {
 	s.PrepareForCreate(ctx, obj)
 }
 
-func (s *Strategy) PrepareForCreate(ctx context.Context, obj runtime.Object) {
+func (s *Strategy) PrepareForCreate(_ context.Context, obj runtime.Object) {
 	cred := obj.(*apiv1.Credential)
 	cred.ServerAddress = imagesystem.NormalizeServerAddress(cred.ServerAddress)
 }
@@ -34,7 +34,7 @@ func (s *Strategy) Validate(ctx context.Context, obj runtime.Object) (result fie
 	}
 	return result
 }
-func (s *Strategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) (result field.ErrorList) {
+func (s *Strategy) ValidateUpdate(ctx context.Context, obj, _ runtime.Object) (result field.ErrorList) {
 	params := obj.(*apiv1.Credential)
 	return s.Validate(ctx, params)
 }

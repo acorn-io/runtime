@@ -6,7 +6,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func DeletePods(req router.Request, resp router.Response) error {
+func DeletePods(req router.Request, _ router.Response) error {
 	pod := req.Object.(*corev1.Pod)
 	for _, container := range pod.Spec.Containers {
 		if container.Image == system.LocalImage {

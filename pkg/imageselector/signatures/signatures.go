@@ -2,6 +2,7 @@ package signatures
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/acorn-io/baaah/pkg/merr"
@@ -64,11 +65,12 @@ func VerifySignatureRule(ctx context.Context, c client.Reader, namespace string,
 			if err == nil {
 				anyOfOK = true
 				break
-			} else {
-				if _, ok := err.(*cosign.VerificationError); !ok {
-					e := fmt.Errorf(".signatures.anyOf.%d: %w", anyOfRuleIndex, err)
-					anyOfErrs = append(anyOfErrs, e)
-				}
+			}
+
+			var verificationError *cosign.VerificationError
+			if !errors.As(err, &verificationError) {
+				e := fmt.Errorf(".signatures.anyOf.%d: %w", anyOfRuleIndex, err)
+				anyOfErrs = append(anyOfErrs, e)
 			}
 		}
 		if !anyOfOK {

@@ -7,7 +7,7 @@ import (
 	client2 "github.com/acorn-io/runtime/integration/client"
 	"github.com/acorn-io/runtime/integration/helper"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/runtime/pkg/client"
+	rclient "github.com/acorn-io/runtime/pkg/client"
 	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +26,7 @@ func TestJobList(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", project.Name)
+	c, err := rclient.New(restConfig, "", project.Name)
 	require.NoError(t, err)
 
 	imageID := client2.NewImageWithJobs(t, project.Name)
@@ -58,7 +58,7 @@ func TestJobGet(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", project.Name)
+	c, err := rclient.New(restConfig, "", project.Name)
 	require.NoError(t, err)
 
 	imageID := client2.NewImageWithJobs(t, project.Name)
@@ -106,29 +106,27 @@ func TestJobRestart(t *testing.T) {
 	lclient, err := kclient.New(restConfig)
 	require.NoError(t, err)
 
-	kclient := helper.MustReturn(kclient.Default)
-	project := helper.TempProject(t, kclient)
+	client := helper.MustReturn(kclient.Default)
+	project := helper.TempProject(t, client)
 
-	c, err := client.New(restConfig, "", project.Name)
+	c, err := rclient.New(restConfig, "", project.Name)
 	require.NoError(t, err)
 
-	imageID := client2.NewImageWithJobs(t, project.Name)
-	app, err := c.AppRun(ctx, imageID, nil)
+	app, err := c.AppRun(ctx, client2.NewImageWithJobs(t, project.Name), nil)
 	require.NoError(t, err)
 
 	// Wait for the Job to initially complete
 	var firstCompletion *metav1.Time
-	helper.WaitForObject(t, lclient.Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
+	app = helper.WaitForObject(t, lclient.Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
 		firstCompletion = app.Status.AppStatus.Jobs["job"].CompletionTime
-		return app.Status.Namespace != "" && app.Status.AppStatus.Jobs["job"].CompletionTime != nil
+		return app.Status.AppStatus.Jobs["job"].CompletionTime != nil
 	})
 
 	require.NoError(t, c.JobRestart(ctx, publicname.ForChild(app, "job")))
 
 	// Wait for the Job to complete again by checking for a difference in the completion time
-	helper.WaitForObject(t, lclient.Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
-		secondCompletion := app.Status.AppStatus.Jobs["job"].CompletionTime
-		return app.Status.Namespace != "" && !firstCompletion.Equal(secondCompletion)
+	app = helper.WaitForObject(t, lclient.Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
+		return !firstCompletion.Equal(app.Status.AppStatus.Jobs["job"].CompletionTime)
 	})
 
 	require.NoError(t, c.JobRestart(ctx, publicname.ForChild(app, "cronjob")))

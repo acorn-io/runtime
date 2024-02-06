@@ -20,7 +20,7 @@ type Translator struct {
 	strategy strategy.CompleteStrategy
 }
 
-func (p *Translator) ListOpts(ctx context.Context, namespace string, opts storage.ListOptions) (string, storage.ListOptions, error) {
+func (p *Translator) ListOpts(_ context.Context, namespace string, opts storage.ListOptions) (string, storage.ListOptions, error) {
 	return namespace, opts, nil
 }
 
@@ -38,7 +38,7 @@ func NewStrategy(strategy strategy.CompleteStrategy) strategy.CompleteStrategy {
 	}, strategy)
 }
 
-func (p *Translator) ToPublic(ctx context.Context, objs ...runtime.Object) (result []types.Object, _ error) {
+func (p *Translator) ToPublic(_ context.Context, objs ...runtime.Object) (result []types.Object, _ error) {
 	for _, obj := range objs {
 		newObj := obj.DeepCopyObject().(types.Object)
 		newObj.SetName(Get(newObj))

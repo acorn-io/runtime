@@ -39,7 +39,7 @@ func registryService(namespace string) []client.Object {
 	}
 }
 
-func registryServiceAccount(namespace string) client.Object {
+func registryServiceAccount() client.Object {
 	return &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      system.RegistryServiceAccountName,

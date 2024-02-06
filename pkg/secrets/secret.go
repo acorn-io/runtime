@@ -367,7 +367,7 @@ func getSecret(req router.Request, appInstance *v1.AppInstance, name string) (*c
 
 func generateSecret(secrets map[string]*corev1.Secret, req router.Request, appInstance *v1.AppInstance, secretName string) (*corev1.Secret, error) {
 	existing, err := getSecret(req, appInstance, secretName)
-	if err != nil && !apierrors.IsNotFound(err) {
+	if kclient.IgnoreNotFound(err) != nil {
 		return nil, err
 	}
 	secretRef, ok := appInstance.Status.AppSpec.Secrets[secretName]

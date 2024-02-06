@@ -31,7 +31,7 @@ func (s *Push) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	auth, err := getAuthForImage(cmd.Context(), s.client, args[0])
+	auth, err := getAuthForImage(s.client, args[0])
 	if err != nil {
 		return err
 	}

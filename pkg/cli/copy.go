@@ -73,7 +73,7 @@ func (a *ImageCopy) Run(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("image %s has no specified registry", args[0])
 	}
 
-	sourceAuth, err := getAuthForImage(cmd.Context(), a.client, args[0])
+	sourceAuth, err := getAuthForImage(a.client, args[0])
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (a *ImageCopy) Run(cmd *cobra.Command, args []string) (err error) {
 		return a.copyTag(source, args[1], sourceOpts)
 	}
 
-	destAuth, err := getAuthForImage(cmd.Context(), a.client, args[1])
+	destAuth, err := getAuthForImage(a.client, args[1])
 	if err != nil {
 		return err
 	}

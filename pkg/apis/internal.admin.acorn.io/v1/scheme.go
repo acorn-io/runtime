@@ -1,7 +1,7 @@
 package v1
 
 import (
-	internal_admin_acorn_io "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io"
+	internaladminacornio "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -10,7 +10,7 @@ import (
 const Version = "v1"
 
 var SchemeGroupVersion = schema.GroupVersion{
-	Group:   internal_admin_acorn_io.Group,
+	Group:   internaladminacornio.Group,
 	Version: Version,
 }
 

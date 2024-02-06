@@ -18,7 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, depotToken, depotProjectId, builderUID, forwardAddress string, cfg *apiv1.Config) []client.Object {
+func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, depotToken, depotProjectID, builderUID, forwardAddress string, cfg *apiv1.Config) []client.Object {
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -28,7 +28,7 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 			"pub":            []byte(pub),
 			"priv":           []byte(privKey),
 			"depotToken":     []byte(depotToken),
-			"depotProjectId": []byte(depotProjectId),
+			"depotProjectId": []byte(depotProjectID),
 		},
 	}
 
@@ -225,7 +225,7 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 		},
 	}
 
-	if depotToken != "" && depotProjectId != "" {
+	if depotToken != "" && depotProjectID != "" {
 		// Drop buildkit
 		deployment.Spec.Template.Spec.Containers = []corev1.Container{
 			deployment.Spec.Template.Spec.Containers[1],

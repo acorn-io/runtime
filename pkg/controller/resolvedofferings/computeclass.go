@@ -8,9 +8,9 @@ import (
 	"github.com/acorn-io/runtime/pkg/computeclasses"
 	"github.com/acorn-io/z"
 
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/utils/strings/slices"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // resolveComputeClasses resolves the compute class information for each container in the AppInstance
@@ -38,7 +38,7 @@ func resolveComputeClasses(req router.Request, cfg *apiv1.Config, appInstance *v
 		Class:  defaultCC,
 	}
 	cc, err := computeclasses.GetAsProjectComputeClassInstance(req.Ctx, req.Client, appInstance.Status.Namespace, defaultCC)
-	if err != nil && !apierrors.IsNotFound(err) {
+	if kclient.IgnoreNotFound(err) != nil {
 		return err
 	}
 

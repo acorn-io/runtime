@@ -52,7 +52,7 @@ func (a *appStatusRenderer) getReplicasSummary(nameLabel string) (map[string]v1.
 			}
 		}
 
-		transition, errored := containerMessages(&pod, append(pod.Status.InitContainerStatuses, pod.Status.ContainerStatuses...))
+		transition, errored := containerMessages(append(pod.Status.InitContainerStatuses, pod.Status.ContainerStatuses...))
 		summary.TransitioningMessages = append(summary.TransitioningMessages, transition...)
 		summary.ErrorMessages = append(summary.ErrorMessages, errored...)
 
@@ -68,7 +68,7 @@ func (a *appStatusRenderer) getReplicasSummary(nameLabel string) (map[string]v1.
 	return result, nil
 }
 
-func containerMessages(pod *corev1.Pod, status []corev1.ContainerStatus) (transitionMessages, errorMessages []string) {
+func containerMessages(status []corev1.ContainerStatus) (transitionMessages, errorMessages []string) {
 	for _, container := range status {
 		if container.State.Waiting != nil {
 			if container.LastTerminationState.Terminated != nil {

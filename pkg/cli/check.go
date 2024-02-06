@@ -31,7 +31,7 @@ type Check struct {
 	client           ClientFactory
 }
 
-func (a *Check) Run(cmd *cobra.Command, args []string) error {
+func (a *Check) Run(cmd *cobra.Command, _ []string) error {
 	checkOpts := install.CheckOptions{RuntimeImage: a.Image, IngressClassName: a.IngressClassName, Namespace: a.TestNamespace}
 	checkresult := install.RunChecks(cmd.Context(), checkOpts,
 		install.CheckRBAC,

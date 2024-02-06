@@ -51,7 +51,7 @@ func (t *Translator) FromPublicName(ctx context.Context, namespace, name string)
 	return "", name, nil
 }
 
-func (t *Translator) ListOpts(ctx context.Context, namespace string, opts storage.ListOptions) (string, storage.ListOptions, error) {
+func (t *Translator) ListOpts(_ context.Context, namespace string, opts storage.ListOptions) (string, storage.ListOptions, error) {
 	sel := opts.Predicate.Label
 	if sel == nil {
 		sel = klabels.Everything()
@@ -129,7 +129,7 @@ func (t *Translator) ToPublic(ctx context.Context, objs ...runtime.Object) (resu
 	return
 }
 
-func (t *Translator) FromPublic(ctx context.Context, obj runtime.Object) (types.Object, error) {
+func (t *Translator) FromPublic(_ context.Context, obj runtime.Object) (types.Object, error) {
 	vol := obj.(*apiv1.Volume)
 	pv := &corev1.PersistentVolume{
 		ObjectMeta: vol.ObjectMeta,

@@ -419,12 +419,10 @@ func matchesContainer(pod *corev1.Pod, container corev1.Container, options *Opti
 				return pod.Name == podName && container.Name == pod.Labels[applabels.AcornContainerName]
 			} else if pod.Labels[applabels.AcornFunctionName] != "" {
 				return pod.Name == podName && container.Name == pod.Labels[applabels.AcornFunctionName]
-			} else {
-				return pod.Name == podName && container.Name == pod.Labels[applabels.AcornJobName]
 			}
-		} else {
-			return pod.Name == podName && container.Name == containerName
+			return pod.Name == podName && container.Name == pod.Labels[applabels.AcornJobName]
 		}
+		return pod.Name == podName && container.Name == containerName
 	}
 
 	// user has selected a specific acorn container name (the name seen in the acornfile containers section)

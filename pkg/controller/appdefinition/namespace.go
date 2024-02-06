@@ -59,7 +59,7 @@ func RequireNamespace(h router.Handler) router.Handler {
 	})
 }
 
-func AddAcornProjectLabel(req router.Request, resp router.Response) error {
+func AddAcornProjectLabel(req router.Request, _ router.Response) error {
 	app := req.Object.(*v1.AppInstance)
 	var projectNamespace corev1.Namespace
 

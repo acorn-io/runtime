@@ -30,12 +30,12 @@ func NewACMEDNS01ChallengeProvider(endpoint, domain, token string) *ACMEDNS01Cha
 	}
 }
 
-func (d *ACMEDNS01ChallengeProvider) Present(domain, token, keyAuth string) error {
+func (d *ACMEDNS01ChallengeProvider) Present(domain, _, keyAuth string) error {
 	fqdn, value := dns01.GetRecord(domain, keyAuth)
 	return d.client.SetTXTRecord(fqdn, value)
 }
 
-func (d *ACMEDNS01ChallengeProvider) CleanUp(domain, token, keyAuth string) error {
+func (d *ACMEDNS01ChallengeProvider) CleanUp(domain, _, _ string) error {
 	return d.client.DeleteDNSRecord(domain)
 }
 

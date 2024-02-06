@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewLocalRm(c CommandContext) *cobra.Command {
+func NewLocalRm() *cobra.Command {
 	cmd := cli.Command(&LocalRm{}, cobra.Command{
 		Use:          "rm [flags]",
 		Aliases:      []string{"delete"},
@@ -22,8 +22,8 @@ type LocalRm struct {
 	State bool `usage:"Include associated state (acorns, secrets and volume data)"`
 }
 
-func (a *LocalRm) Run(cmd *cobra.Command, args []string) error {
-	c, err := local.NewContainer(cmd.Context())
+func (a *LocalRm) Run(cmd *cobra.Command, _ []string) error {
+	c, err := local.NewContainer()
 	if err != nil {
 		return err
 	}

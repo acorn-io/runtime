@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	api_acorn_io "github.com/acorn-io/runtime/pkg/apis/api.acorn.io"
+	apiacornio "github.com/acorn-io/runtime/pkg/apis/api.acorn.io"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -13,7 +13,7 @@ import (
 const Version = "v1"
 
 var SchemeGroupVersion = schema.GroupVersion{
-	Group:   api_acorn_io.Group,
+	Group:   apiacornio.Group,
 	Version: Version,
 }
 
@@ -83,13 +83,13 @@ func AddToSchemeWithGV(scheme *runtime.Scheme, schemeGroupVersion schema.GroupVe
 		// Add the watch version that applies
 		metav1.AddToGroupVersion(scheme, schemeGroupVersion)
 
-		if err := scheme.AddConversionFunc((*url.Values)(nil), (*ContainerReplicaPortForwardOptions)(nil), Convert_url_Values_To__ContainerReplicaPortForwardOptions); err != nil {
+		if err := scheme.AddConversionFunc((*url.Values)(nil), (*ContainerReplicaPortForwardOptions)(nil), ConvertURLValuesToContainerReplicaPortForwardOptions); err != nil {
 			return err
 		}
-		if err := scheme.AddConversionFunc((*url.Values)(nil), (*ContainerReplicaExecOptions)(nil), Convert_url_Values_To__ContainerReplicaExecOptions); err != nil {
+		if err := scheme.AddConversionFunc((*url.Values)(nil), (*ContainerReplicaExecOptions)(nil), ConvertURLValuesToContainerReplicaExecOptions); err != nil {
 			return err
 		}
-		if err := scheme.AddConversionFunc((*url.Values)(nil), (*LogOptions)(nil), Convert_url_Values_To__LogOptions); err != nil {
+		if err := scheme.AddConversionFunc((*url.Values)(nil), (*LogOptions)(nil), ConvertURLValuesToLogOptions); err != nil {
 			return err
 		}
 

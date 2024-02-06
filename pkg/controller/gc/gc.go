@@ -7,7 +7,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func GCOrphans(req router.Request, resp router.Response) error {
+func Orphans(req router.Request, _ router.Response) error {
 	if !req.Object.GetDeletionTimestamp().IsZero() {
 		return nil
 	}

@@ -38,6 +38,7 @@ func (r *RemoteKeyChain) run(ctx context.Context) {
 	defer func() {
 		cancel()
 		go func() {
+			//nolint:revive
 			for range msgs {
 			}
 		}()

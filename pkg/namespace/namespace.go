@@ -17,7 +17,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func DenormalizeName(ctx context.Context, c client.Client, namespace, name string) (string, string, error) {
+func DenormalizeName(ctx context.Context, c client.Client, _, name string) (string, string, error) {
 	ns, _ := request.NamespaceFrom(ctx)
 	for {
 		prefix, suffix, ok := strings.Cut(name, ".")

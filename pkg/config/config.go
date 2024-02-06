@@ -80,8 +80,8 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader, inclu
 	if c.BuilderPerProject == nil {
 		c.BuilderPerProject = profile.BuilderPerProject
 	}
-	if z.Dereference(c.HttpEndpointPattern) == "" {
-		c.HttpEndpointPattern = profile.HttpEndpointPattern
+	if z.Dereference(c.HTTPEndpointPattern) == "" {
+		c.HTTPEndpointPattern = profile.HTTPEndpointPattern
 	}
 	if c.WorkloadMemoryDefault == nil {
 		c.WorkloadMemoryDefault = profile.WorkloadMemoryDefault
@@ -201,7 +201,7 @@ func setClusterDomains(ctx context.Context, c *apiv1.Config, getter kclient.Read
 	if shouldLookupAcornDNSDomain {
 		dnsSecret := &corev1.Secret{}
 		err = getter.Get(ctx, router.Key(system.Namespace, system.DNSSecretName), dnsSecret)
-		if err != nil && !apierror.IsNotFound(err) {
+		if kclient.IgnoreNotFound(err) != nil {
 			return err
 		}
 		domain := string(dnsSecret.Data["domain"])
@@ -335,8 +335,8 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 		}
 		mergedConfig.ClusterDomains = newConfig.ClusterDomains
 	}
-	if newConfig.HttpEndpointPattern != nil {
-		mergedConfig.HttpEndpointPattern = newConfig.HttpEndpointPattern
+	if newConfig.HTTPEndpointPattern != nil {
+		mergedConfig.HTTPEndpointPattern = newConfig.HTTPEndpointPattern
 	}
 	if newConfig.AcornDNS != nil {
 		mergedConfig.AcornDNS = newConfig.AcornDNS
@@ -557,7 +557,7 @@ func Set(ctx context.Context, client kclient.Client, cfg *apiv1.Config) error {
 			Name: system.Namespace,
 		},
 	})
-	if err != nil && !apierror.IsAlreadyExists(err) && !meta.IsNoMatchError(err) {
+	if kclient.IgnoreAlreadyExists(err) != nil && !meta.IsNoMatchError(err) {
 		return err
 	}
 

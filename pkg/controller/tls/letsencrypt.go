@@ -30,7 +30,6 @@ import (
 	"github.com/go-acme/lego/v4/registration"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -170,9 +169,8 @@ func matchLeURLToEnv(url string) string {
 		return "staging"
 	} else if url == LetsEncryptURLProduction {
 		return "enabled"
-	} else {
-		return "disabled"
 	}
+	return "disabled"
 }
 
 // toHash returns a hash of the configurable fields of the LEUser
@@ -233,7 +231,7 @@ func ensureLEUser(ctx context.Context, client kclient.Client) (*LEUser, error) {
 
 	leAccountSecret := &corev1.Secret{}
 	err = client.Get(ctx, router.Key(system.Namespace, system.LEAccountSecretName), leAccountSecret)
-	if err != nil && !apierrors.IsNotFound(err) {
+	if kclient.IgnoreNotFound(err) != nil {
 		return nil, err
 	}
 
@@ -342,18 +340,17 @@ func stillValid(cert []byte) bool {
 		// (a) unreadable certificate -> renew
 		logrus.Errorf("problem parsing certificate: %v", err)
 		return false
-	} else {
-		timeToExpire := x509crt.NotAfter.Sub(time.Now().UTC())
-		if timeToExpire > 7*24*time.Hour {
-			// (b) cert is still valid for more than 7 days -> good to go
-			logrus.Debugf("certificate for %s is still valid until %s (%d hours)", x509crt.Subject.CommonName, x509crt.NotAfter, int(timeToExpire.Hours()))
-			return true
-		} else {
-			// (c) cert is expired -> renew
-			logrus.Infof("certificate for %s is expiring after %s (%d hours) and should be renewed", x509crt.Subject.CommonName, x509crt.NotAfter, int(timeToExpire.Hours()))
-			return false
-		}
 	}
+
+	timeToExpire := x509crt.NotAfter.Sub(time.Now().UTC())
+	if timeToExpire > 7*24*time.Hour {
+		// (b) cert is still valid for more than 7 days -> good to go
+		logrus.Debugf("certificate for %s is still valid until %s (%d hours)", x509crt.Subject.CommonName, x509crt.NotAfter, int(timeToExpire.Hours()))
+		return true
+	}
+	// (c) cert is expired -> renew
+	logrus.Infof("certificate for %s is expiring after %s (%d hours) and should be renewed", x509crt.Subject.CommonName, x509crt.NotAfter, int(timeToExpire.Hours()))
+	return false
 }
 
 // mustRenew returns true if the certificate must be renewed, either because the Let's Encrypt settings changed, the certificate is invalid or it's about to expire
@@ -393,7 +390,7 @@ func (u *LEUser) dnsChallenge(ctx context.Context, domain string) (*certificate.
 
 	dnsSecret := &corev1.Secret{}
 	err = c.Get(ctx, router.Key(system.Namespace, system.DNSSecretName), dnsSecret)
-	if err != nil && !apierrors.IsNotFound(err) {
+	if kclient.IgnoreNotFound(err) != nil {
 		return nil, err
 	}
 	token := string(dnsSecret.Data["token"])

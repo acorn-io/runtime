@@ -28,7 +28,7 @@ func wsURL(url string) string {
 	return url
 }
 
-type CredentialLookup func(ctx context.Context, serverAddress string) (*apiv1.RegistryAuth, bool, error)
+type CredentialLookup func(serverAddress string) (*apiv1.RegistryAuth, bool, error)
 
 type WebSocketDialer func(ctx context.Context, urlStr string, requestHeader http.Header) (*websocket.Conn, *http.Response, error)
 
@@ -110,7 +110,7 @@ func Stream(ctx context.Context, cwd string, streams *streams.Output, dialer Web
 		} else if msg.AppImage != nil {
 			return msg.AppImage, nil
 		} else if msg.RegistryServerAddress != "" {
-			cm := lookupCred(ctx, creds, msg.RegistryServerAddress)
+			cm := lookupCred(creds, msg.RegistryServerAddress)
 			if cm != nil && cm.RegistryAuth != nil {
 				// Mark the credential as used
 				credHits.Insert(msg.RegistryServerAddress)
@@ -158,7 +158,7 @@ func Stream(ctx context.Context, cwd string, streams *streams.Output, dialer Web
 	return nil, fmt.Errorf("build failed")
 }
 
-func lookupCred(ctx context.Context, creds CredentialLookup, serverAddress string) (result *Message) {
+func lookupCred(creds CredentialLookup, serverAddress string) (result *Message) {
 	result = &Message{
 		RegistryServerAddress: serverAddress,
 	}
@@ -167,7 +167,7 @@ func lookupCred(ctx context.Context, creds CredentialLookup, serverAddress strin
 		return
 	}
 
-	cred, found, err := creds(ctx, serverAddress)
+	cred, found, err := creds(serverAddress)
 	if err != nil {
 		logrus.Errorf("failed to lookup credential for server address %s: %v", serverAddress, err)
 		return

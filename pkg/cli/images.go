@@ -137,7 +137,7 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 			tagToMatch = image.Tags[0]
 		}
 
-		return printContainerImages(images, cmd.Context(), c, a, args, tagToMatch)
+		return printContainerImages(cmd.Context(), c, images, a, tagToMatch)
 	}
 
 	out := table.NewWriter(tables.ImageAcorn, false, a.Output)
@@ -236,7 +236,7 @@ type imageContainerPrint struct {
 	ImageID   string
 }
 
-func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Client, a *Image, args []string, tagToMatch string) error {
+func printContainerImages(ctx context.Context, c client.Client, images []apiv1.Image, a *Image, tagToMatch string) error {
 	out := table.NewWriter(tables.ImageContainer, a.Quiet, a.Output)
 
 	if a.Quiet {
@@ -246,7 +246,7 @@ func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Cl
 	}
 
 	for _, image := range images {
-		containerImages, err := getImageContainers(c, ctx, image)
+		containerImages, err := getImageContainers(ctx, c, image)
 		if err != nil {
 			return err
 		}
@@ -284,8 +284,8 @@ func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Cl
 	return out.Err()
 }
 
-func getImageContainers(c client.Client, ctx context.Context, image apiv1.Image) ([]imageContainer, error) {
-	imageContainers := []imageContainer{}
+func getImageContainers(ctx context.Context, c client.Client, image apiv1.Image) ([]imageContainer, error) {
+	var imageContainers []imageContainer
 
 	imgDetails, err := c.ImageDetails(ctx, image.Name, nil)
 	if err != nil {
@@ -302,7 +302,7 @@ func getImageContainers(c client.Client, ctx context.Context, image apiv1.Image)
 }
 
 func newImageContainerList(image apiv1.Image, containers map[string]v1.ContainerData) []imageContainer {
-	imageContainers := []imageContainer{}
+	var imageContainers []imageContainer
 
 	for k, v := range containers {
 		imageContainerObject := imageContainer{

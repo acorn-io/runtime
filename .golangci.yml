@@ -21,5 +21,6 @@ linters:
   - unused
   - goimports
   - whitespace
+  - revive
   fast: false
   max-same-issues: 50

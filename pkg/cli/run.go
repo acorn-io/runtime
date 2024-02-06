@@ -160,11 +160,10 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 
 	if s.EnvFile != "" {
 		envData, err := os.ReadFile(s.EnvFile)
-		if os.IsNotExist(err) {
-		} else if err != nil {
-			return opts, err
-		} else {
+		if err == nil {
 			opts.Env = append(opts.Env, v1.ParseNameValues(false, strings.Split(string(envData), "\n")...)...)
+		} else if err != nil && !os.IsNotExist(err) {
+			return opts, err
 		}
 	}
 
@@ -268,7 +267,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 		}
 		err = client.TranslateNotAllowed(err)
 		if naErr := (*imagerules.ErrImageNotAllowed)(nil); errors.As(err, &naErr) {
-			if _, isPattern := autoupgrade.AutoUpgradePattern(image); isPattern {
+			if _, isPattern := autoupgrade.Pattern(image); isPattern {
 				err.(*imagerules.ErrImageNotAllowed).Image = image
 				logrus.Debugf("Valid tags for pattern %s were not allowed to run: %v", image, naErr)
 				if choice, promptErr := rulerequest.HandleNotAllowed(s.Dangerous, image); promptErr != nil {

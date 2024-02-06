@@ -206,9 +206,8 @@ func retryGetImage(d name.Digest, opts []remote.Option) (result ggcrv1.Image, er
 		result, err = remote.Image(d, opts...)
 		if err == nil {
 			return
-		} else {
-			logrus.Warnf("failed to find newly created manifest %s, retrying: %v", d.String(), err)
 		}
+		logrus.Warnf("failed to find newly created manifest %s, retrying: %v", d.String(), err)
 		time.Sleep(time.Second)
 	}
 

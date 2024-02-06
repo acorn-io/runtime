@@ -63,7 +63,7 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	auth, err := getAuthForImage(cmd.Context(), a.client, imageName)
+	auth, err := getAuthForImage(a.client, imageName)
 	if err != nil {
 		return err
 	}

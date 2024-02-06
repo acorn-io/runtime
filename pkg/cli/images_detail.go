@@ -41,7 +41,7 @@ func (a *ImageDetails) Run(cmd *cobra.Command, args []string) error {
 		nested = args[1]
 	}
 
-	auth, err = getAuthForImage(cmd.Context(), a.client, args[0])
+	auth, err = getAuthForImage(a.client, args[0])
 	if err != nil {
 		return err
 	}

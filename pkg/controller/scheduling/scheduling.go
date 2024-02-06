@@ -91,7 +91,7 @@ func addScheduling(req router.Request, appInstance *v1.AppInstance, workloads ma
 			appInstance.Status.Scheduling[sidecarName] = v1.Scheduling{Requirements: *sidecarRequirements}
 		}
 
-		affinity, tolerations = Nodes(req, computeClass)
+		affinity, tolerations = Nodes(computeClass)
 
 		priorityClassName, err := priorityClassName(req, computeClass)
 		if err != nil {
@@ -124,7 +124,7 @@ func addScheduling(req router.Request, appInstance *v1.AppInstance, workloads ma
 }
 
 // Nodes returns the Affinity and Tolerations from a ComputeClass if they exist
-func Nodes(req router.Request, computeClass *adminv1.ProjectComputeClassInstance) (*corev1.Affinity, []corev1.Toleration) {
+func Nodes(computeClass *adminv1.ProjectComputeClassInstance) (*corev1.Affinity, []corev1.Toleration) {
 	if computeClass == nil {
 		return nil, nil
 	}

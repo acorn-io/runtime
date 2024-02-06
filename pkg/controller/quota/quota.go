@@ -211,7 +211,7 @@ func addStorage(req router.Request, appInstance *v1.AppInstance, quotaRequest *a
 		if boundSecret(name, appInstance.Spec.Secrets) {
 			continue
 		}
-		quotaRequest.Spec.Resources.Secrets += 1
+		quotaRequest.Spec.Resources.Secrets++
 	}
 	return nil
 }

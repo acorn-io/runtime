@@ -19,8 +19,8 @@ var (
 	// AutoUpgradeIntervalDefault is the default value for the DefaultImageCheckInterval field
 	AutoUpgradeIntervalDefault = "1m"
 
-	// HttpEndpointPatternDefault is a pattern that works with Let's Encrypt
-	HttpEndpointPatternDefault = "{{hashConcat 8 .Container .App .Namespace | truncate}}.{{.ClusterDomain}}"
+	// HTTPEndpointPatternDefault is a pattern that works with Let's Encrypt
+	HTTPEndpointPatternDefault = "{{hashConcat 8 .Container .App .Namespace | truncate}}.{{.ClusterDomain}}"
 
 	// Features
 	FeatureImageAllowRules         = "image-allow-rules"
@@ -43,7 +43,7 @@ func defaultProfile() apiv1.Config {
 		CertManagerIssuer:              new(string),
 		EventTTL:                       new(string),
 		Features:                       FeatureDefaults,
-		HttpEndpointPattern:            z.Pointer(HttpEndpointPatternDefault),
+		HTTPEndpointPattern:            z.Pointer(HTTPEndpointPatternDefault),
 		IgnoreUserLabelsAndAnnotations: new(bool),
 		IngressClassName:               new(string),
 		IngressControllerNamespace:     new(string),

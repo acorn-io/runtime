@@ -50,7 +50,7 @@ func NewConverter(tableDef [][]string) (*Converter, error) {
 	return &c, nil
 }
 
-func (c Converter) ConvertToTable(ctx context.Context, object runtime.Object, tableOptions runtime.Object) (*metav1.Table, error) {
+func (c Converter) ConvertToTable(_ context.Context, object runtime.Object, _ runtime.Object) (*metav1.Table, error) {
 	var (
 		rows     []metav1.TableRow
 		listMeta metav1.ListMeta

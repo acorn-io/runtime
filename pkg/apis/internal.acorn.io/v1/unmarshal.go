@@ -588,8 +588,8 @@ func (in *ContainerImageBuilderSpec) UnmarshalJSON(data []byte) error {
 
 func (in *PortBinding) UnmarshalJSON(data []byte) error {
 	defer func() {
-		if in.ZZ_ServiceName != "" && in.Hostname == "" {
-			in.Hostname = in.ZZ_ServiceName
+		if in.ZZServiceName != "" && in.Hostname == "" {
+			in.Hostname = in.ZZServiceName
 		}
 	}()
 

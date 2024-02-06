@@ -2,7 +2,7 @@ package nacl
 
 import (
 	"context"
-	crypto_rand "crypto/rand"
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -22,8 +22,8 @@ const (
 	naclNSUID    = "ns-uid"
 )
 
-type NaclKeys map[string]*NaclKey
-type NaclKey struct {
+type Keys map[string]*Key
+type Key struct {
 	AcornNamespace    string
 	Primary           *bool
 	PublicKey         *[32]byte
@@ -40,7 +40,7 @@ type naclStoredKey struct {
 	PublicKey         *[32]byte `json:"publicKey,omitempty"`
 }
 
-func GetOrCreatePrimaryNaclKey(ctx context.Context, c kclient.Client, namespace string) (*NaclKey, error) {
+func GetOrCreatePrimaryNaclKey(ctx context.Context, c kclient.Client, namespace string) (*Key, error) {
 	existing, err := getExistingSecret(ctx, c, namespace)
 	if apierrors.IsNotFound(err) {
 		return generateNewKeys(ctx, c, namespace, nil)
@@ -56,7 +56,7 @@ func GetOrCreatePrimaryNaclKey(ctx context.Context, c kclient.Client, namespace 
 	return keys["primary"], nil
 }
 
-func GetPrimaryNaclKey(ctx context.Context, c kclient.Reader, publicKey, namespace string) (*NaclKey, error) {
+func GetPrimaryNaclKey(ctx context.Context, c kclient.Reader, publicKey, namespace string) (*Key, error) {
 	existing, err := getExistingSecret(ctx, c, namespace)
 	if apierrors.IsNotFound(err) {
 		return nil, &ErrKeyNotFound{}
@@ -79,7 +79,7 @@ func GetPrimaryNaclKey(ctx context.Context, c kclient.Reader, publicKey, namespa
 	return keys["primary"], nil
 }
 
-func GetAllNaclKeys(ctx context.Context, c kclient.Reader, namespace string) (NaclKeys, error) {
+func GetAllNaclKeys(ctx context.Context, c kclient.Reader, namespace string) (Keys, error) {
 	existing, err := getExistingSecret(ctx, c, namespace)
 	if apierrors.IsNotFound(err) {
 		return nil, &ErrKeyNotFound{}
@@ -99,11 +99,11 @@ func GetPublicKey(ctx context.Context, c kclient.Reader, namespace string) (stri
 	return "", err
 }
 
-func generateNewKeys(ctx context.Context, c kclient.Client, namespace string, existing *corev1.Secret) (*NaclKey, error) {
-	naclKey := &NaclKey{
+func generateNewKeys(ctx context.Context, c kclient.Client, namespace string, existing *corev1.Secret) (*Key, error) {
+	naclKey := &Key{
 		AcornNamespace: namespace,
 	}
-	publicKey, privateKey, err := box.GenerateKey(crypto_rand.Reader)
+	publicKey, privateKey, err := box.GenerateKey(rand.Reader)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +139,7 @@ func getExistingSecret(ctx context.Context, c kclient.Reader, namespace string) 
 	return existing, err
 }
 
-func createOrUpdateNaclKeySecret(ctx context.Context, c kclient.Client, key *NaclKey, existing *corev1.Secret) error {
+func createOrUpdateNaclKeySecret(ctx context.Context, c kclient.Client, key *Key, existing *corev1.Secret) error {
 	if existing == nil {
 		keyData, err := key.toSecretData(nil)
 		if err != nil {
@@ -173,11 +173,12 @@ func createOrUpdateNaclKeySecret(ctx context.Context, c kclient.Client, key *Nac
 
 func keyToBytes(key string) (*[32]byte, error) {
 	returnBytes := &[32]byte{}
-	if bytes, err := base64.RawURLEncoding.DecodeString(key); err != nil {
+	bytes, err := base64.RawURLEncoding.DecodeString(key)
+	if err != nil {
 		return nil, err
-	} else {
-		copy(returnBytes[:], bytes)
 	}
+
+	copy(returnBytes[:], bytes)
 	return returnBytes, nil
 }
 
@@ -186,8 +187,8 @@ func KeyBytesToB64String(key *[32]byte) string {
 	return base64.RawURLEncoding.EncodeToString(bytes)
 }
 
-func secretToNaclKeys(secret *corev1.Secret, namespace string) (NaclKeys, error) {
-	to := NaclKeys{}
+func secretToNaclKeys(secret *corev1.Secret, namespace string) (Keys, error) {
+	to := Keys{}
 
 	keystore, ok := secret.Data[naclStoreKey]
 	if !ok {
@@ -214,7 +215,7 @@ func secretToNaclKeys(secret *corev1.Secret, namespace string) (NaclKeys, error)
 		if err != nil {
 			return nil, err
 		}
-		to[pubKeyString] = &NaclKey{
+		to[pubKeyString] = &Key{
 			AcornNamespace:    keyInfo.AcornNamespace,
 			Primary:           keyInfo.Primary,
 			PublicKey:         pubKey,
@@ -229,7 +230,7 @@ func secretToNaclKeys(secret *corev1.Secret, namespace string) (NaclKeys, error)
 	return to, nil
 }
 
-func (k *NaclKey) toSecretData(existingData map[string][]byte) (map[string][]byte, error) {
+func (k *Key) toSecretData(existingData map[string][]byte) (map[string][]byte, error) {
 	to := map[string][]byte{
 		naclNSUID: []byte(k.acornNamespaceUID),
 	}

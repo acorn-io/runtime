@@ -9,7 +9,6 @@ import (
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/autoupgrade"
 	"github.com/acorn-io/runtime/pkg/condition"
-	"github.com/acorn-io/runtime/pkg/event"
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/tags"
 	imagename "github.com/google/go-containerregistry/pkg/name"
@@ -17,7 +16,7 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func PullAppImage(transport http.RoundTripper, recorder event.Recorder) router.HandlerFunc {
+func PullAppImage(transport http.RoundTripper) router.HandlerFunc {
 	return pullAppImage(transport, pullClient{
 		pull: images.PullAppImage,
 	})
@@ -109,48 +108,44 @@ func pullAppImage(transport http.RoundTripper, client pullClient) router.Handler
 // If the determined image is not new, this returns empty strings.
 func determineTargetImage(appInstance *v1.AppInstance) (string, string) {
 	_, on := autoupgrade.Mode(appInstance.Spec)
-	pattern, isPattern := autoupgrade.AutoUpgradePattern(appInstance.Spec.Image)
+	pattern, isPattern := autoupgrade.Pattern(appInstance.Spec.Image)
 
 	if on {
 		if appInstance.Status.AvailableAppImage != "" || appInstance.Status.ConfirmUpgradeAppImage != "" {
 			if appInstance.Status.AvailableAppImage != "" {
 				// AvailableAppImage is not blank, use it and reset the other fields
 				return appInstance.Status.AvailableAppImage, ""
-			} else {
-				// ConfirmUpgradeAppImage is not blank. Normally, we shouldn't get the desiredImage from it. That should
-				// be done explicitly by the user via the apps/confirmupgrade subresource (which would set it to the
-				// AvailableAppImage field). But if AppImage.ID is blank, this app has never had an image pulled. So, do the initial pull.
-				if appInstance.Status.Staged.AppImage.Name == "" {
-					return appInstance.Status.ConfirmUpgradeAppImage, ""
-				} else {
-					return "", fmt.Sprintf("confirm upgrade to %v", appInstance.Status.ConfirmUpgradeAppImage)
-				}
 			}
-		} else {
-			// Neither AvailableAppImage nor ConfirmUpgradeAppImage is set.
-			if isPattern {
-				if appInstance.Status.Staged.AppImage.Name == "" {
-					// Need to trigger a sync since this app has never had a concrete image set
-					autoupgrade.Sync()
-					return "", fmt.Sprintf("waiting for image to satisfy auto-upgrade tag %v", pattern)
-				} else {
-					return "", ""
-				}
-			} else {
-				if appInstance.Spec.Image == appInstance.Status.Staged.AppImage.Name {
-					return "", ""
-				} else {
-					return appInstance.Spec.Image, ""
-				}
+			// ConfirmUpgradeAppImage is not blank. Normally, we shouldn't get the desiredImage from it. That should
+			// be done explicitly by the user via the apps/confirmupgrade subresource (which would set it to the
+			// AvailableAppImage field). But if AppImage.ID is blank, this app has never had an image pulled. So, do the initial pull.
+			if appInstance.Status.Staged.AppImage.Name == "" {
+				return appInstance.Status.ConfirmUpgradeAppImage, ""
 			}
+			return "", fmt.Sprintf("confirm upgrade to %v", appInstance.Status.ConfirmUpgradeAppImage)
 		}
-	} else {
-		// Auto-upgrade is off. Only need to pull if spec and status are not equal or we're trying to trigger a repull
-		if appInstance.Spec.Image != appInstance.Status.Staged.AppImage.Name ||
-			appInstance.Status.AvailableAppImage == appInstance.Spec.Image {
-			return appInstance.Spec.Image, ""
-		} else {
+
+		// Neither AvailableAppImage nor ConfirmUpgradeAppImage is set.
+		if isPattern {
+			if appInstance.Status.Staged.AppImage.Name == "" {
+				// Need to trigger a sync since this app has never had a concrete image set
+				autoupgrade.Sync()
+				return "", fmt.Sprintf("waiting for image to satisfy auto-upgrade tag %v", pattern)
+			}
 			return "", ""
 		}
+
+		if appInstance.Spec.Image == appInstance.Status.Staged.AppImage.Name {
+			return "", ""
+		}
+
+		return appInstance.Spec.Image, ""
 	}
+
+	// Auto-upgrade is off. Only need to pull if spec and status are not equal or we're trying to trigger a repull
+	if appInstance.Spec.Image != appInstance.Status.Staged.AppImage.Name ||
+		appInstance.Status.AvailableAppImage == appInstance.Spec.Image {
+		return appInstance.Spec.Image, ""
+	}
+	return "", ""
 }

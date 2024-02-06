@@ -76,7 +76,7 @@ func toHTTPEndpointHostname(pattern, domain, container, appName, appNamespace st
 	// This should not happen since the pattern in the config (passed to this through pattern) should
 	// always be set to the default if the pattern is "". However, if it is not somehow, set it here.
 	if pattern == "" {
-		pattern = profiles.HttpEndpointPatternDefault
+		pattern = profiles.HTTPEndpointPatternDefault
 	}
 
 	endpointOpts := struct {
@@ -191,7 +191,7 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 
 	dnsSecret := &corev1.Secret{}
 	err = req.Client.Get(req.Ctx, router.Key(system.Namespace, system.DNSSecretName), dnsSecret)
-	if err != nil && !apierrors.IsNotFound(err) {
+	if kclient.IgnoreNotFound(err) != nil {
 		return nil, err
 	}
 	acornDNSDomain := string(dnsSecret.Data["domain"])
@@ -219,7 +219,7 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 				}
 
 				for _, domain := range cfg.ClusterDomains {
-					hostname, err := toHTTPEndpointHostname(*cfg.HttpEndpointPattern, domain, targetName, svc.Spec.AppName, svc.Spec.AppNamespace, appInstance)
+					hostname, err := toHTTPEndpointHostname(*cfg.HTTPEndpointPattern, domain, targetName, svc.Spec.AppName, svc.Spec.AppNamespace, appInstance)
 					if err != nil {
 						return nil, err
 					}

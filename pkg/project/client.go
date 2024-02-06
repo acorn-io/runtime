@@ -100,7 +100,7 @@ func (p *projectClientFactory) ForProject(ctx context.Context, project string) (
 	return getClient(ctx, p.cfg, p.opts, project)
 }
 
-func (p *projectClientFactory) List(ctx context.Context) ([]client.Client, error) {
+func (p *projectClientFactory) List(context.Context) ([]client.Client, error) {
 	return p.clients, nil
 }
 
@@ -202,7 +202,7 @@ func getLocalClient(ctx context.Context) (client.Client, error) {
 		Project:   "local",
 		Namespace: "local",
 		New: func() (client.Client, error) {
-			docker, err := local.NewContainer(ctx)
+			docker, err := local.NewContainer()
 			if err != nil {
 				return nil, err
 			}
@@ -240,7 +240,7 @@ func getClient(ctx context.Context, cfg *config.CLIConfig, opts Options, project
 		return nil, err
 	}
 
-	cred, ok, err := credStore.Get(ctx, server)
+	cred, ok, err := credStore.Get(server)
 	if err != nil {
 		return nil, err
 	} else if !ok {

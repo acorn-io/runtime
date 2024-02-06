@@ -15,7 +15,7 @@ import (
 
 func MigrateRemoteImages(req router.Request, _ router.Response) error {
 	image := req.Object.(*v1.ImageInstance)
-	if !image.ZZ_Remote || image.Repo == "" || image.Digest == "" {
+	if !image.ZZRemote || image.Repo == "" || image.Digest == "" {
 		return nil
 	}
 	apps := &v1.AppInstanceList{}

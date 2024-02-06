@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewLocalServer(c CommandContext) *cobra.Command {
+func NewLocalServer() *cobra.Command {
 	cmd := cli.Command(&Server{}, cobra.Command{
 		SilenceUsage: true,
 		Short:        "Run local development server",
@@ -18,6 +18,6 @@ func NewLocalServer(c CommandContext) *cobra.Command {
 type Server struct {
 }
 
-func (a *Server) Run(cmd *cobra.Command, args []string) error {
+func (a *Server) Run(cmd *cobra.Command, _ []string) error {
 	return local.ServerRun(cmd.Context())
 }

@@ -47,7 +47,7 @@ func (t *Translator) FromPublicName(ctx context.Context, namespace, name string)
 	return namespace, strings.Split(containerName, ":")[0], nil
 }
 
-func (t *Translator) ListOpts(ctx context.Context, namespace string, opts storage.ListOptions) (string, storage.ListOptions, error) {
+func (t *Translator) ListOpts(_ context.Context, namespace string, opts storage.ListOptions) (string, storage.ListOptions, error) {
 	sel := opts.Predicate.Label
 	if sel == nil {
 		sel = klabels.Everything()
@@ -63,7 +63,7 @@ func (t *Translator) ListOpts(ctx context.Context, namespace string, opts storag
 	return "", opts, nil
 }
 
-func (t *Translator) ToPublic(ctx context.Context, objs ...runtime.Object) (result []mtypes.Object, _ error) {
+func (t *Translator) ToPublic(_ context.Context, objs ...runtime.Object) (result []mtypes.Object, _ error) {
 	for _, obj := range objs {
 		for _, con := range podToContainers(obj.(*corev1.Pod)) {
 			con := con

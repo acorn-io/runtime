@@ -40,6 +40,7 @@ func doWatch[T client.Object](t *testing.T, watchFunc watchFunc, cb func(obj T) 
 	}
 	defer func() {
 		result.Stop()
+		//nolint:revive
 		for range result.ResultChan() {
 		}
 	}()

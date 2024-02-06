@@ -212,9 +212,8 @@ func GetImageReferenceForServiceName(svcName string, appSpec *v1.AppSpec, imageD
 			return findContainerImage(imageData, "", imageDef.Build)
 		} else if imageDef.AcornBuild != nil {
 			return findContainerImage(imageData, "", imageDef.Build)
-		} else {
-			return findImageInImageData(imageData, svcName)
 		}
+		return findImageInImageData(imageData, svcName)
 	}
 
 	return "", false

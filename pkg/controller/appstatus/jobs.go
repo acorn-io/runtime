@@ -13,6 +13,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func (a *appStatusRenderer) readJobs() error {
@@ -69,11 +70,7 @@ func (a *appStatusRenderer) readJobs() error {
 		if apierror.IsNotFound(err) {
 			var cronJob batchv1.CronJob
 			err := a.c.Get(a.ctx, router.Key(a.app.Status.Namespace, jobName), &cronJob)
-			if apierror.IsNotFound(err) {
-				// do nothing
-			} else if err != nil {
-				return err
-			} else {
+			if err == nil {
 				c.CreationTime = &cronJob.CreationTimestamp
 				c.LastRun = cronJob.Status.LastScheduleTime
 				c.CompletionTime = cronJob.Status.LastSuccessfulTime
@@ -100,6 +97,8 @@ func (a *appStatusRenderer) readJobs() error {
 					return err
 				}
 				c.NextRun = nextRun
+			} else if kclient.IgnoreNotFound(err) != nil {
+				return err
 			}
 		} else if err != nil {
 			return err

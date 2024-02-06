@@ -1,3 +1,3 @@
-package api_acorn_io
+package apiacornio
 
 var Group = "api.acorn.io"

@@ -51,7 +51,7 @@ func (i *Logs) NewConnectOptions() (runtime.Object, bool, string) {
 	return &apiv1.LogOptions{}, false, ""
 }
 
-func (i *Logs) Connect(ctx context.Context, id string, options runtime.Object, r rest.Responder) (http.Handler, error) {
+func (i *Logs) Connect(ctx context.Context, id string, options runtime.Object, _ rest.Responder) (http.Handler, error) {
 	ns, _ := request.NamespaceFrom(ctx)
 	app := &apiv1.App{}
 	err := i.client.Get(ctx, kclient.ObjectKey{Namespace: ns, Name: id}, app)

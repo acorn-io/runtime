@@ -44,7 +44,7 @@ type Container struct {
 	c client.APIClient
 }
 
-func NewContainer(_ context.Context) (*Container, error) {
+func NewContainer() (*Container, error) {
 	cli, err := command.NewDockerCli()
 	if err != nil {
 		return nil, err
@@ -163,14 +163,12 @@ func (c *Container) Delete(ctx context.Context, data bool) error {
 		RemoveVolumes: data,
 		Force:         true,
 	})
-	if client.IsErrNotFound(err) {
-	} else if err != nil {
+	if err != nil && !client.IsErrNotFound(err) {
 		return err
 	}
 
 	if data {
-		if err := c.c.VolumeRemove(ctx, volumeName, false); client.IsErrNotFound(err) {
-		} else if err != nil {
+		if err := c.c.VolumeRemove(ctx, volumeName, false); err != nil && !client.IsErrNotFound(err) {
 			return err
 		}
 	}
@@ -239,12 +237,11 @@ func (c *Container) Wait(ctx context.Context) error {
 
 	for {
 		_, err := c.c.ContainerInspect(ctx, ContainerName)
-		if client.IsErrNotFound(err) {
-		} else if err != nil {
-			return conStatus.Fail(err)
-		} else {
+		if err == nil {
 			conStatus.Success()
 			break
+		} else if err != nil && !client.IsErrNotFound(err) {
+			return conStatus.Fail(err)
 		}
 
 		select {
@@ -438,8 +435,7 @@ func (c *Container) Stop(ctx context.Context) error {
 	err := c.c.ContainerStop(ctx, ContainerName, container.StopOptions{
 		Timeout: z.Pointer(5),
 	})
-	if client.IsErrNotFound(err) {
-	} else if err != nil {
+	if err != nil && !client.IsErrNotFound(err) {
 		return err
 	}
 	return c.DeletePorts(ctx)

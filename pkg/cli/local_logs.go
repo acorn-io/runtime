@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewLocalLogs(c CommandContext) *cobra.Command {
+func NewLocalLogs() *cobra.Command {
 	cmd := cli.Command(&LocalLogs{}, cobra.Command{
 		Use:          "logs [flags]",
 		Aliases:      []string{"log"},
@@ -20,8 +20,8 @@ type LocalLogs struct {
 	local.LogOptions
 }
 
-func (a *LocalLogs) Run(cmd *cobra.Command, args []string) error {
-	c, err := local.NewContainer(cmd.Context())
+func (a *LocalLogs) Run(cmd *cobra.Command, _ []string) error {
+	c, err := local.NewContainer()
 	if err != nil {
 		return err
 	}
