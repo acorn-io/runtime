@@ -17,79 +17,86 @@ func TestBaseResourcesAdd(t *testing.T) {
 		expected BaseResources
 	}{
 		{
-			name:    "add to empty BaseResources resources",
+			name:     "add to empty BaseResources resources",
+			current:  BaseResources{},
+			incoming: BaseResources{Apps: 1},
+			expected: BaseResources{Apps: 1},
+		},
+		{
+			name:    "add to existing BaseResources resources",
+			current: BaseResources{Apps: 1},
+			incoming: BaseResources{
+				Apps:   1,
+				Images: 1,
+			},
+			expected: BaseResources{
+				Apps:   2,
+				Images: 1,
+			},
+		},
+		{
+			name:     "add where current has a resource specified with unlimited",
+			current:  BaseResources{Apps: Unlimited},
+			incoming: BaseResources{Apps: 1},
+			expected: BaseResources{Apps: Unlimited},
+		},
+		{
+			name:     "add where incoming has a resource specified with unlimited",
+			current:  BaseResources{Apps: 1},
+			incoming: BaseResources{Apps: Unlimited},
+			expected: BaseResources{Apps: Unlimited},
+		},
+		{
+			name:     "add where current and incoming have a resource specified with unlimited",
+			current:  BaseResources{Apps: Unlimited},
+			incoming: BaseResources{Apps: Unlimited},
+			expected: BaseResources{Apps: Unlimited},
+		},
+		{
+			name: "add where current and incoming have ComputeClasses and VolumeClasses",
+			current: BaseResources{
+				Apps: 1, Containers: 1,
+				ComputeClasses: ComputeClassResources{"foo": {
+					Memory: resource.MustParse("1Mi"),
+					CPU:    resource.MustParse("1m"),
+				}},
+				VolumeClasses: VolumeClassResources{"foo": {resource.MustParse("1Mi")}},
+			},
+			incoming: BaseResources{
+				Apps: 1, Containers: 1,
+				ComputeClasses: ComputeClassResources{"foo": {
+					Memory: resource.MustParse("1Mi"),
+					CPU:    resource.MustParse("1m"),
+				}},
+				VolumeClasses: VolumeClassResources{"foo": {resource.MustParse("1Mi")}},
+			},
+			expected: BaseResources{
+				Apps: 2, Containers: 2,
+				ComputeClasses: ComputeClassResources{"foo": {
+					Memory: resource.MustParse("2Mi"),
+					CPU:    resource.MustParse("2m"),
+				}},
+				VolumeClasses: VolumeClassResources{"foo": {resource.MustParse("2Mi")}},
+			},
+		},
+		{
+			name:    "add where current is empty and incoming has ComputeClasses and VolumeClasses",
 			current: BaseResources{},
 			incoming: BaseResources{
-				Apps:          1,
-				VolumeStorage: resource.MustParse("1Mi"),
+				Apps: 1, Containers: 1,
+				ComputeClasses: ComputeClassResources{"foo": {
+					Memory: resource.MustParse("1Mi"),
+					CPU:    resource.MustParse("1m"),
+				}},
+				VolumeClasses: VolumeClassResources{"foo": {resource.MustParse("1Mi")}},
 			},
 			expected: BaseResources{
-				Apps:          1,
-				VolumeStorage: resource.MustParse("1Mi"),
-			},
-		},
-		{
-			name: "add to existing BaseResources resources",
-			current: BaseResources{
-				Apps:          1,
-				VolumeStorage: resource.MustParse("1Mi"),
-			},
-			incoming: BaseResources{
-				Apps:          1,
-				Images:        1,
-				VolumeStorage: resource.MustParse("1Mi"),
-				CPU:           resource.MustParse("20m"),
-			},
-			expected: BaseResources{
-				Apps:          2,
-				Images:        1,
-				VolumeStorage: resource.MustParse("2Mi"),
-				CPU:           resource.MustParse("20m"),
-			},
-		},
-		{
-			name: "add where current has a resource specified with unlimited",
-			current: BaseResources{
-				Apps:   Unlimited,
-				Memory: UnlimitedQuantity(),
-			},
-			incoming: BaseResources{
-				Apps:   1,
-				Memory: resource.MustParse("1Mi"),
-			},
-			expected: BaseResources{
-				Apps:   Unlimited,
-				Memory: UnlimitedQuantity(),
-			},
-		},
-		{
-			name: "add where incoming has a resource specified with unlimited",
-			current: BaseResources{
-				Apps:   1,
-				Memory: resource.MustParse("1Mi"),
-			},
-			incoming: BaseResources{
-				Apps:   Unlimited,
-				Memory: UnlimitedQuantity(),
-			},
-			expected: BaseResources{
-				Apps:   Unlimited,
-				Memory: UnlimitedQuantity(),
-			},
-		},
-		{
-			name: "add where current and incoming have a resource specified with unlimited",
-			current: BaseResources{
-				Apps:   Unlimited,
-				Memory: UnlimitedQuantity(),
-			},
-			incoming: BaseResources{
-				Apps:   Unlimited,
-				Memory: UnlimitedQuantity(),
-			},
-			expected: BaseResources{
-				Apps:   Unlimited,
-				Memory: UnlimitedQuantity(),
+				Apps: 1, Containers: 1,
+				ComputeClasses: ComputeClassResources{"foo": {
+					Memory: resource.MustParse("1Mi"),
+					CPU:    resource.MustParse("1m"),
+				}},
+				VolumeClasses: VolumeClassResources{"foo": {resource.MustParse("1Mi")}},
 			},
 		},
 	}
@@ -113,107 +120,115 @@ func TestBaseResourcesRemove(t *testing.T) {
 		expected BaseResources
 	}{
 		{
-			name:    "remove from empty BaseResources resources",
-			current: BaseResources{},
-			incoming: BaseResources{
-				Apps:   1,
-				Memory: resource.MustParse("1Mi"),
-			},
+			name:     "remove from empty BaseResources resources",
+			current:  BaseResources{},
+			incoming: BaseResources{Apps: 1},
 			expected: BaseResources{},
 		},
 		{
-			name: "remove from existing BaseResources resources",
-			current: BaseResources{
-				Apps:   1,
-				Memory: resource.MustParse("1Mi"),
-			},
-			incoming: BaseResources{
-				Apps:   1,
-				Memory: resource.MustParse("1Mi"),
-			},
+			name:     "remove from existing BaseResources resources",
+			current:  BaseResources{Apps: 1},
+			incoming: BaseResources{Apps: 1},
 			expected: BaseResources{},
 		},
 		{
-			name: "should never get negative values",
-			all:  true,
-			current: BaseResources{
-				Apps:          1,
-				Memory:        resource.MustParse("1Mi"),
-				VolumeStorage: resource.MustParse("1Mi"),
-			},
-			incoming: BaseResources{
-				Apps:          2,
-				Memory:        resource.MustParse("2Mi"),
-				VolumeStorage: resource.MustParse("2Mi"),
-			},
+			name:     "should never get negative values",
+			all:      true,
+			current:  BaseResources{Apps: 1},
+			incoming: BaseResources{Apps: 2},
 			expected: BaseResources{},
 		},
 		{
-			name: "remove persistent resources with all",
+			name:     "remove where current has a resource specified with unlimited",
+			current:  BaseResources{Apps: Unlimited},
+			incoming: BaseResources{Apps: 1},
+			expected: BaseResources{Apps: Unlimited},
+		},
+		{
+			name:     "remove where incoming has a resource specified with unlimited",
+			current:  BaseResources{Apps: 1},
+			incoming: BaseResources{Apps: Unlimited},
+			expected: BaseResources{Apps: 1},
+		},
+		{
+			name:     "remove where current and incoming have a resource specified with unlimited",
+			current:  BaseResources{Apps: Unlimited},
+			incoming: BaseResources{Apps: Unlimited},
+			expected: BaseResources{Apps: Unlimited},
+		},
+		{
+			name: "remove where current and incoming have ComputeClasses and VolumeClasses",
 			current: BaseResources{
-				VolumeStorage: resource.MustParse("1Mi"),
+				Apps: 1, Containers: 1,
+				ComputeClasses: ComputeClassResources{"foo": {
+					Memory: resource.MustParse("1Mi"),
+					CPU:    resource.MustParse("1m"),
+				}},
+				VolumeClasses: VolumeClassResources{"foo": {resource.MustParse("1Mi")}},
 			},
 			incoming: BaseResources{
-				VolumeStorage: resource.MustParse("1Mi"),
+				Apps: 1, Containers: 1,
+				ComputeClasses: ComputeClassResources{"foo": {
+					Memory: resource.MustParse("1Mi"),
+					CPU:    resource.MustParse("1m"),
+				}},
+				VolumeClasses: VolumeClassResources{"foo": {resource.MustParse("1Mi")}},
 			},
 			all:      true,
 			expected: BaseResources{},
 		},
 		{
-			name: "does not remove persistent resources without all",
+			name: "does not remove volume storage when all is false",
+			expected: BaseResources{
+				VolumeClasses: VolumeClassResources{"foo": {resource.MustParse("1Mi")}},
+			},
 			current: BaseResources{
-				VolumeStorage: resource.MustParse("1Mi"),
+				VolumeClasses: VolumeClassResources{"foo": {resource.MustParse("1Mi")}},
 			},
 			incoming: BaseResources{
-				VolumeStorage: resource.MustParse("1Mi"),
-			},
-			expected: BaseResources{
-				VolumeStorage: resource.MustParse("1Mi"),
+				VolumeClasses: VolumeClassResources{"foo": {resource.MustParse("1Mi")}},
 			},
 		},
 		{
-			name: "remove where current has a resource specified with unlimited",
+			name: "remove where current has two ComputeClasses and VolumeClasses and incoming has one",
 			current: BaseResources{
-				Apps:   Unlimited,
-				Memory: UnlimitedQuantity(),
+				ComputeClasses: ComputeClassResources{
+					"foo": {
+						Memory: resource.MustParse("2Mi"),
+						CPU:    resource.MustParse("2m"),
+					},
+					"bar": {
+						Memory: resource.MustParse("2Mi"),
+						CPU:    resource.MustParse("2m"),
+					},
+				},
+				VolumeClasses: VolumeClassResources{
+					"foo": {resource.MustParse("2Mi")},
+					"bar": {resource.MustParse("2Mi")},
+				},
 			},
 			incoming: BaseResources{
-				Apps:   1,
-				Memory: resource.MustParse("1Mi"),
+				ComputeClasses: ComputeClassResources{
+					"foo": {
+						Memory: resource.MustParse("2Mi"),
+						CPU:    resource.MustParse("2m"),
+					},
+				},
+				VolumeClasses: VolumeClassResources{
+					"foo": {resource.MustParse("2Mi")},
+				},
 			},
+			all: true,
 			expected: BaseResources{
-				Apps:   Unlimited,
-				Memory: UnlimitedQuantity(),
-			},
-		},
-		{
-			name: "remove where incoming has a resource specified with unlimited",
-			current: BaseResources{
-				Apps:   1,
-				Memory: resource.MustParse("1Mi"),
-			},
-			incoming: BaseResources{
-				Apps:   Unlimited,
-				Memory: UnlimitedQuantity(),
-			},
-			expected: BaseResources{
-				Apps:   1,
-				Memory: resource.MustParse("1Mi"),
-			},
-		},
-		{
-			name: "remove where current and incoming have a resource specified with unlimited",
-			current: BaseResources{
-				Apps:   Unlimited,
-				Memory: UnlimitedQuantity(),
-			},
-			incoming: BaseResources{
-				Apps:   Unlimited,
-				Memory: UnlimitedQuantity(),
-			},
-			expected: BaseResources{
-				Apps:   Unlimited,
-				Memory: UnlimitedQuantity(),
+				ComputeClasses: ComputeClassResources{
+					"bar": {
+						Memory: resource.MustParse("2Mi"),
+						CPU:    resource.MustParse("2m"),
+					},
+				},
+				VolumeClasses: VolumeClassResources{
+					"bar": {resource.MustParse("2Mi")},
+				},
 			},
 		},
 	}
@@ -242,40 +257,62 @@ func TestBaseResourcesEquals(t *testing.T) {
 			expected: true,
 		},
 		{
-			name: "equal BaseResources resources",
-			current: BaseResources{
-				Apps:          1,
-				VolumeStorage: resource.MustParse("1Mi"),
-			},
-			incoming: BaseResources{
-				Apps:          1,
-				VolumeStorage: resource.MustParse("1Mi"),
-			},
+			name:     "equal BaseResources resources",
+			current:  BaseResources{Apps: 1},
+			incoming: BaseResources{Apps: 1},
 			expected: true,
 		},
 		{
-			name: "unequal BaseResources resources",
-			current: BaseResources{
-				Apps:          1,
-				VolumeStorage: resource.MustParse("1Mi"),
-			},
-			incoming: BaseResources{
-				Apps:          2,
-				VolumeStorage: resource.MustParse("1Mi"),
-			},
+			name:     "unequal BaseResources resources",
+			current:  BaseResources{Apps: 1},
+			incoming: BaseResources{Apps: 2},
 			expected: false,
 		},
 		{
-			name: "equal BaseResources resources with unlimited values",
+			name:     "equal BaseResources resources with unlimited values",
+			current:  BaseResources{Apps: Unlimited},
+			incoming: BaseResources{Apps: Unlimited},
+			expected: true,
+		},
+		{
+			name: "equal BaseResources with ComputeClasses and VolumeClasses",
 			current: BaseResources{
-				Apps:          Unlimited,
-				VolumeStorage: UnlimitedQuantity(),
+				Apps: 1, Containers: 1,
+				ComputeClasses: ComputeClassResources{"foo": {
+					Memory: resource.MustParse("1Mi"),
+					CPU:    resource.MustParse("1m"),
+				}},
+				VolumeClasses: VolumeClassResources{"foo": {resource.MustParse("1Mi")}},
 			},
 			incoming: BaseResources{
-				Apps:          Unlimited,
-				VolumeStorage: UnlimitedQuantity(),
+				Apps: 1, Containers: 1,
+				ComputeClasses: ComputeClassResources{"foo": {
+					Memory: resource.MustParse("1Mi"),
+					CPU:    resource.MustParse("1m"),
+				}},
+				VolumeClasses: VolumeClassResources{"foo": {resource.MustParse("1Mi")}},
 			},
 			expected: true,
+		},
+		{
+			name: "unequal BaseResources with ComputeClasses and VolumeClasses",
+			current: BaseResources{
+				Apps: 1, Containers: 1,
+				ComputeClasses: ComputeClassResources{"foo": {
+					Memory: resource.MustParse("1Mi"),
+					CPU:    resource.MustParse("1m"),
+				}},
+				VolumeClasses: VolumeClassResources{"foo": {resource.MustParse("1Mi")}},
+			},
+			incoming: BaseResources{
+				Apps: 1, Containers: 1,
+				ComputeClasses: ComputeClassResources{"foo": {
+					Memory: resource.MustParse("2Mi"),
+					CPU:    resource.MustParse("1m"),
+				}},
+				VolumeClasses: VolumeClassResources{"foo": {resource.MustParse("2Mi")}},
+			},
+			expected: false,
 		},
 	}
 
@@ -301,61 +338,64 @@ func TestBaseResourcesFits(t *testing.T) {
 			incoming: BaseResources{},
 		},
 		{
-			name: "fits BaseResources",
-			current: BaseResources{
-				Apps:          1,
-				VolumeStorage: resource.MustParse("1Mi"),
-			},
-			incoming: BaseResources{
-				Apps:          1,
-				VolumeStorage: resource.MustParse("1Mi"),
-			},
+			name:     "fits BaseResources",
+			current:  BaseResources{Apps: 1},
+			incoming: BaseResources{Apps: 1},
 		},
 
 		{
-			name: "does not fit BaseResources resources",
-			current: BaseResources{
-				Apps:          1,
-				VolumeStorage: resource.MustParse("1Mi"),
-			},
-			incoming: BaseResources{
-				Apps:          2,
-				VolumeStorage: resource.MustParse("1Mi"),
-			},
+			name:        "does not fit BaseResources resources",
+			current:     BaseResources{Apps: 1},
+			incoming:    BaseResources{Apps: 2},
 			expectedErr: ErrExceededResources,
 		},
 		{
-			name: "fits BaseResources resources with specified unlimited values",
-			current: BaseResources{
-				Apps:          Unlimited,
-				VolumeStorage: UnlimitedQuantity(),
-			},
-			incoming: BaseResources{
-				Apps:          2,
-				VolumeStorage: resource.MustParse("2Mi"),
-			},
+			name:     "fits BaseResources resources with specified unlimited values",
+			current:  BaseResources{Apps: Unlimited},
+			incoming: BaseResources{Apps: 2},
 		},
 		{
-			name: "fits count BaseResources resources with specified unlimited values but not others",
-			current: BaseResources{
-				Jobs: 0,
-				Apps: Unlimited,
-			},
-			incoming: BaseResources{
-				Jobs: 2,
-				Apps: 2,
-			},
+			name:        "fits count BaseResources resources with specified unlimited values but not others",
+			current:     BaseResources{Jobs: 0, Apps: Unlimited},
+			incoming:    BaseResources{Jobs: 2, Apps: 2},
 			expectedErr: ErrExceededResources,
 		},
-
 		{
-			name: "fits quantity BaseResources resources with specified unlimited values but not others",
+			name: "fits BaseResources with ComputeClasses and VolumeClasses",
 			current: BaseResources{
-				VolumeStorage: UnlimitedQuantity(),
+				Apps: 1, Containers: 1,
+				ComputeClasses: ComputeClassResources{"foo": {
+					Memory: resource.MustParse("1Mi"),
+					CPU:    resource.MustParse("1m"),
+				}},
+				VolumeClasses: VolumeClassResources{"foo": {resource.MustParse("1Mi")}},
 			},
 			incoming: BaseResources{
-				CPU:           resource.MustParse("100m"),
-				VolumeStorage: resource.MustParse("2Mi"),
+				Apps: 1, Containers: 1,
+				ComputeClasses: ComputeClassResources{"foo": {
+					Memory: resource.MustParse("1Mi"),
+					CPU:    resource.MustParse("1m"),
+				}},
+				VolumeClasses: VolumeClassResources{"foo": {resource.MustParse("1Mi")}},
+			},
+		},
+		{
+			name: "does not fit exceeding ComputeClasses and VolumeClasses",
+			current: BaseResources{
+				Apps: 1, Containers: 1,
+				ComputeClasses: ComputeClassResources{"foo": {
+					Memory: resource.MustParse("1Mi"),
+					CPU:    resource.MustParse("1m"),
+				}},
+				VolumeClasses: VolumeClassResources{"foo": {resource.MustParse("1Mi")}},
+			},
+			incoming: BaseResources{
+				Apps: 1, Containers: 1,
+				ComputeClasses: ComputeClassResources{"foo": {
+					Memory: resource.MustParse("2Mi"),
+					CPU:    resource.MustParse("2m"),
+				}},
+				VolumeClasses: VolumeClassResources{"foo": {resource.MustParse("2Mi")}},
 			},
 			expectedErr: ErrExceededResources,
 		},
@@ -385,20 +425,47 @@ func TestBaseResourcesToString(t *testing.T) {
 			expected: "",
 		},
 		{
-			name: "populated BaseResources",
-			current: BaseResources{
-				Apps:          1,
-				VolumeStorage: resource.MustParse("1Mi"),
-			},
-			expected: "Apps: 1, VolumeStorage: 1Mi",
+			name:     "populated BaseResources",
+			current:  BaseResources{Apps: 1, Containers: 1},
+			expected: "Apps: 1, Containers: 1",
 		},
 		{
-			name: "populated BaseResources with unlimited values",
+			name:     "populated BaseResources with unlimited values",
+			current:  BaseResources{Apps: Unlimited, Containers: 1},
+			expected: "Apps: unlimited, Containers: 1",
+		},
+		{
+			name: "populated with ComputeClasses and VolumeClasses",
 			current: BaseResources{
-				Apps:          Unlimited,
-				VolumeStorage: UnlimitedQuantity(),
+				Apps: 1, Containers: 1,
+				ComputeClasses: ComputeClassResources{"foo": {
+					Memory: resource.MustParse("1Mi"),
+					CPU:    resource.MustParse("1m"),
+				}},
+				VolumeClasses: VolumeClassResources{"foo": {resource.MustParse("1Mi")}},
 			},
-			expected: "Apps: unlimited, VolumeStorage: unlimited",
+			expected: "Apps: 1, Containers: 1, ComputeClasses: \"foo\": { Memory: 1Mi, CPU: 1m }, VolumeClasses: \"foo\": { VolumeStorage: 1Mi }",
+		},
+		{
+			name: "populated with multiple ComputeClasses and VolumeClasses",
+			current: BaseResources{
+				Apps: 1, Containers: 1,
+				ComputeClasses: ComputeClassResources{
+					"foo": {
+						Memory: resource.MustParse("1Mi"),
+						CPU:    resource.MustParse("1m"),
+					},
+					"bar": {
+						Memory: resource.MustParse("2Mi"),
+						CPU:    resource.MustParse("2m"),
+					},
+				},
+				VolumeClasses: VolumeClassResources{
+					"foo": {resource.MustParse("1Mi")},
+					"bar": {resource.MustParse("2Mi")},
+				},
+			},
+			expected: "Apps: 1, Containers: 1, ComputeClasses: \"bar\": { Memory: 2Mi, CPU: 2m }, \"foo\": { Memory: 1Mi, CPU: 1m }, VolumeClasses: \"bar\": { VolumeStorage: 2Mi }, \"foo\": { VolumeStorage: 1Mi }",
 		},
 	}
 

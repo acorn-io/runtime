@@ -7,7 +7,7 @@ metadata:
 spec:
   image: image-name
   computeClass:
-    "": sample-compute-class
+    "": default-compute-class
 status:
   observedGeneration: 1
   namespace: app-created-namespace
@@ -54,17 +54,21 @@ status:
   resolvedOfferings:
     containers:
       "":
-        class: sample-compute-class
+        class: default-compute-class
         cpu: 125
         memory: 536870912
       container-name:
-        class: sample-compute-class
+        class: default-compute-class
         cpu: 125
         memory: 536870912
       sidecar-name:
-        class: sample-compute-class
+        class: default-compute-class
         cpu: 125
         memory: 536870912
+    volumes:
+      test:
+        class: default-volume-class
+        size: 536870912
   scheduling:
     container-name:
       requirements:
