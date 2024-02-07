@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/computeclasses"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -22,15 +24,28 @@ type Validator struct {
 	Client kclient.Client
 }
 
-func (v *Validator) Validate(_ context.Context, obj runtime.Object) field.ErrorList {
+func (v *Validator) Validate(ctx context.Context, obj runtime.Object) field.ErrorList {
 	var result field.ErrorList
 	project := obj.(*apiv1.Project)
 
-	if project.Spec.DefaultRegion != "" && !slices.Contains(project.Spec.SupportedRegions, project.Spec.DefaultRegion) && !slices.Contains(project.Spec.SupportedRegions, apiv1.AllRegions) {
-		return append(result, field.Invalid(field.NewPath("spec", "defaultRegion"), project.Spec.DefaultRegion, "default region is not in the supported regions list"))
+	if project.Spec.DefaultRegion != "" &&
+		!slices.Contains(project.Spec.SupportedRegions, project.Spec.DefaultRegion) &&
+		!slices.Contains(project.Spec.SupportedRegions, apiv1.AllRegions) {
+		result = append(result, field.Invalid(field.NewPath("spec", "defaultRegion"), project.Spec.DefaultRegion, "default region is not in the supported regions list"))
 	}
 
-	return nil
+	if defaultComputeClass := project.Spec.DefaultComputeClass; defaultComputeClass != "" {
+		if _, err := computeclasses.GetAsProjectComputeClassInstance(ctx, v.Client, project.Name, defaultComputeClass); apierrors.IsNotFound(err) {
+			// The compute class does not exist, return an invalid error
+			result = append(result, field.Invalid(field.NewPath("spec", "defaultComputeClass"), defaultComputeClass, "default compute class does not exist"))
+		} else if err != nil {
+			// Some other error occurred while trying to get the compute class, return an internal error.
+			result = append(result, field.InternalError(field.NewPath("spec", "defaultComputeClass"), err))
+		}
+		// TODO(njhale): Validate that the compute class shares the project's supported regions?
+	}
+
+	return result
 }
 
 func (v *Validator) ValidateUpdate(ctx context.Context, newObj, _ runtime.Object) field.ErrorList {

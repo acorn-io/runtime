@@ -10,8 +10,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func getCurrentClusterComputeClassDefault(ctx context.Context, c client.Client, projectDefaultComputeClass string) (*ClusterComputeClassInstance, error) {
-	clusterComputeClasses := ClusterComputeClassInstanceList{}
+func getCurrentClusterComputeClassDefault(ctx context.Context, c client.Client, projectDefault string) (*ClusterComputeClassInstance, error) {
+	var clusterComputeClasses ClusterComputeClassInstanceList
 	if err := c.List(ctx, &clusterComputeClasses, &client.ListOptions{}); err != nil {
 		return nil, err
 	}
@@ -30,12 +30,10 @@ func getCurrentClusterComputeClassDefault(ctx context.Context, c client.Client, 
 			}
 
 			// Create a new variable that isn't being iterated on to get a pointer
-			if projectDefaultComputeClass != "" {
-				defaultCCC = z.Pointer(clusterComputeClass)
-			}
+			defaultCCC = z.Pointer(clusterComputeClass)
 		}
 
-		if clusterComputeClass.Name == projectDefaultComputeClass {
+		if clusterComputeClass.Name == projectDefault {
 			projectDefaultCCC = z.Pointer(clusterComputeClass)
 		}
 	}
@@ -47,8 +45,8 @@ func getCurrentClusterComputeClassDefault(ctx context.Context, c client.Client, 
 	return defaultCCC, nil
 }
 
-func getCurrentProjectComputeClassDefault(ctx context.Context, c client.Client, projectDefaultComputeClass, namespace string) (*ProjectComputeClassInstance, error) {
-	projectComputeClasses := ProjectComputeClassInstanceList{}
+func getCurrentProjectComputeClassDefault(ctx context.Context, c client.Client, projectDefault, namespace string) (*ProjectComputeClassInstance, error) {
+	var projectComputeClasses ProjectComputeClassInstanceList
 	if err := c.List(ctx, &projectComputeClasses, &client.ListOptions{Namespace: namespace}); err != nil {
 		return nil, err
 	}
@@ -67,12 +65,10 @@ func getCurrentProjectComputeClassDefault(ctx context.Context, c client.Client, 
 			}
 
 			// Create a new variable that isn't being iterated on to get a pointer
-			if projectDefaultComputeClass != "" {
-				defaultPCC = z.Pointer(projectComputeClass)
-			}
+			defaultPCC = z.Pointer(projectComputeClass)
 		}
 
-		if projectComputeClass.Name == projectDefaultComputeClass {
+		if projectDefault projectComputeClass.Name == projectDefault {
 			projectDefaultPCC = z.Pointer(projectComputeClass)
 		}
 	}
@@ -94,15 +90,18 @@ func GetDefaultComputeClass(ctx context.Context, c client.Client, namespace stri
 	pcc, err := getCurrentProjectComputeClassDefault(ctx, c, projectDefault, namespace)
 	if err != nil {
 		return "", err
-	} else if pcc != nil {
+	}
+	if pcc != nil {
 		return pcc.Name, nil
 	}
 
 	ccc, err := getCurrentClusterComputeClassDefault(ctx, c, projectDefault)
 	if err != nil {
 		return "", err
-	} else if ccc != nil {
+	}
+	if ccc != nil {
 		return ccc.Name, nil
 	}
+
 	return "", nil
 }
