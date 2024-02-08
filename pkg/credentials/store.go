@@ -36,7 +36,7 @@ func normalize(cred apiv1.Credential) apiv1.Credential {
 	return cred
 }
 
-func (s *Store) Get(ctx context.Context, serverAddress string) (*apiv1.RegistryAuth, bool, error) {
+func (s *Store) Get(serverAddress string) (*apiv1.RegistryAuth, bool, error) {
 	serverAddress = imagesystem.NormalizeServerAddress(serverAddress)
 	store, err := s.getStore(serverAddress)
 	if err != nil {

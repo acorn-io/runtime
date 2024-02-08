@@ -17,12 +17,12 @@ var (
 type errorResponder struct {
 }
 
-func (e *errorResponder) Error(w http.ResponseWriter, req *http.Request, err error) {
+func (e *errorResponder) Error(w http.ResponseWriter, _ *http.Request, err error) {
 	w.WriteHeader(http.StatusInternalServerError)
 	_, _ = w.Write([]byte(err.Error()))
 }
 
-// Mostly copied from "kubectl proxy" code
+// Handler is mostly copied from "kubectl proxy" code
 func Handler(cfg *rest.Config) (http.Handler, error) {
 	host := cfg.Host
 	if !strings.HasSuffix(host, "/") {

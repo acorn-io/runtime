@@ -93,7 +93,7 @@ func (f *FileServer) DiffCopy(server filesync.FileSync_DiffCopyServer) error {
 	return nil
 }
 
-func (f *FileServer) TarStream(server filesync.FileSync_TarStreamServer) error {
+func (f *FileServer) TarStream(filesync.FileSync_TarStreamServer) error {
 	panic("unsupported")
 }
 

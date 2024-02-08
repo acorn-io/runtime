@@ -9,7 +9,7 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func EnableFeatureWithRestore(t *testing.T, ctx context.Context, kclient kclient.WithWatch, feature string) {
+func EnableFeatureWithRestore(ctx context.Context, t *testing.T, kclient kclient.WithWatch, feature string) {
 	t.Helper()
 
 	// enable feature in acorn config
@@ -43,7 +43,7 @@ func EnableFeatureWithRestore(t *testing.T, ctx context.Context, kclient kclient
 	}
 }
 
-func SetIgnoreResourceRequirementsWithRestore(t *testing.T, ctx context.Context, kclient kclient.WithWatch) {
+func SetIgnoreResourceRequirementsWithRestore(ctx context.Context, t *testing.T, kclient kclient.WithWatch) {
 	t.Helper()
 
 	cfg, err := config.Get(ctx, kclient)

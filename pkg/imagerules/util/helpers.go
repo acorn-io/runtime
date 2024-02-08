@@ -21,7 +21,7 @@ const (
 )
 
 func GenerateSimpleAllowRule(namespace string, name string, image string, scope string) (*v1.ImageAllowRule, error) {
-	pattern, isPattern := autoupgrade.AutoUpgradePattern(image)
+	pattern, isPattern := autoupgrade.Pattern(image)
 
 	if isPattern {
 		image = strings.TrimRight(image, ":"+pattern)

@@ -49,9 +49,8 @@ func DecryptNamespacedData(ctx context.Context, c kclient.Reader, data []byte, n
 		data, err := key.Decrypt(data)
 		if err == nil {
 			return data, nil
-		} else {
-			errs = append(errs, fmt.Errorf("pubkey %s: %w", KeyBytesToB64String(key.PublicKey), err))
 		}
+		errs = append(errs, fmt.Errorf("pubkey %s: %w", KeyBytesToB64String(key.PublicKey), err))
 	}
 
 	return nil, &ErrUnableToDecrypt{
@@ -59,7 +58,7 @@ func DecryptNamespacedData(ctx context.Context, c kclient.Reader, data []byte, n
 	}
 }
 
-func (k *NaclKey) Decrypt(encData []byte) ([]byte, error) {
+func (k *Key) Decrypt(encData []byte) ([]byte, error) {
 	pubKeyString := KeyBytesToB64String(k.PublicKey)
 	preppedData, err := unwrapForDecryption(encData)
 	if err != nil {

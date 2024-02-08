@@ -266,7 +266,7 @@ func (c *DefaultClient) ImageList(ctx context.Context) ([]apiv1.Image, error) {
 // FindImage finds an image if exists and returns whether it was found by tag
 func FindImage(ctx context.Context, c Client, name string) (*apiv1.Image, string, error) {
 	// Early filter autoupgrade patterns, as they will fail lookup since the reference cannot be parsed
-	if _, ok := autoupgrade.AutoUpgradePattern(name); ok {
+	if _, ok := autoupgrade.Pattern(name); ok {
 		return nil, "", images.ErrImageNotFound{ImageSearch: name}
 	}
 

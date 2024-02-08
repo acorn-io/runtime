@@ -30,15 +30,15 @@ var parentAcornfile []byte
 
 func TestImageRoleAuthorizations(t *testing.T) {
 	helper.StartController(t)
-	registry, close := helper.StartRegistry(t)
-	defer close()
+	registry, cancel := helper.StartRegistry(t)
+	defer cancel()
 
 	ctx := helper.GetCTX(t)
 	c, _ := helper.ClientAndProject(t)
 	kclient := helper.MustReturn(kclient.Default)
 
 	// enable image role authorizations in acorn config
-	helper.EnableFeatureWithRestore(t, ctx, kclient, profiles.FeatureImageRoleAuthorizations)
+	helper.EnableFeatureWithRestore(ctx, t, kclient, profiles.FeatureImageRoleAuthorizations)
 
 	// Delete any existing rules from this project namespace
 	err := kclient.DeleteAllOf(ctx, &internaladminv1.ImageRoleAuthorizationInstance{}, cclient.InNamespace(c.GetNamespace()))
@@ -397,7 +397,7 @@ func TestImageRoleAuthorizationConsumerPerms(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 
 	// enable image role authorizations in acorn config
-	helper.EnableFeatureWithRestore(t, ctx, kclient, profiles.FeatureImageRoleAuthorizations)
+	helper.EnableFeatureWithRestore(ctx, t, kclient, profiles.FeatureImageRoleAuthorizations)
 
 	// Delete any existing rules from this project namespace
 	err := kclient.DeleteAllOf(ctx, &internaladminv1.ImageRoleAuthorizationInstance{}, cclient.InNamespace(c.GetNamespace()))

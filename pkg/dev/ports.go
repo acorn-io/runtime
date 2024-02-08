@@ -16,7 +16,7 @@ import (
 	"k8s.io/client-go/util/retry"
 )
 
-func DevPorts(ctx context.Context, c client.Client, logger Logger, appName string) error {
+func Ports(ctx context.Context, c client.Client, logger Logger, appName string) error {
 	wc, err := c.GetClient()
 	if err != nil {
 		return err

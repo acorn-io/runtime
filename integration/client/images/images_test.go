@@ -150,8 +150,8 @@ func TestImageTag(t *testing.T) {
 
 func TestImagePush(t *testing.T) {
 	helper.StartController(t)
-	registry, close := helper.StartRegistry(t)
-	defer close()
+	registry, cancel := helper.StartRegistry(t)
+	defer cancel()
 	restConfig := helper.StartAPI(t)
 
 	ctx := helper.GetCTX(t)
@@ -193,8 +193,8 @@ func TestImagePush(t *testing.T) {
 
 func TestImagePull(t *testing.T) {
 	helper.StartController(t)
-	registry, close := helper.StartRegistry(t)
-	defer close()
+	registry, cancel := helper.StartRegistry(t)
+	defer cancel()
 	restConfig := helper.StartAPI(t)
 
 	ctx := helper.GetCTX(t)
@@ -268,8 +268,8 @@ func TestImagePull(t *testing.T) {
 
 func TestImageDetails(t *testing.T) {
 	helper.StartController(t)
-	registry, close := helper.StartRegistry(t)
-	defer close()
+	registry, cancel := helper.StartRegistry(t)
+	defer cancel()
 	restConfig := helper.StartAPI(t)
 
 	ctx := helper.GetCTX(t)

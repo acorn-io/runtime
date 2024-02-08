@@ -75,7 +75,7 @@ func (c *PortForward) connect(podName, podNamespace string, execOpt *apiv1.Conta
 	}), nil
 }
 
-func (c *PortForward) Connect(ctx context.Context, id string, options runtime.Object, r registryrest.Responder) (http.Handler, error) {
+func (c *PortForward) Connect(ctx context.Context, id string, options runtime.Object, _ registryrest.Responder) (http.Handler, error) {
 	forwardOpts := options.(*apiv1.ContainerReplicaPortForwardOptions)
 
 	container := &apiv1.ContainerReplica{}

@@ -6,7 +6,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/config"
 )
 
-func MarkRecorded(req router.Request, resp router.Response) error {
+func MarkRecorded(req router.Request, _ router.Response) error {
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return err

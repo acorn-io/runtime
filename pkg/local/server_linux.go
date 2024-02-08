@@ -4,7 +4,6 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
-	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -37,27 +36,28 @@ func ServerRun(ctx context.Context) error {
 		return fmt.Errorf("must be ran in a docker container: %w", err)
 	}
 
-	if f, err := os.Open("/dev/kmsg"); err != nil {
+	f, err := os.Open("/dev/kmsg")
+	if err != nil {
 		return fmt.Errorf("must be ran in a privileged docker container: %w", err)
-	} else {
-		_ = f.Close()
 	}
+
+	_ = f.Close()
 
 	if err := os.WriteFile("/etc/machine-id", []byte(system.LocalImage), 0644); err != nil {
 		return err
 	}
 
-	c, err := NewContainer(ctx)
+	c, err := NewContainer()
 	if err != nil {
 		return err
 	}
 
-	if err := c.DeletePorts(ctx); err != nil {
+	if err = c.DeletePorts(ctx); err != nil {
 		return err
 	}
 
 	buf := &bytes.Buffer{}
-	err = install.PrintObjects("acorn-local", &install.Options{
+	if err = install.PrintObjects("acorn-local", &install.Options{
 		Output:                   buf,
 		IncludeLocalEnvResources: true,
 		Config: apiv1.Config{
@@ -65,8 +65,7 @@ func ServerRun(ctx context.Context) error {
 			SetPodSecurityEnforceProfile: z.Pointer(false),
 			IgnoreResourceRequirements:   z.Pointer(true),
 		},
-	})
-	if err != nil {
+	}); err != nil {
 		return err
 	}
 
@@ -106,15 +105,15 @@ func ServerRun(ctx context.Context) error {
 		return err
 	}
 
-	if err := os.MkdirAll("/var/lib/rancher/k3s/server/manifests", 0755); err != nil {
+	if err = os.MkdirAll("/var/lib/rancher/k3s/server/manifests", 0755); err != nil {
 		return err
 	}
 
-	if err := os.WriteFile("/var/lib/rancher/k3s/server/manifests/acorn.yaml", data, 0655); err != nil {
+	if err = os.WriteFile("/var/lib/rancher/k3s/server/manifests/acorn.yaml", data, 0655); err != nil {
 		return err
 	}
 
-	if _, err := os.Stat("/sys/fs/cgroup/cgroup.controllers"); err == nil {
+	if _, err = os.Stat("/sys/fs/cgroup/cgroup.controllers"); err == nil {
 		cmd := exec.Command("/bin/sh", "-c", `
 mkdir -p /sys/fs/cgroup/init
 busybox xargs -rn1 < /sys/fs/cgroup/cgroup.procs > /sys/fs/cgroup/init/cgroup.procs || :
@@ -122,7 +121,7 @@ sed -e 's/ / +/g' -e 's/^/+/' <"/sys/fs/cgroup/cgroup.controllers" >"/sys/fs/cgr
 `)
 		cmd.Stderr = os.Stderr
 		cmd.Stdout = os.Stdout
-		if err := cmd.Run(); err != nil {
+		if err = cmd.Run(); err != nil {
 			return fmt.Errorf("failed to setup cgroups: %w", err)
 		}
 	}
@@ -132,12 +131,12 @@ sed -e 's/ / +/g' -e 's/^/+/' <"/sys/fs/cgroup/cgroup.controllers" >"/sys/fs/cgr
 		return err
 	}
 
-	img, err := buildImage(ctx)
+	img, err := buildImage()
 	if err != nil {
 		return err
 	}
 
-	if err := os.MkdirAll("/var/lib/rancher/k3s/agent/images", 0755); err != nil {
+	if err = os.MkdirAll("/var/lib/rancher/k3s/agent/images", 0755); err != nil {
 		return err
 	}
 
@@ -148,7 +147,7 @@ sed -e 's/ / +/g' -e 's/^/+/' <"/sys/fs/cgroup/cgroup.controllers" >"/sys/fs/cgr
 	return syscall.Exec("/bin/k3s", []string{"k3s", "server"}, os.Environ())
 }
 
-func buildImage(ctx context.Context) (ggcrv1.Image, error) {
+func buildImage() (ggcrv1.Image, error) {
 	layer, err := tarball.LayerFromOpener(func() (io.ReadCloser, error) {
 		out := &bytes.Buffer{}
 		t := tar.NewWriter(out)

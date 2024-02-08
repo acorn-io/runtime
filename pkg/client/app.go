@@ -188,11 +188,10 @@ func (c *DefaultClient) DevSessionRenew(ctx context.Context, name string, client
 func (c *DefaultClient) DevSessionRelease(ctx context.Context, name string) error {
 	// Don't release a devsession for removing apps
 	app, err := c.AppGet(ctx, name)
-	if apierrors.IsNotFound(err) {
-	} else if err != nil {
-		return err
-	} else if !app.DeletionTimestamp.IsZero() {
+	if err == nil && !app.DeletionTimestamp.IsZero() {
 		return nil
+	} else if kclient.IgnoreNotFound(err) != nil {
+		return err
 	}
 
 	devSession := &apiv1.DevSession{}

@@ -43,7 +43,7 @@ func (s *PullAppImageStrategy) Create(ctx context.Context, obj types.Object) (ty
 	if err != nil {
 		return nil, err
 	}
-	if _, pattern := autoupgrade.AutoUpgradePattern(app.Spec.Image); pattern {
+	if _, pattern := autoupgrade.Pattern(app.Spec.Image); pattern {
 		if app.Status.AppImage.Name != "" {
 			app.Status.AvailableAppImage = app.Status.AppImage.Name
 		}
@@ -59,7 +59,7 @@ func (s *PullAppImageStrategy) New() types.Object {
 	return &apiv1.AppPullImage{}
 }
 
-func (v PullAppImageNameValidator) ValidateName(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
+func (v PullAppImageNameValidator) ValidateName(_ context.Context, obj runtime.Object) (result field.ErrorList) {
 	appPullImage := obj.(*apiv1.AppPullImage)
 	if len(strings.Split(appPullImage.Name, ".")) == 2 {
 		result = append(result, field.Invalid(field.NewPath("metadata", "name"), appPullImage.Name, "To update a nested Acorn or a service, update the parent Acorn instead."))

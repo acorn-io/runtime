@@ -27,7 +27,7 @@ const (
 	Helper = "acorn-job-output-helper"
 )
 
-func GetJobOutputSecretName(ctx context.Context, namespace, jobName string) string {
+func GetJobOutputSecretName(namespace, jobName string) string {
 	return name.SafeHashConcatName(jobName, "output", namespace)
 }
 
@@ -96,7 +96,7 @@ func getOutput(ctx context.Context, c kclient.Client, appInstance *v1.AppInstanc
 		}
 	}()
 
-	secretName := GetJobOutputSecretName(ctx, appInstance.Status.Namespace, name)
+	secretName := GetJobOutputSecretName(appInstance.Status.Namespace, name)
 	secret := &corev1.Secret{}
 
 	if err := c.Get(ctx, router.Key(appInstance.Status.Namespace, secretName), secret); apierror.IsNotFound(err) {

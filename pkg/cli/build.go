@@ -79,7 +79,7 @@ func (s *Build) Run(cmd *cobra.Command, args []string) error {
 
 	if s.Push {
 		for _, tag := range s.Tag {
-			auth, err := getAuthForImage(cmd.Context(), s.client, tag)
+			auth, err := getAuthForImage(s.client, tag)
 			if err != nil {
 				return err
 			}

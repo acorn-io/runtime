@@ -26,7 +26,7 @@ func (a *AuthProvider) Register(server *grpc.Server) {
 	auth.RegisterAuthServer(server, a)
 }
 
-func (a *AuthProvider) Credentials(ctx context.Context, request *auth.CredentialsRequest) (*auth.CredentialsResponse, error) {
+func (a *AuthProvider) Credentials(_ context.Context, request *auth.CredentialsRequest) (*auth.CredentialsResponse, error) {
 	if a.keychain == nil {
 		return &auth.CredentialsResponse{}, nil
 	}
@@ -52,14 +52,14 @@ func (a *AuthProvider) Credentials(ctx context.Context, request *auth.Credential
 	}, nil
 }
 
-func (a *AuthProvider) FetchToken(ctx context.Context, request *auth.FetchTokenRequest) (*auth.FetchTokenResponse, error) {
+func (a *AuthProvider) FetchToken(context.Context, *auth.FetchTokenRequest) (*auth.FetchTokenResponse, error) {
 	return nil, fmt.Errorf("not supported")
 }
 
-func (a *AuthProvider) GetTokenAuthority(ctx context.Context, request *auth.GetTokenAuthorityRequest) (*auth.GetTokenAuthorityResponse, error) {
+func (a *AuthProvider) GetTokenAuthority(context.Context, *auth.GetTokenAuthorityRequest) (*auth.GetTokenAuthorityResponse, error) {
 	return nil, status.Errorf(codes.Unavailable, "client side tokens disabled")
 }
 
-func (a *AuthProvider) VerifyTokenAuthority(ctx context.Context, request *auth.VerifyTokenAuthorityRequest) (*auth.VerifyTokenAuthorityResponse, error) {
+func (a *AuthProvider) VerifyTokenAuthority(context.Context, *auth.VerifyTokenAuthorityRequest) (*auth.VerifyTokenAuthorityResponse, error) {
 	return nil, fmt.Errorf("not supported")
 }

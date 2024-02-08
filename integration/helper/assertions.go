@@ -13,7 +13,7 @@ func Subset[V, W any, Z comparable](t *testing.T, first []V, second []W, firstLo
 
 	set := make(map[Z]int)
 	for _, value := range second {
-		set[secondLookup(value)] += 1
+		set[secondLookup(value)]++
 	}
 
 	for _, value := range first {

@@ -133,30 +133,27 @@ func parsePortBindingTuple(left, right string) (PortBinding, error) {
 				TargetPort: rightNum,
 				Protocol:   ProtocolHTTP,
 			}, nil
-		} else {
-			// app:80 format
-			return PortBinding{
-				TargetServiceName: left,
-				TargetPort:        rightNum,
-			}, nil
 		}
+		// app:80 format
+		return PortBinding{
+			TargetServiceName: left,
+			TargetPort:        rightNum,
+		}, nil
 	} else if leftIsNum && !rightIsNum {
 		// 80:service format
 		return PortBinding{
 			Port:              leftNum,
 			TargetServiceName: right,
 		}, nil
-	} else {
-		if strings.Contains(left, ".") {
-			// hostname:service
-			return PortBinding{
-				Hostname:          left,
-				TargetServiceName: right,
-				Protocol:          ProtocolHTTP,
-			}, nil
-		}
-		return PortBinding{}, fmt.Errorf("[%s] must be a hostname containing a \".\"", left)
+	} else if strings.Contains(left, ".") {
+		// hostname:service
+		return PortBinding{
+			Hostname:          left,
+			TargetServiceName: right,
+			Protocol:          ProtocolHTTP,
+		}, nil
 	}
+	return PortBinding{}, fmt.Errorf("[%s] must be a hostname containing a \".\"", left)
 }
 
 func parsePortTuple(left, right string) (PortDef, error) {

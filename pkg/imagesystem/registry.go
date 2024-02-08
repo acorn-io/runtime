@@ -17,7 +17,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func NormalizeServerAddress(address string) string {
@@ -27,7 +27,7 @@ func NormalizeServerAddress(address string) string {
 	return address
 }
 
-func GetInternalRepoForNamespace(ctx context.Context, c client.Reader, namespace string) (name.Repository, bool, error) {
+func GetInternalRepoForNamespace(ctx context.Context, c kclient.Reader, namespace string) (name.Repository, bool, error) {
 	cfg, err := config.Get(ctx, c)
 	if err != nil {
 		return name.Repository{}, false, err
@@ -46,7 +46,7 @@ func GetInternalRepoForNamespace(ctx context.Context, c client.Reader, namespace
 	return n, false, err
 }
 
-func GetRuntimePullableInternalRepoForNamespace(ctx context.Context, c client.Reader, namespace string) (name.Repository, error) {
+func GetRuntimePullableInternalRepoForNamespace(ctx context.Context, c kclient.Reader, namespace string) (name.Repository, error) {
 	cfg, err := config.Get(ctx, c)
 	if err != nil {
 		return name.Repository{}, err
@@ -63,7 +63,7 @@ func GetRuntimePullableInternalRepoForNamespace(ctx context.Context, c client.Re
 	return name.NewRepository(fmt.Sprintf("%s/acorn/%s", address, namespace))
 }
 
-func GetRuntimePullableInternalRepoForNamespaceAndID(ctx context.Context, c client.Reader, namespace, imageID string) (name.Reference, error) {
+func GetRuntimePullableInternalRepoForNamespaceAndID(ctx context.Context, c kclient.Reader, namespace, imageID string) (name.Reference, error) {
 	var (
 		repo name.Repository
 	)
@@ -73,7 +73,7 @@ func GetRuntimePullableInternalRepoForNamespaceAndID(ctx context.Context, c clie
 		if err != nil {
 			return nil, err
 		}
-	} else if err != nil && !apierrors.IsNotFound(err) {
+	} else if kclient.IgnoreNotFound(err) != nil {
 		return nil, err
 	} else {
 		repo, err = GetRuntimePullableInternalRepoForNamespace(ctx, c, namespace)
@@ -84,7 +84,7 @@ func GetRuntimePullableInternalRepoForNamespaceAndID(ctx context.Context, c clie
 	return repo.Digest("sha256:" + imageID), nil
 }
 
-func GetInternalRepoForNamespaceAndID(ctx context.Context, c client.Reader, namespace, imageID string) (name.Reference, error) {
+func GetInternalRepoForNamespaceAndID(ctx context.Context, c kclient.Reader, namespace, imageID string) (name.Reference, error) {
 	var (
 		repo name.Repository
 	)
@@ -94,7 +94,7 @@ func GetInternalRepoForNamespaceAndID(ctx context.Context, c client.Reader, name
 		if err != nil {
 			return nil, err
 		}
-	} else if err != nil && !apierrors.IsNotFound(err) {
+	} else if kclient.IgnoreNotFound(err) != nil {
 		return nil, err
 	} else {
 		repo, _, err = GetInternalRepoForNamespace(ctx, c, namespace)
@@ -105,7 +105,7 @@ func GetInternalRepoForNamespaceAndID(ctx context.Context, c client.Reader, name
 	return repo.Digest("sha256:" + imageID), nil
 }
 
-func GetRegistryObjects(ctx context.Context, c client.Reader) (result []client.Object, _ error) {
+func GetRegistryObjects(ctx context.Context, c kclient.Reader) (result []kclient.Object, _ error) {
 	cfg, err := config.Get(ctx, c)
 	if err != nil {
 		return nil, err
@@ -159,7 +159,7 @@ func GetRegistryObjects(ctx context.Context, c client.Reader) (result []client.O
 		)
 	}
 
-	sa := registryServiceAccount(system.ImagesNamespace)
+	sa := registryServiceAccount()
 	result = append(result, sa)
 
 	result = append(result,
@@ -175,7 +175,7 @@ func GetRegistryObjects(ctx context.Context, c client.Reader) (result []client.O
 	return result, nil
 }
 
-func GetClusterInternalRegistryDNSName(ctx context.Context, c client.Reader) (string, error) {
+func GetClusterInternalRegistryDNSName(ctx context.Context, c kclient.Reader) (string, error) {
 	cfg, err := config.Get(ctx, c)
 	if err != nil {
 		return "", err
@@ -187,7 +187,7 @@ func IsClusterInternalRegistryAddressReference(url string) bool {
 	return strings.HasPrefix(url, "127.")
 }
 
-func GetClusterInternalRegistryAddress(ctx context.Context, c client.Reader) (string, error) {
+func GetClusterInternalRegistryAddress(ctx context.Context, c kclient.Reader) (string, error) {
 	port, err := getRegistryPort(ctx, c)
 	if err != nil {
 		return "", err
@@ -195,9 +195,9 @@ func GetClusterInternalRegistryAddress(ctx context.Context, c client.Reader) (st
 	return fmt.Sprintf("127.0.0.1:%d", port), nil
 }
 
-func getRegistryPort(ctx context.Context, c client.Reader) (int, error) {
+func getRegistryPort(ctx context.Context, c kclient.Reader) (int, error) {
 	var service corev1.Service
-	err := c.Get(ctx, client.ObjectKey{Name: system.RegistryName, Namespace: system.ImagesNamespace}, &service)
+	err := c.Get(ctx, kclient.ObjectKey{Name: system.RegistryName, Namespace: system.ImagesNamespace}, &service)
 	if err != nil {
 		return 0, fmt.Errorf("getting %s/%s service: %w", system.ImagesNamespace, system.RegistryName, err)
 	}
@@ -210,7 +210,7 @@ func getRegistryPort(ctx context.Context, c client.Reader) (int, error) {
 	return 0, fmt.Errorf("failed to find node port for registry %s/%s", system.ImagesNamespace, system.RegistryName)
 }
 
-func IsNotInternalRepo(ctx context.Context, c client.Reader, namespace, image string) error {
+func IsNotInternalRepo(ctx context.Context, c kclient.Reader, namespace, image string) error {
 	if !strings.Contains(image, "/") {
 		return nil
 	}
@@ -259,7 +259,7 @@ func isNotInternalRepo(prefix, image string) error {
 	return nil
 }
 
-func ParseAndEnsureNotInternalRepo(ctx context.Context, c client.Reader, namespace, image string) (name.Reference, error) {
+func ParseAndEnsureNotInternalRepo(ctx context.Context, c kclient.Reader, namespace, image string) (name.Reference, error) {
 	if err := IsNotInternalRepo(ctx, c, namespace, image); err != nil {
 		return nil, err
 	}

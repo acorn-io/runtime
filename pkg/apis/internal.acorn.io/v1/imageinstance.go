@@ -48,10 +48,10 @@ type ImageInstance struct {
 	// Remote indicates that this image has not been locally cached to the internal registry
 	// meaning that it may not exist at the location recorded in the Repo field if the user
 	// has deleted the image after the fact
-	ZZ_Remote bool     `json:"remote,omitempty"`
-	Repo      string   `json:"repo,omitempty"`
-	Digest    string   `json:"digest,omitempty"`
-	Tags      []string `json:"tags,omitempty"`
+	ZZRemote bool     `json:"remote,omitempty"`
+	Repo     string   `json:"repo,omitempty"`
+	Digest   string   `json:"digest,omitempty"`
+	Tags     []string `json:"tags,omitempty"`
 }
 
 func (in *ImageInstance) ShortID() string {

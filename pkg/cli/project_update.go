@@ -43,8 +43,8 @@ func (a *ProjectUpdate) Run(cmd *cobra.Command, args []string) error {
 	}
 	if err := project.Update(cmd.Context(), a.client.Options(), projectsDetails[0], a.DefaultRegion, a.SupportedRegions); err != nil {
 		return err
-	} else {
-		fmt.Println(projectsDetails[0].FullName)
 	}
+
+	fmt.Println(projectsDetails[0].FullName)
 	return nil
 }

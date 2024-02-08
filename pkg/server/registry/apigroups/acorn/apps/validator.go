@@ -77,7 +77,7 @@ func NewValidator(client kclient.Client, clientFactory *client.Factory, deleter 
 	}
 }
 
-func (s *Validator) PrepareForCreate(ctx context.Context, obj runtime.Object) {
+func (s *Validator) PrepareForCreate(_ context.Context, obj runtime.Object) {
 	r := obj.(types.Object)
 	if r.GetName() == "" && r.GetGenerateName() == "" {
 		r.SetName(nameGenerator.Generate())
@@ -133,7 +133,7 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 		checkImage        = app.Spec.Image
 	)
 
-	tagPattern, isPattern := autoupgrade.AutoUpgradePattern(app.Spec.Image)
+	tagPattern, isPattern := autoupgrade.Pattern(app.Spec.Image)
 	if isPattern {
 		if latestImage, found, err := autoupgrade.FindLatestTagForImageWithPattern(ctx, s.client, "", app.Namespace, app.Spec.Image, tagPattern); err != nil {
 			result = append(result, field.Invalid(field.NewPath("spec", "image"), app.Spec.Image, err.Error()))

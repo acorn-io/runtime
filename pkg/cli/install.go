@@ -66,7 +66,7 @@ func (i *Install) dev(ctx context.Context, imageName string, opts *install.Optio
 		return err
 	}
 
-	auth, ok, err := creds.Get(ctx, ref.Context().RegistryStr())
+	auth, ok, err := creds.Get(ref.Context().RegistryStr())
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func (i *Install) dev(ctx context.Context, imageName string, opts *install.Optio
 	return install.Dev(ctx, imageName, auth, opts)
 }
 
-func (i *Install) Run(cmd *cobra.Command, args []string) error {
+func (i *Install) Run(cmd *cobra.Command, _ []string) error {
 	var image = system.DefaultImage()
 	if i.Image != "" {
 		image = i.Image

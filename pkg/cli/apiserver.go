@@ -12,7 +12,7 @@ var (
 	opts = minkserver.DefaultOpts()
 )
 
-func NewApiServer(c CommandContext) *cobra.Command {
+func NewAPIServer(c CommandContext) *cobra.Command {
 	api := &APIServer{client: c.ClientFactory}
 	cmd := cli.Command(api, cobra.Command{
 		Use:          "api-server [flags] [ACORN_NAME...]",
@@ -28,7 +28,7 @@ type APIServer struct {
 	client ClientFactory
 }
 
-func (a *APIServer) Run(cmd *cobra.Command, args []string) error {
+func (a *APIServer) Run(cmd *cobra.Command, _ []string) error {
 	cfg, err := server.New(server.Config{
 		Version:     cmd.Version,
 		DefaultOpts: opts,

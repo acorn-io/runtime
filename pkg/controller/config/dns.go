@@ -14,10 +14,9 @@ import (
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/strings/slices"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func NewDNSConfigHandler() router.Handler {
@@ -42,7 +41,7 @@ func (h *configHandler) Handle(req router.Request, resp router.Response) error {
 
 	dnsSecret := &corev1.Secret{}
 	err = req.Client.Get(req.Ctx, router.Key(system.Namespace, system.DNSSecretName), dnsSecret)
-	if err != nil && !apierrors.IsNotFound(err) {
+	if kclient.IgnoreNotFound(err) != nil {
 		return err
 	}
 	domain := string(dnsSecret.Data["domain"])
@@ -83,7 +82,7 @@ func (h *configHandler) Handle(req router.Request, resp router.Response) error {
 
 	// Secret exists. Update it
 	sec := &corev1.Secret{}
-	err = req.Client.Get(req.Ctx, client.ObjectKey{
+	err = req.Client.Get(req.Ctx, kclient.ObjectKey{
 		Name:      system.DNSSecretName,
 		Namespace: system.Namespace,
 	}, uncached.Get(sec))
@@ -101,8 +100,8 @@ func (h *configHandler) Handle(req router.Request, resp router.Response) error {
 		}
 	}
 
-	if !strings.EqualFold(*cfg.LetsEncrypt, "disabled") && domain != "" && token != "" {
-		if err := tls.ProvisionWildcardCert(req, resp, domain, token); err != nil {
+	if !strings.EqualFold(*cfg.LetsEncrypt, "disabled") && domain != "" {
+		if err := tls.ProvisionWildcardCert(req, resp, domain); err != nil {
 			return err
 		}
 	}

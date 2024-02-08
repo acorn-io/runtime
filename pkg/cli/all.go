@@ -26,7 +26,7 @@ type All struct {
 	client ClientFactory
 }
 
-func (a *All) Run(cmd *cobra.Command, args []string) error {
+func (a *All) Run(cmd *cobra.Command, _ []string) error {
 	if !a.Quiet {
 		fmt.Println("")
 		fmt.Println("ACORNS:")

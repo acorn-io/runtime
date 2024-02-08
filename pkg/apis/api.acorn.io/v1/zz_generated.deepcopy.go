@@ -427,8 +427,8 @@ func (in *Config) DeepCopyInto(out *Config) {
 		*out = new(bool)
 		**out = **in
 	}
-	if in.HttpEndpointPattern != nil {
-		in, out := &in.HttpEndpointPattern, &out.HttpEndpointPattern
+	if in.HTTPEndpointPattern != nil {
+		in, out := &in.HTTPEndpointPattern, &out.HTTPEndpointPattern
 		*out = new(string)
 		**out = **in
 	}

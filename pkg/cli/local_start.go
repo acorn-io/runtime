@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewLocalStart(c CommandContext) *cobra.Command {
+func NewLocalStart() *cobra.Command {
 	cmd := cli.Command(&LocalStart{}, cobra.Command{
 		Use:          "start [flags]",
 		Aliases:      []string{"delete"},
@@ -21,8 +21,8 @@ type LocalStart struct {
 	Delete bool `usage:"Delete existing server before starting"`
 }
 
-func (a *LocalStart) Run(cmd *cobra.Command, args []string) (err error) {
-	c, err := local.NewContainer(cmd.Context())
+func (a *LocalStart) Run(cmd *cobra.Command, _ []string) (err error) {
+	c, err := local.NewContainer()
 	if err != nil {
 		return err
 	}

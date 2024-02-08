@@ -23,7 +23,7 @@ var (
 	ErrInvalidClass          = errors.New("compute class is invalid")
 )
 
-type memoryQuantities struct {
+type MemoryQuantities struct {
 	Max    *resource.Quantity
 	Min    *resource.Quantity
 	Def    *resource.Quantity
@@ -37,24 +37,24 @@ func parseQuantity(memory string) (resource.Quantity, error) {
 	return resource.ParseQuantity(memory)
 }
 
-func ParseComputeClassMemory(memory apiv1.ComputeClassMemory) (memoryQuantities, error) {
-	var quantities memoryQuantities
+func ParseComputeClassMemory(memory apiv1.ComputeClassMemory) (MemoryQuantities, error) {
+	var quantities MemoryQuantities
 
 	minInt, err := parseQuantity(memory.Min)
 	if err != nil {
-		return memoryQuantities{}, err
+		return MemoryQuantities{}, err
 	}
 	quantities.Min = &minInt
 
 	maxInt, err := parseQuantity(memory.Max)
 	if err != nil {
-		return memoryQuantities{}, err
+		return MemoryQuantities{}, err
 	}
 	quantities.Max = &maxInt
 
 	defInt, err := parseQuantity(memory.Default)
 	if err != nil {
-		return memoryQuantities{}, err
+		return MemoryQuantities{}, err
 	}
 	quantities.Def = &defInt
 
@@ -62,7 +62,7 @@ func ParseComputeClassMemory(memory apiv1.ComputeClassMemory) (memoryQuantities,
 	for i, value := range memory.Values {
 		valueInt, err := parseQuantity(value)
 		if err != nil {
-			return memoryQuantities{}, err
+			return MemoryQuantities{}, err
 		}
 		quantities.Values[i] = &valueInt
 	}
@@ -70,14 +70,14 @@ func ParseComputeClassMemory(memory apiv1.ComputeClassMemory) (memoryQuantities,
 	return quantities, nil
 }
 
-func ParseComputeClassMemoryInternal(memory internaladminv1.ComputeClassMemory) (memoryQuantities, error) {
+func ParseComputeClassMemoryInternal(memory internaladminv1.ComputeClassMemory) (MemoryQuantities, error) {
 	if memory.RequestScaler < 0 || memory.RequestScaler > 1 {
-		return memoryQuantities{}, errors.New("request scaler value must be between 0 and 1, inclusive")
+		return MemoryQuantities{}, errors.New("request scaler value must be between 0 and 1, inclusive")
 	}
 	return ParseComputeClassMemory(apiv1.ComputeClassMemoryFromInternalAdmin(memory))
 }
 
-func memoryInValues(parsedMemory memoryQuantities, memory resource.Quantity) bool {
+func memoryInValues(parsedMemory MemoryQuantities, memory resource.Quantity) bool {
 	value := memory.Value()
 	for _, allowedMemory := range parsedMemory.Values {
 		if allowedMemory != nil && value == allowedMemory.Value() {

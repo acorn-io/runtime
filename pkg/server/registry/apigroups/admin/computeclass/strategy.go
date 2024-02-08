@@ -31,7 +31,7 @@ func (s *Strategy) New() types.Object {
 	return &apiv1.ComputeClass{}
 }
 
-func (s *Strategy) List(ctx context.Context, namespace string, options storage.ListOptions) (types.ObjectList, error) {
+func (s *Strategy) List(ctx context.Context, namespace string, _ storage.ListOptions) (types.ObjectList, error) {
 	clusterComputeClasses := &adminv1.ClusterComputeClassInstanceList{}
 	if err := s.client.List(ctx, clusterComputeClasses); err != nil {
 		return nil, err

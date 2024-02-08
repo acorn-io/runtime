@@ -141,7 +141,7 @@ func listAcornServer(ctx context.Context, wg *sync.WaitGroup, creds *credentials
 			defer wg.Done()
 
 			var projects []string
-			cred, ok, err := creds.Get(ctx, managerServer)
+			cred, ok, err := creds.Get(managerServer)
 			if err == nil && ok {
 				subCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 				projects, err = manager.Projects(subCtx, managerServer, cred.Password)

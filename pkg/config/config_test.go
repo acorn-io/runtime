@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAcornDNSDisabledNoLookupsHappen(t *testing.T) {
+func TestAcornDNSDisabledNoLookupsHappen(*testing.T) {
 	s := "not exactly disabled, but any string that doesn't equal" +
 		" auto or enabled should be treated as disabled"
 	_ = complete(context.Background(), &apiv1.Config{

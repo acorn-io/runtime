@@ -19,11 +19,11 @@ func FindSignatureImage(imageRef name.Reference, opts ...remote.Option) (name.Ta
 		img, err := remote.Image(tag, opts...)
 
 		return tag, img, err
-	} else {
-		digeststr, err := SimpleDigest(imageRef, opts...)
-		if err != nil {
-			return name.Tag{}, nil, err
-		}
-		return FindSignatureImage(imageRef.Context().Digest(digeststr), opts...)
 	}
+
+	digeststr, err := SimpleDigest(imageRef, opts...)
+	if err != nil {
+		return name.Tag{}, nil, err
+	}
+	return FindSignatureImage(imageRef.Context().Digest(digeststr), opts...)
 }

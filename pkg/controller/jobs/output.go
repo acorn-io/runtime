@@ -112,7 +112,7 @@ func (h *Handler) runCommand(ctx context.Context, pod *corev1.Pod, command ...st
 	}, nil
 }
 
-func (h *Handler) SaveJobOutput(req router.Request, resp router.Response) error {
+func (h *Handler) SaveJobOutput(req router.Request, _ router.Response) error {
 	pod := req.Object.(*corev1.Pod)
 	jobName := pod.Labels[labels.AcornJobName]
 
@@ -154,7 +154,7 @@ func (h *Handler) SaveJobOutput(req router.Request, resp router.Response) error 
 		return err
 	}
 
-	secretName := jobs.GetJobOutputSecretName(req.Ctx, pod.Namespace, jobName)
+	secretName := jobs.GetJobOutputSecretName(pod.Namespace, jobName)
 
 	data, err := h.runCommand(req.Ctx, pod, "/usr/local/bin/acorn-job-get-output")
 	if err != nil {

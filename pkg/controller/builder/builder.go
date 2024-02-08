@@ -30,7 +30,7 @@ func createBuilderObjects(req router.Request, resp router.Response) (string, str
 		return "", "", nil, err
 	}
 
-	depotToken, depotProjectId, err := getDepotKey(req.Ctx, req.Client, builder.Namespace)
+	depotToken, depotProjectID, err := getDepotKey(req.Ctx, req.Client, builder.Namespace)
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -46,7 +46,7 @@ func createBuilderObjects(req router.Request, resp router.Response) (string, str
 	}
 
 	objs := imagesystem.BuilderObjects(name, system.ImagesNamespace, forNamespace, system.DefaultImage(),
-		pubKey, privKey, depotToken, depotProjectId, builder.Status.UUID, registryDNS, cfg)
+		pubKey, privKey, depotToken, depotProjectID, builder.Status.UUID, registryDNS, cfg)
 
 	if *cfg.BuilderPerProject {
 		resp.Objects(objs...)

@@ -10,7 +10,7 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func OnError(req router.Request, resp router.Response, err error) error {
+func OnError(req router.Request, _ router.Response, err error) error {
 	if apierrors.IsConflict(err) {
 		return err
 	}

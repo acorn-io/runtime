@@ -20,7 +20,7 @@ import (
 )
 
 // ProvisionWildcardCert provisions a Let's Encrypt wildcard certificate for *.<domain>.oss-acorn.io
-func ProvisionWildcardCert(req router.Request, resp router.Response, domain, token string) error {
+func ProvisionWildcardCert(req router.Request, resp router.Response, domain string) error {
 	logrus.Debugf("Provisioning wildcard cert for %v", domain)
 	// Ensure that we have a Let's Encrypt account ready
 	leUser, err := ensureLEUser(req.Ctx, req.Client)

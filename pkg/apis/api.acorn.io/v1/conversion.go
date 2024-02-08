@@ -8,7 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func convert_url_Values_To__ContainerReplicaExecOptions(in *url.Values, out *ContainerReplicaExecOptions, s conversion.Scope) error {
+func convertURLlValuesToContainerReplicaExecOptions(in *url.Values, out *ContainerReplicaExecOptions, s conversion.Scope) error {
 	if values, ok := map[string][]string(*in)["command"]; ok && len(values) > 0 {
 		out.Command = *(*[]string)(unsafe.Pointer(&values))
 	} else {
@@ -31,11 +31,11 @@ func convert_url_Values_To__ContainerReplicaExecOptions(in *url.Values, out *Con
 	return nil
 }
 
-func Convert_url_Values_To__ContainerReplicaExecOptions(in, out interface{}, s conversion.Scope) error {
-	return convert_url_Values_To__ContainerReplicaExecOptions(in.(*url.Values), out.(*ContainerReplicaExecOptions), s)
+func ConvertURLValuesToContainerReplicaExecOptions(in, out interface{}, s conversion.Scope) error {
+	return convertURLlValuesToContainerReplicaExecOptions(in.(*url.Values), out.(*ContainerReplicaExecOptions), s)
 }
 
-func convert_url_Values_To__LogOptions(in *url.Values, out *LogOptions, s conversion.Scope) error {
+func convertURLValuesToLogOptions(in *url.Values, out *LogOptions, s conversion.Scope) error {
 	if values, ok := map[string][]string(*in)["tailLines"]; ok && len(values) > 0 {
 		out.Tail = new(int64)
 		if err := runtime.Convert_Slice_string_To_int64(&values, out.Tail, s); err != nil {
@@ -60,11 +60,11 @@ func convert_url_Values_To__LogOptions(in *url.Values, out *LogOptions, s conver
 	return nil
 }
 
-func Convert_url_Values_To__LogOptions(in, out interface{}, s conversion.Scope) error {
-	return convert_url_Values_To__LogOptions(in.(*url.Values), out.(*LogOptions), s)
+func ConvertURLValuesToLogOptions(in, out interface{}, s conversion.Scope) error {
+	return convertURLValuesToLogOptions(in.(*url.Values), out.(*LogOptions), s)
 }
 
-func convert_url_Values_To__ContainerReplicaPortForwardOptions(in *url.Values, out *ContainerReplicaPortForwardOptions, s conversion.Scope) error {
+func convertURLValuesToContainerReplicaPortForwardOptions(in *url.Values, out *ContainerReplicaPortForwardOptions, s conversion.Scope) error {
 	if values, ok := map[string][]string(*in)["port"]; ok && len(values) > 0 {
 		if err := runtime.Convert_Slice_string_To_int(&values, &out.Port, s); err != nil {
 			return err
@@ -75,6 +75,6 @@ func convert_url_Values_To__ContainerReplicaPortForwardOptions(in *url.Values, o
 	return nil
 }
 
-func Convert_url_Values_To__ContainerReplicaPortForwardOptions(in, out interface{}, s conversion.Scope) error {
-	return convert_url_Values_To__ContainerReplicaPortForwardOptions(in.(*url.Values), out.(*ContainerReplicaPortForwardOptions), s)
+func ConvertURLValuesToContainerReplicaPortForwardOptions(in, out interface{}, s conversion.Scope) error {
+	return convertURLValuesToContainerReplicaPortForwardOptions(in.(*url.Values), out.(*ContainerReplicaPortForwardOptions), s)
 }

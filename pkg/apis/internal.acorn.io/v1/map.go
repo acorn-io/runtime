@@ -106,16 +106,16 @@ func translateObject(data any) (ret any, err error) {
 	return data, nil
 }
 
-func (in *GenericMap) DeepCopyInto(out *GenericMap) {
+func (g *GenericMap) DeepCopyInto(out *GenericMap) {
 	var err error
-	if *out, err = Mapify(in.GetData()); err != nil {
+	if *out, err = Mapify(g.GetData()); err != nil {
 		logrus.WithError(err).Errorf("failed to deep copy into [%T]", out)
 	}
 }
 
-func (in GenericMap) DeepCopy() GenericMap {
+func (g GenericMap) DeepCopy() GenericMap {
 	var out GenericMap
-	in.DeepCopyInto(&out)
+	g.DeepCopyInto(&out)
 	return out
 }
 

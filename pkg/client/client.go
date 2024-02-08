@@ -294,10 +294,10 @@ type Client interface {
 	GetClient() (kclient.WithWatch, error)
 
 	KubeProxyAddress(ctx context.Context, opts *KubeProxyAddressOptions) (string, error)
-	KubeConfig(ctx context.Context, opts *KubeProxyAddressOptions) ([]byte, error)
+	KubeConfig(opts *KubeProxyAddressOptions) ([]byte, error)
 }
 
-type CredentialLookup func(ctx context.Context, serverAddress string) (*apiv1.RegistryAuth, bool, error)
+type CredentialLookup func(serverAddress string) (*apiv1.RegistryAuth, bool, error)
 
 type AcornImageBuildOptions struct {
 	BuilderName string
@@ -445,7 +445,7 @@ func generateKubeConfig(restConfig *rest.Config) ([]byte, error) {
 	return clientcmd.Write(*config)
 }
 
-func (c *DefaultClient) getRESTConfig(ctx context.Context, opts *KubeProxyAddressOptions) (*rest.Config, error) {
+func (c *DefaultClient) getRESTConfig(opts *KubeProxyAddressOptions) (*rest.Config, error) {
 	if opts == nil || opts.Region == "" {
 		return c.RESTConfig, nil
 	}
@@ -490,8 +490,8 @@ func (c *DefaultClient) getRESTConfig(ctx context.Context, opts *KubeProxyAddres
 	return clientcmd.RESTConfigFromKubeConfig(parsed.Config)
 }
 
-func (c *DefaultClient) KubeConfig(ctx context.Context, opts *KubeProxyAddressOptions) ([]byte, error) {
-	restConfig, err := c.getRESTConfig(ctx, opts)
+func (c *DefaultClient) KubeConfig(opts *KubeProxyAddressOptions) ([]byte, error) {
+	restConfig, err := c.getRESTConfig(opts)
 	if err != nil {
 		return nil, err
 	}
@@ -499,7 +499,7 @@ func (c *DefaultClient) KubeConfig(ctx context.Context, opts *KubeProxyAddressOp
 }
 
 func (c *DefaultClient) KubeProxyAddress(ctx context.Context, opts *KubeProxyAddressOptions) (string, error) {
-	restConfig, err := c.getRESTConfig(ctx, opts)
+	restConfig, err := c.getRESTConfig(opts)
 	if err != nil {
 		return "", err
 	}

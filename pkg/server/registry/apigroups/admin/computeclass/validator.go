@@ -53,7 +53,7 @@ func (s *ProjectValidator) Validate(ctx context.Context, obj runtime.Object) (re
 	return append(result, validateMemorySpec(cc.Memory)...)
 }
 
-func (s *ProjectValidator) ValidateUpdate(ctx context.Context, newObj, oldObj runtime.Object) field.ErrorList {
+func (s *ProjectValidator) ValidateUpdate(ctx context.Context, newObj, _ runtime.Object) field.ErrorList {
 	return s.Validate(ctx, newObj)
 }
 

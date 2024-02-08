@@ -10,7 +10,7 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func MarkAndSave(req router.Request, resp router.Response) error {
+func MarkAndSave(req router.Request, _ router.Response) error {
 	pvc := req.Object.(*corev1.PersistentVolumeClaim)
 	if pvc.Spec.VolumeName == "" {
 		return nil

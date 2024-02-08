@@ -10,17 +10,17 @@ func IsImagePattern(image string) bool {
 	return strings.ContainsAny(image, "#*")
 }
 
-// We need to know two things about a matching group: it's name and whether it should be sorted alphabetically or
-// numerically. pType will be either "alpha" or "numeric"
-type namedMatchingGroup struct {
+// NamedMatchingGroup represents the information we need to know two things about a matching group: it's name and
+// whether it should be sorted alphabetically or numerically. pType will be either "alpha" or "numeric"
+type NamedMatchingGroup struct {
 	PType string
 	Name  string
 }
 
 // NewMatcher returns a Regexp that can be used to match an image or image tag against a pattern.
-// The supplied pattern is NOT a regex. It is acorn's own custom syntax with the following characteristics:
+// The supplied pattern is NOT a regexp. It is acorn's own custom syntax with the following characteristics:
 // - Assumed to be valid docker tag characters: 0-9A-Za-z_.-
-// - Outside of the special matching/sorting groups, a tag must match the pattern exactly
+// - Outside the special matching/sorting groups, a tag must match the pattern exactly
 // - There are three special matching/sorting groups: #, *, and **
 // - ** indicates a portion of the tag doesn't need to match the pattern and won't be considered for sorting. It is the "wildcard"
 // - * indicates a portion of the tag that will be matched and sorted alphabetically
@@ -30,7 +30,7 @@ type namedMatchingGroup struct {
 // - "v#.#" - Matches: "v1.0", "v2.0" (return as latest). Doesn't match: "v1.alpha", "1.0", "v1.0.0"
 // - "v1.0-*" - Matches: "v1.0-alpha", "v1.0-beta" (returned as latest). Doesn't match: "v1.0"
 // - "v1.#-**" - Matches: "v1.0-cv23jkha", "v1.1-2020-01-01" (returned as latest).
-func NewMatcher(pattern string) (*regexp.Regexp, []namedMatchingGroup, error) {
+func NewMatcher(pattern string) (*regexp.Regexp, []NamedMatchingGroup, error) {
 	pattern = "^" + pattern + "$"
 
 	// ** denotes a part of the tag that should be completely ignored for both matching and sorting. Replace it with
@@ -38,7 +38,7 @@ func NewMatcher(pattern string) (*regexp.Regexp, []namedMatchingGroup, error) {
 	pattern = strings.ReplaceAll(pattern, "**", `([0-9A-Za-z_./:-]{0,})`)
 
 	index := 0
-	var namedMatchingGroups []namedMatchingGroup
+	var namedMatchingGroups []NamedMatchingGroup
 
 	// We are replacing the special cases of "#" and "*" with regex "Named Capturing Groups". We are using this feature
 	// so that later we can sort on each group to find the "latest" image.
@@ -52,13 +52,13 @@ func NewMatcher(pattern string) (*regexp.Regexp, []namedMatchingGroup, error) {
 
 		if strings.Contains(pattern, "*") && (!strings.Contains(pattern, "#") || (strings.Index(pattern, "*") < strings.Index(pattern, "#"))) {
 			pattern = strings.Replace(pattern, "*", fmt.Sprintf(`(?P<%v>[0-9A-Za-z_.-]+)`, name), 1)
-			namedMatchingGroups = append(namedMatchingGroups, namedMatchingGroup{PType: "alpha", Name: name})
+			namedMatchingGroups = append(namedMatchingGroups, NamedMatchingGroup{PType: "alpha", Name: name})
 		} else {
 			pattern = strings.Replace(pattern, "#", fmt.Sprintf(`(?P<%v>\d+)`, name), 1)
-			namedMatchingGroups = append(namedMatchingGroups, namedMatchingGroup{PType: "numeric", Name: name})
+			namedMatchingGroups = append(namedMatchingGroups, NamedMatchingGroup{PType: "numeric", Name: name})
 		}
 
-		index += 1
+		index++
 	}
 
 	re, err := regexp.Compile(pattern)

@@ -28,7 +28,7 @@ func NewCreateFolder() (router.Handler, error) {
 	return router.HandlerFunc(createFolder), nil
 }
 
-func CleanupStorage(req router.Request, resp router.Response) error {
+func CleanupStorage(req router.Request, _ router.Response) error {
 	pv := req.Object.(*corev1.PersistentVolume)
 	if pv.DeletionTimestamp.IsZero() || len(pv.Finalizers) == 0 || pv.Finalizers[0] != FinalizerID {
 		return nil
@@ -48,7 +48,7 @@ func CleanupStorage(req router.Request, resp router.Response) error {
 	return req.Client.Update(req.Ctx, pv)
 }
 
-func createFolder(req router.Request, resp router.Response) error {
+func createFolder(req router.Request, _ router.Response) error {
 	pvc := req.Object.(*corev1.PersistentVolumeClaim)
 	if z.Dereference(pvc.Spec.StorageClassName) != storageClass || pvc.Status.Phase != corev1.ClaimPending || pvc.Spec.VolumeName != "" {
 		return nil

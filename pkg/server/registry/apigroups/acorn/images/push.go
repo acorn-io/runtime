@@ -55,7 +55,7 @@ func (i *ImagePush) New() runtime.Object {
 	return &apiv1.ImagePush{}
 }
 
-func (i *ImagePush) Connect(ctx context.Context, id string, options runtime.Object, r rest.Responder) (http.Handler, error) {
+func (i *ImagePush) Connect(ctx context.Context, id string, _ runtime.Object, _ rest.Responder) (http.Handler, error) {
 	ns, _ := request.NamespaceFrom(ctx)
 	tagName := strings.ReplaceAll(id, "+", "/")
 

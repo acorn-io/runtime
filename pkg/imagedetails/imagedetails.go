@@ -27,7 +27,7 @@ func GetImageIcon(ctx context.Context, c kclient.Client, namespace, imageName, d
 
 	image := &apiv1.Image{}
 	err := c.Get(ctx, router.Key(namespace, name), image)
-	if err != nil && !apierror.IsNotFound(err) {
+	if kclient.IgnoreNotFound(err) != nil {
 		return nil, "", err
 	} else if err != nil && apierror.IsNotFound(err) && (tags.IsLocalReference(name) || tags.HasNoSpecifiedRegistry(imageName)) {
 		return nil, "", err
@@ -70,8 +70,9 @@ func getImageDetails(ctx context.Context, c kclient.Client, namespace, imageName
 	imageName = strings.ReplaceAll(imageName, "+", "/")
 	name := strings.ReplaceAll(imageName, "/", "+")
 
-	if tagPattern, isPattern := autoupgrade.AutoUpgradePattern(imageName); isPattern {
-		if latestImage, found, err := autoupgrade.FindLatestTagForImageWithPattern(ctx, c, "", namespace, imageName, tagPattern, opts.RemoteOpts...); err != nil {
+	if tagPattern, isPattern := autoupgrade.Pattern(imageName); isPattern {
+		latestImage, found, err := autoupgrade.FindLatestTagForImageWithPattern(ctx, c, "", namespace, imageName, tagPattern, opts.RemoteOpts...)
+		if err != nil {
 			return nil, err
 		} else if !found {
 			// Check and see if no registry was specified on the image.
@@ -82,17 +83,17 @@ func getImageDetails(ctx context.Context, c kclient.Client, namespace, imageName
 			}
 
 			return nil, fmt.Errorf("unable to find an image for %v matching pattern %v", imageName, tagPattern)
-		} else {
-			imageName = latestImage
-			name = strings.ReplaceAll(imageName, "/", "+")
 		}
+
+		imageName = latestImage
+		name = strings.ReplaceAll(imageName, "/", "+")
 	}
 
 	image := &apiv1.Image{}
 	err := c.Get(ctx, router.Key(namespace, name), image)
-	if err != nil && !apierror.IsNotFound(err) {
+	if kclient.IgnoreNotFound(err) != nil {
 		return nil, err
-	} else if err != nil && apierror.IsNotFound(err) && (tags.IsLocalReference(name) || (opts.NoDefaultReg && tags.HasNoSpecifiedRegistry(imageName))) {
+	} else if err != nil && (tags.IsLocalReference(name) || (opts.NoDefaultReg && tags.HasNoSpecifiedRegistry(imageName))) {
 		return nil, err
 	} else if err == nil {
 		namespace = image.Namespace

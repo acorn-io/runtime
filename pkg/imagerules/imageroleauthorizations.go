@@ -44,11 +44,11 @@ func GetAuthorizedPermissions(ctx context.Context, c client.Reader, namespace, i
 
 	authorizedRoles, err := CheckRoleAuthorizations(ctx, c, namespace, imageName, digest, iras.Items, remoteOpts...)
 	if err != nil {
-		if _, ok := err.(*ErrImageNotAllowed); ok {
+		var errImageNotAllowed *ErrImageNotAllowed
+		if errors.As(err, &errImageNotAllowed) {
 			return nil, nil
-		} else {
-			return nil, err
 		}
+		return nil, err
 	}
 
 	return resolveAuthorizedRoles(ctx, c, namespace, imageName, authorizedRoles)

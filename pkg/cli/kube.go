@@ -45,7 +45,7 @@ func (s *Kube) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	if s.WriteFile != "" {
-		data, err := c.KubeConfig(cmd.Context(), &client.KubeProxyAddressOptions{
+		data, err := c.KubeConfig(&client.KubeProxyAddressOptions{
 			Region: s.Region,
 		})
 		if err != nil {

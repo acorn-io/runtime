@@ -22,11 +22,11 @@ type Translator struct {
 	reveal bool
 }
 
-func (t *Translator) FromPublicName(ctx context.Context, namespace, name string) (string, string, error) {
+func (t *Translator) FromPublicName(_ context.Context, namespace, name string) (string, string, error) {
 	return namespace, strings.ReplaceAll(imagesystem.NormalizeServerAddress(name), ":", "-"), nil
 }
 
-func (t *Translator) ListOpts(ctx context.Context, namespace string, opts storage.ListOptions) (string, storage.ListOptions, error) {
+func (t *Translator) ListOpts(_ context.Context, namespace string, opts storage.ListOptions) (string, storage.ListOptions, error) {
 	if opts.Predicate.Label == nil {
 		opts.Predicate.Label = klabels.Everything()
 	}
@@ -38,7 +38,7 @@ func (t *Translator) ListOpts(ctx context.Context, namespace string, opts storag
 	return namespace, opts, nil
 }
 
-func (t *Translator) ToPublic(ctx context.Context, objs ...runtime.Object) (result []types.Object, _ error) {
+func (t *Translator) ToPublic(_ context.Context, objs ...runtime.Object) (result []types.Object, _ error) {
 	for _, obj := range objs {
 		secret := obj.(*corev1.Secret)
 		if secret.Type != apiv1.SecretTypeCredential {

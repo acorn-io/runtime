@@ -58,7 +58,7 @@ func (i *ImagePull) NewConnectOptions() (runtime.Object, bool, string) {
 	return &apiv1.ImagePull{}, false, ""
 }
 
-func (i *ImagePull) Connect(ctx context.Context, id string, options runtime.Object, r rest.Responder) (http.Handler, error) {
+func (i *ImagePull) Connect(ctx context.Context, id string, _ runtime.Object, _ rest.Responder) (http.Handler, error) {
 	id = strings.ReplaceAll(id, "+", "/")
 	ns, _ := request.NamespaceFrom(ctx)
 

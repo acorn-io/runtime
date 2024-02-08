@@ -30,7 +30,6 @@ import (
 	"github.com/acorn-io/runtime/pkg/controller/secrets"
 	"github.com/acorn-io/runtime/pkg/controller/service"
 	"github.com/acorn-io/runtime/pkg/controller/tls"
-	"github.com/acorn-io/runtime/pkg/event"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/local/webhook"
 	"github.com/acorn-io/runtime/pkg/project"
@@ -53,7 +52,7 @@ var (
 	})
 )
 
-func routes(router *router.Router, cfg *rest.Config, registryTransport http.RoundTripper, recorder event.Recorder) error {
+func routes(router *router.Router, cfg *rest.Config, registryTransport http.RoundTripper) error {
 	jobsHandler, err := jobs.NewHandler(cfg)
 	if err != nil {
 		return err
@@ -66,9 +65,9 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	appRouter.HandlerFunc(appdefinition.AssignNamespace)
 
 	// AppImage preparation, checks and promotion
-	appRouter.HandlerFunc(appdefinition.PullAppImage(registryTransport, recorder)) // pulls image to .status.Staged.AppImage
-	appRouter.HandlerFunc(permissions.CheckPermissions)                            // checks if newly staged image is allowed and that permissions are requested and granted properly
-	appRouter.HandlerFunc(permissions.CopyPromoteStagedAppImage)                   // if the above checks pass, the staged image is promoted to app.Status.AppImage and everything below will use that image
+	appRouter.HandlerFunc(appdefinition.PullAppImage(registryTransport)) // pulls image to .status.Staged.AppImage
+	appRouter.HandlerFunc(permissions.CheckPermissions)                  // checks if newly staged image is allowed and that permissions are requested and granted properly
+	appRouter.HandlerFunc(permissions.CopyPromoteStagedAppImage)         // if the above checks pass, the staged image is promoted to app.Status.AppImage and everything below will use that image
 	appRouter.HandlerFunc(appstatus.PrepareStatus)
 
 	// ---
@@ -116,26 +115,26 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	router.Type(&v1.AcornImageBuildInstance{}).HandlerFunc(defaults.SetDefaultRegion)
 	router.Type(&v1.AcornImageBuildInstance{}).HandlerFunc(acornimagebuildinstance.MarkRecorded)
 
-	router.Type(&v1.ServiceInstance{}).HandlerFunc(gc.GCOrphans)
+	router.Type(&v1.ServiceInstance{}).HandlerFunc(gc.Orphans)
 
 	router.Type(&v1.EventInstance{}).HandlerFunc(eventinstance.GCExpired())
 
 	router.Type(&batchv1.Job{}).Selector(managedSelector).HandlerFunc(jobs.JobCleanup)
-	router.Type(&rbacv1.ClusterRole{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
-	router.Type(&rbacv1.ClusterRoleBinding{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
+	router.Type(&rbacv1.ClusterRole{}).Selector(managedSelector).HandlerFunc(gc.Orphans)
+	router.Type(&rbacv1.ClusterRoleBinding{}).Selector(managedSelector).HandlerFunc(gc.Orphans)
 	router.Type(&corev1.PersistentVolumeClaim{}).Selector(managedSelector).HandlerFunc(pvc.MarkAndSave)
 	router.Type(&corev1.PersistentVolume{}).Selector(managedSelector).HandlerFunc(appdefinition.ReleaseVolume)
 	router.Type(&corev1.Namespace{}).Selector(managedSelector).HandlerFunc(namespace.DeleteOrphaned)
 	// This will only catch namespace deletes when the controller is running, but that's fine for now.
 	router.Type(&corev1.Namespace{}).IncludeRemoved().HandlerFunc(namespace.DeleteProjectOnNamespaceDelete)
-	router.Type(&appsv1.DaemonSet{}).Namespace(system.ImagesNamespace).HandlerFunc(gc.GCOrphans)
-	router.Type(&appsv1.Deployment{}).Namespace(system.ImagesNamespace).HandlerFunc(gc.GCOrphans)
-	router.Type(&corev1.Service{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
-	router.Type(&policyv1.PodDisruptionBudget{}).Namespace(system.ImagesNamespace).HandlerFunc(gc.GCOrphans)
-	router.Type(&corev1.Pod{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
+	router.Type(&appsv1.DaemonSet{}).Namespace(system.ImagesNamespace).HandlerFunc(gc.Orphans)
+	router.Type(&appsv1.Deployment{}).Namespace(system.ImagesNamespace).HandlerFunc(gc.Orphans)
+	router.Type(&corev1.Service{}).Selector(managedSelector).HandlerFunc(gc.Orphans)
+	router.Type(&policyv1.PodDisruptionBudget{}).Namespace(system.ImagesNamespace).HandlerFunc(gc.Orphans)
+	router.Type(&corev1.Pod{}).Selector(managedSelector).HandlerFunc(gc.Orphans)
 	router.Type(&corev1.Pod{}).Selector(managedSelector).HandlerFunc(jobs.JobPodOrphanCleanup)
 	router.Type(&corev1.Pod{}).Selector(managedSelector).HandlerFunc(jobsHandler.SaveJobOutput)
-	router.Type(&netv1.Ingress{}).Selector(managedSelector).Namespace(system.ImagesNamespace).HandlerFunc(gc.GCOrphans)
+	router.Type(&netv1.Ingress{}).Selector(managedSelector).Namespace(system.ImagesNamespace).HandlerFunc(gc.Orphans)
 	router.Type(&corev1.Secret{}).Selector(managedSelector).Name(system.DNSSecretName).Namespace(system.Namespace).HandlerFunc(secrets.HandleDNSSecret)
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).Name(system.DNSIngressName).Namespace(system.Namespace).Middleware(ingress.RequireLBs).Handler(ingress.NewDNSHandler())
 	router.Type(&corev1.Secret{}).Selector(managedSelector).Name(system.TLSSecretName).Namespace(system.Namespace).Middleware(tls.RequireSecretTypeTLS).HandlerFunc(tls.RenewCert) // renew (expired) TLS certificate
@@ -143,7 +142,7 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	router.Type(&corev1.Service{}).Selector(managedSelector).HandlerFunc(networkpolicy.ForService)
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).HandlerFunc(networkpolicy.ForIngress)
 	router.Type(&appsv1.Deployment{}).Namespace(system.ImagesNamespace).HandlerFunc(networkpolicy.ForBuilder)
-	router.Type(&netv1.NetworkPolicy{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
+	router.Type(&netv1.NetworkPolicy{}).Selector(managedSelector).HandlerFunc(gc.Orphans)
 
 	router.Type(&internaladminv1.ImageRoleAuthorizationInstance{}).HandlerFunc(permissions.BumpImageRoleAuthorizations)
 	router.Type(&internaladminv1.ClusterImageRoleAuthorizationInstance{}).HandlerFunc(permissions.BumpClusterImageRoleAuthorizations)

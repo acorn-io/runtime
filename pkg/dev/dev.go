@@ -332,7 +332,7 @@ func buildLoop(ctx context.Context, c client.Client, hash clientHash, opts *Opti
 		opts.Run.Name = appName
 		eg, ctx := errgroup.WithContext(ctx)
 		eg.Go(func() error {
-			return DevPorts(ctx, c, logger, appName)
+			return Ports(ctx, c, logger, appName)
 		})
 		eg.Go(func() error {
 			return LogLoop(ctx, c, appName, &client.LogOptions{

@@ -8,8 +8,8 @@ import (
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func PurgeDevConfig(req router.Request, resp router.Response) error {
@@ -38,7 +38,7 @@ func PurgeDevConfig(req router.Request, resp router.Response) error {
 				Namespace: system.Namespace,
 			},
 		})
-		if err != nil && !apierror.IsNotFound(err) {
+		if kclient.IgnoreNotFound(err) != nil {
 			return err
 		}
 	}

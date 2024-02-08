@@ -10,7 +10,6 @@ import (
 	"github.com/acorn-io/runtime/pkg/ports"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	apierror "k8s.io/apimachinery/pkg/api/errors"
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/kubectl/pkg/util/deployment"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -49,11 +48,7 @@ func (a *appStatusRenderer) readContainers() error {
 
 		dep := appsv1.Deployment{}
 		err = a.c.Get(a.ctx, router.Key(a.app.Status.Namespace, containerName), &dep)
-		if apierror.IsNotFound(err) {
-			// do nothing
-		} else if err != nil {
-			return err
-		} else {
+		if err == nil {
 			cs.Defined = true
 			cs.UpToDate = dep.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) && dep.Annotations[labels.AcornConfigHashAnnotation] == hash
 			cs.ReadyReplicaCount = dep.Status.ReadyReplicas
@@ -67,6 +62,8 @@ func (a *appStatusRenderer) readContainers() error {
 					return err
 				}
 			}
+		} else if kclient.IgnoreNotFound(err) != nil {
+			return err
 		}
 
 		if cs.LinkOverride != "" {

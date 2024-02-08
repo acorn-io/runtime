@@ -87,7 +87,7 @@ type PortBinding struct {
 	Protocol Protocol `json:"protocol,omitempty"`
 	Hostname string   `json:"hostname,omitempty"`
 	// Deprecated Use Hostname instead
-	ZZ_ServiceName string `json:"serviceName,omitempty"`
+	ZZServiceName string `json:"serviceName,omitempty"`
 	// Deprecated Has no meaning, publish=true is always assumed
 	Publish bool `json:"publish,omitempty"`
 	// Deprecated Has no meaning, all ports are exposed by default, if this is true
@@ -402,7 +402,7 @@ type Permissions struct {
 	ServiceName string       `json:"serviceName,omitempty"`
 	Rules       []PolicyRule `json:"rules,omitempty"`
 	// Deprecated, use Rules with the 'scopes: ["cluster"]' field
-	ZZ_ClusterRules []PolicyRule `json:"clusterRules,omitempty"`
+	ZZClusterRules []PolicyRule `json:"clusterRules,omitempty"`
 }
 
 func (in Permissions) Grants(currentNamespace string, forService string, requested PolicyRule) bool {
@@ -425,7 +425,7 @@ individualRuleLoop:
 
 func (in Permissions) GetRules() []PolicyRule {
 	result := in.Rules
-	for _, rule := range in.ZZ_ClusterRules {
+	for _, rule := range in.ZZClusterRules {
 		if len(rule.Scopes) == 0 {
 			rule.Scopes = append(rule.Scopes, "cluster")
 		}
@@ -438,7 +438,7 @@ func (in *Permissions) HasRules() bool {
 	if in == nil {
 		return false
 	}
-	return len(in.Rules) > 0 || len(in.ZZ_ClusterRules) > 0
+	return len(in.Rules) > 0 || len(in.ZZClusterRules) > 0
 }
 
 func (in *Permissions) Get() Permissions {

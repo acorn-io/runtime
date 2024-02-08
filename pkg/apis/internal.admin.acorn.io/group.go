@@ -1,3 +1,3 @@
-package internal_admin_acorn_io
+package internaladminacornio
 
 var Group = "internal.admin.acorn.io"

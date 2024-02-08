@@ -480,11 +480,11 @@ func (d *DeferredClient) GetClient() (client.WithWatch, error) {
 	return d.Client.GetClient()
 }
 
-func (d *DeferredClient) KubeConfig(ctx context.Context, opts *KubeProxyAddressOptions) ([]byte, error) {
+func (d *DeferredClient) KubeConfig(opts *KubeProxyAddressOptions) ([]byte, error) {
 	if err := d.create(); err != nil {
 		return nil, err
 	}
-	return d.Client.KubeConfig(ctx, opts)
+	return d.Client.KubeConfig(opts)
 }
 
 func (d *DeferredClient) KubeProxyAddress(ctx context.Context, opts *KubeProxyAddressOptions) (string, error) {

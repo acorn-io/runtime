@@ -69,11 +69,11 @@ func (t *Translator) FromPublicName(ctx context.Context, namespace, name string)
 	return namespace, name, nil
 }
 
-func (t *Translator) ListOpts(ctx context.Context, namespace string, opts storage.ListOptions) (string, storage.ListOptions, error) {
+func (t *Translator) ListOpts(_ context.Context, namespace string, opts storage.ListOptions) (string, storage.ListOptions, error) {
 	return namespace, opts, nil
 }
 
-func (t *Translator) ToPublic(ctx context.Context, objs ...runtime.Object) (result []types.Object, _ error) {
+func (t *Translator) ToPublic(_ context.Context, objs ...runtime.Object) (result []types.Object, _ error) {
 	for _, obj := range objs {
 		var keys []string
 		secret := obj.(*corev1.Secret)

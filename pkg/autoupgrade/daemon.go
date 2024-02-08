@@ -193,7 +193,7 @@ func (d *daemon) refreshImages(ctx context.Context, apps map[kclient.ObjectKey]v
 			)
 
 			// If we have autoUpgradeTagPattern, we need to use it to compare the current tag against all the tags
-			tagPattern, isPattern := AutoUpgradePattern(app.Spec.Image)
+			tagPattern, isPattern := Pattern(app.Spec.Image)
 			if isPattern {
 				nextAppImage, updated, err = findLatestTagForImageWithPattern(ctx, d.client, current.Identifier(), imageKey.namespace, imageKey.image, tagPattern)
 				if err != nil {
@@ -297,7 +297,7 @@ func calcNextCheck(defaultInterval time.Duration, lastUpdate time.Time, app v1.A
 }
 
 func removeTagPattern(image string) string {
-	p, ok := AutoUpgradePattern(image)
+	p, ok := Pattern(image)
 	if !ok {
 		return image
 	}
@@ -305,8 +305,8 @@ func removeTagPattern(image string) string {
 	return strings.TrimSuffix(image, ":"+p)
 }
 
-// AutoUpgradePattern returns the tag and a boolean indicating whether it is actually a pattern (versus a concrete tag)
-func AutoUpgradePattern(image string) (string, bool) {
+// Pattern returns the tag and a boolean indicating whether it is actually a pattern (versus a concrete tag)
+func Pattern(image string) (string, bool) {
 	// This first bit is adapted from https://github.com/google/go-containerregistry/blob/main/pkg/name/tag.go
 	// Split on ":"
 	parts := strings.Split(image, ":")
@@ -324,14 +324,14 @@ func AutoUpgradePattern(image string) (string, bool) {
 // 2. A non-empty interval
 // 3. app.Spec.NotifyUpgrade set to true
 func Implied(image, interval string, notify bool) bool {
-	if _, isPattern := AutoUpgradePattern(image); isPattern || interval != "" || notify {
+	if _, isPattern := Pattern(image); isPattern || interval != "" || notify {
 		return true
 	}
 	return false
 }
 
 func Mode(appSpec v1.AppInstanceSpec) (string, bool) {
-	_, isPat := AutoUpgradePattern(appSpec.Image)
+	_, isPat := Pattern(appSpec.Image)
 	on := appSpec.GetAutoUpgrade() || isPat
 
 	if !on {

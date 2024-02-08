@@ -80,9 +80,7 @@ func Lookup(ctx context.Context, req kclient.Client, out kclient.Object, namespa
 				validSecrets = nil
 				namespace = app.Status.Namespace
 			}
-		} else if len(parts)-i == 2 && (parts[i] == "secrets" || parts[i] == "secret") {
-			// support "svc.secrets.name" syntax
-		} else {
+		} else if len(parts)-i != 2 || parts[i] != "secrets" && parts[i] != "secret" {
 			// if validSecrets is set then we already found a service and we are evaluating the second
 			// to last part which is invalid as it must be a secret name and the last part at this point
 			return apierrors.NewNotFound(schema.GroupResource{

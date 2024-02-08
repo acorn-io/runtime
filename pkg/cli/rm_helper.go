@@ -15,6 +15,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	k8swait "k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/spf13/cobra"
@@ -80,31 +81,27 @@ func removeVolume(arg string, c client.Client, cmd *cobra.Command, force bool) e
 		if v != nil {
 			fmt.Println("Removed volume: " + vol)
 			continue
-		} else {
-			fmt.Printf("Error: No such volume: %s\n", vol)
 		}
+
+		fmt.Printf("Error: No such volume: %s\n", vol)
 	}
 	return nil
 }
 
 func deleteOthers(ctx context.Context, c client.Client, arg string) (bool, error) {
 	_, err := c.ContainerReplicaGet(ctx, arg)
-	if apierrors.IsNotFound(err) {
-	} else if err != nil {
-		return false, err
-	} else {
+	if err == nil {
 		_, err = c.ContainerReplicaDelete(ctx, arg)
 		if err == nil {
 			fmt.Println("Removed container: " + arg)
 		}
 		return true, err
+	} else if kclient.IgnoreNotFound(err) != nil {
+		return false, err
 	}
 
 	_, err = c.VolumeGet(ctx, arg)
-	if apierrors.IsNotFound(err) {
-	} else if err != nil {
-		return false, err
-	} else {
+	if err == nil {
 		_, err = c.VolumeDelete(ctx, arg)
 		if err == nil {
 			fmt.Println("Removed volume: " + arg)
@@ -112,16 +109,19 @@ func deleteOthers(ctx context.Context, c client.Client, arg string) (bool, error
 		return true, err
 	}
 
-	_, err = c.SecretGet(ctx, arg)
-	if apierrors.IsNotFound(err) {
-	} else if err != nil {
+	if kclient.IgnoreNotFound(err) != nil {
 		return false, err
-	} else {
+	}
+
+	_, err = c.SecretGet(ctx, arg)
+	if err == nil {
 		_, err = c.SecretDelete(ctx, arg)
 		if err == nil {
 			fmt.Println("Removed secret: " + arg)
 		}
 		return true, err
+	} else if kclient.IgnoreNotFound(err) != nil {
+		return false, err
 	}
 
 	return false, nil

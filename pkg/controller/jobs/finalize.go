@@ -20,7 +20,7 @@ const (
 	DestroyJobFinalizer = "jobs.acorn.io/destroy"
 )
 
-func JobPodOrphanCleanup(req router.Request, resp router.Response) error {
+func JobPodOrphanCleanup(req router.Request, _ router.Response) error {
 	pod := req.Object.(*corev1.Pod)
 	// pods with "controller-uid" and "job-name" on them are created by batchv1.Job
 	if pod.Labels[labels.AcornJobName] != "" &&
@@ -32,7 +32,7 @@ func JobPodOrphanCleanup(req router.Request, resp router.Response) error {
 	return nil
 }
 
-func JobCleanup(req router.Request, resp router.Response) error {
+func JobCleanup(req router.Request, _ router.Response) error {
 	job := req.Object.(*batchv1.Job)
 	if job.Status.Failed == 0 || job.Spec.Selector == nil {
 		return nil
@@ -119,10 +119,10 @@ func FinalizeDestroyJob(req router.Request, resp router.Response) error {
 
 		if done(job) {
 			continue
-		} else {
-			resp.DisablePrune()
-			resp.RetryAfter(15 * time.Second)
 		}
+
+		resp.DisablePrune()
+		resp.RetryAfter(15 * time.Second)
 	}
 
 	return nil

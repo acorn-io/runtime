@@ -139,24 +139,24 @@ func TestDisabling(t *testing.T) {
 // simply not panic. This is enough for the handler to assume the call succeeded and move on
 type mockClient struct{}
 
-func (t *mockClient) CreateRecords(endpoint, domain, token string, records []dns.RecordRequest) error {
+func (t *mockClient) CreateRecords(string, string, string, []dns.RecordRequest) error {
 	return nil
 }
 
-func (t *mockClient) ReserveDomain(endpoint string) (string, string, error) {
+func (t *mockClient) ReserveDomain(string) (string, string, error) {
 	return "test.oss-acorn.io", "token", nil
 }
 
-func (t *mockClient) Renew(endpoint, domain, token string, renew dns.RenewRequest) (dns.RenewResponse, error) {
+func (t *mockClient) Renew(string, string, string, dns.RenewRequest) (dns.RenewResponse, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (t *mockClient) DeleteRecord(endpoint, domain, fqdn, token string) error {
+func (t *mockClient) DeleteRecord(string, string, string, string) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (t *mockClient) PurgeRecords(endpoint, domain, token string) error {
+func (t *mockClient) PurgeRecords(string, string, string) error {
 	return nil
 }

@@ -14,10 +14,10 @@ func TestCredentialCreate(t *testing.T) {
 	helper.StartController(t)
 	restConfig := helper.StartAPI(t)
 
-	reg, close := helper.StartRegistry(t)
-	reg1, close1 := helper.StartRegistry(t)
-	defer close()
-	defer close1()
+	reg, cancel := helper.StartRegistry(t)
+	reg1, cancel1 := helper.StartRegistry(t)
+	defer cancel()
+	defer cancel1()
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
@@ -60,10 +60,10 @@ func TestCredentialList(t *testing.T) {
 	helper.StartController(t)
 	restConfig := helper.StartAPI(t)
 
-	reg, close := helper.StartRegistry(t)
-	reg1, close1 := helper.StartRegistry(t)
-	defer close()
-	defer close1()
+	reg, cancel := helper.StartRegistry(t)
+	reg1, cancel1 := helper.StartRegistry(t)
+	defer cancel()
+	defer cancel1()
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
@@ -110,10 +110,10 @@ func TestCredentialGet(t *testing.T) {
 	helper.StartController(t)
 	restConfig := helper.StartAPI(t)
 
-	reg, close := helper.StartRegistry(t)
-	reg1, close1 := helper.StartRegistry(t)
-	defer close()
-	defer close1()
+	reg, cancel := helper.StartRegistry(t)
+	reg1, cancel1 := helper.StartRegistry(t)
+	defer cancel()
+	defer cancel1()
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
@@ -146,10 +146,10 @@ func TestCredentialUpdate(t *testing.T) {
 	helper.StartController(t)
 	restConfig := helper.StartAPI(t)
 
-	reg, close := helper.StartRegistry(t)
-	reg1, close1 := helper.StartRegistry(t)
-	defer close()
-	defer close1()
+	reg, cancel := helper.StartRegistry(t)
+	reg1, cancel1 := helper.StartRegistry(t)
+	defer cancel()
+	defer cancel1()
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
@@ -189,10 +189,10 @@ func TestCredentialDelete(t *testing.T) {
 	helper.StartController(t)
 	restConfig := helper.StartAPI(t)
 
-	reg, close := helper.StartRegistry(t)
-	reg1, close1 := helper.StartRegistry(t)
-	defer close()
-	defer close1()
+	reg, cancel := helper.StartRegistry(t)
+	reg1, cancel1 := helper.StartRegistry(t)
+	defer cancel()
+	defer cancel1()
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
