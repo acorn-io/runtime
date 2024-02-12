@@ -12,7 +12,7 @@ func NewVersion() *cobra.Command {
 		Use:     "version",
 		Short:   "Version information for acorn",
 		Example: "acorn version",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			fmt.Printf("acorn version %s\n", version.Get().String())
 		},
 		Args: cobra.NoArgs,

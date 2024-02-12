@@ -82,7 +82,7 @@ func TestReplace(t *testing.T) {
 				s:          "start@{inner}end",
 				startToken: "@{",
 				endToken:   "}",
-				replace: func(s string) (string, bool, error) {
+				replace: func(_ string) (string, bool, error) {
 					return "", false, nil
 				},
 			},

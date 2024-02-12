@@ -13,7 +13,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var Upgrader = &websocket.Upgrader{CheckOrigin: func(req *http.Request) bool {
+var Upgrader = &websocket.Upgrader{CheckOrigin: func(_ *http.Request) bool {
 	return true
 }, HandshakeTimeout: 15 * time.Second}
 

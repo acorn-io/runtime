@@ -172,7 +172,7 @@ func prepareSyncedDirs(localDirs map[string]string, dirNames []string, followPat
 			}
 		}
 	}
-	resetUIDAndGID := func(p string, st *fstypes.Stat) fsutil.MapResult {
+	resetUIDAndGID := func(_ string, st *fstypes.Stat) fsutil.MapResult {
 		st.Uid = 0
 		st.Gid = 0
 		return fsutil.MapResultKeep

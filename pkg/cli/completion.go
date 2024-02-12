@@ -281,7 +281,7 @@ func secretsCompletion(ctx context.Context, c client.Client, toComplete string) 
 }
 
 func projectsCompletion(f ClientFactory) completionFunc {
-	return func(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
+	return func(ctx context.Context, _ client.Client, toComplete string) ([]string, error) {
 		var acornConfigFile string
 		if f != nil {
 			acornConfigFile = f.AcornConfigFile()

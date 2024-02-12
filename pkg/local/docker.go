@@ -296,7 +296,7 @@ func (c *Container) Wait(ctx context.Context) error {
 	ns.Infof("Waiting for local project")
 	w := watcher.New[*v1.Project](kc)
 	for {
-		_, err = w.ByName(ctx, "", "local", func(obj *v1.Project) (bool, error) {
+		_, err = w.ByName(ctx, "", "local", func(_ *v1.Project) (bool, error) {
 			return true, nil
 		})
 		if err != nil {

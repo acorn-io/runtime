@@ -50,7 +50,7 @@ func NewPortForward(client kclient.WithWatch, cfg *rest.Config) (*PortForward, e
 		proxy: httputil.ReverseProxy{
 			FlushInterval: 200 * time.Millisecond,
 			Transport:     transport,
-			Director:      func(request *http.Request) {},
+			Director:      func(_ *http.Request) {},
 		},
 		RESTClient: k8s.CoreV1().RESTClient(),
 	}, nil

@@ -516,7 +516,7 @@ func (c *DefaultClient) KubeProxyAddress(ctx context.Context, opts *KubeProxyAdd
 
 	srv := &http.Server{
 		Handler: handler,
-		BaseContext: func(listener net.Listener) context.Context {
+		BaseContext: func(_ net.Listener) context.Context {
 			return ctx
 		},
 	}

@@ -54,11 +54,11 @@ func PortForward(ctx context.Context, c client.Client, containerName string, add
 
 	p := tcpproxy.Proxy{}
 	p.AddRoute(listenAddress, &tcpproxy.DialProxy{
-		DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
+		DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
 			return dialer(ctx)
 		},
 	})
-	p.ListenFunc = func(_, laddr string) (net.Listener, error) {
+	p.ListenFunc = func(_, _ string) (net.Listener, error) {
 		fmt.Printf("Forwarding %s => %d for container [%s]\n", listener.Addr().String(), port, containerName)
 		return listener, err
 	}

@@ -81,18 +81,18 @@ func (i *Icon) Connect(ctx context.Context, id string, _ runtime.Object, _ rest.
 	case ".gif":
 		contentType = "image/gif"
 	default:
-		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		return http.HandlerFunc(func(rw http.ResponseWriter, _ *http.Request) {
 			rw.WriteHeader(http.StatusNotFound)
 		}), nil
 	}
 
 	if len(icon) == 0 {
-		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		return http.HandlerFunc(func(rw http.ResponseWriter, _ *http.Request) {
 			rw.WriteHeader(http.StatusNotFound)
 		}), nil
 	}
 
-	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+	return http.HandlerFunc(func(rw http.ResponseWriter, _ *http.Request) {
 		rw.Header().Set("Content-Type", contentType)
 		_, _ = rw.Write(icon)
 	}), nil

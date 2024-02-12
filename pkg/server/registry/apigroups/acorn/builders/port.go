@@ -37,7 +37,7 @@ func NewBuilderPort(client kclient.WithWatch, transport http.RoundTripper) (*Bui
 		proxy: httputil.ReverseProxy{
 			Transport:     transport,
 			FlushInterval: 200 * time.Millisecond,
-			Director:      func(request *http.Request) {},
+			Director:      func(_ *http.Request) {},
 		},
 		httpClient: &http.Client{
 			Transport: transport,

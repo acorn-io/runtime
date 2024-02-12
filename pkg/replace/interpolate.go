@@ -23,7 +23,7 @@ func Interpolate(data any, s string) (string, error) {
 		out := json.RawMessage{}
 		err = aml.Unmarshal([]byte(s), &out, aml.DecoderOption{
 			SourceName: "inline",
-			GlobalsLookup: func(ctx context.Context, key string, parent eval.Scope) (value.Value, bool, error) {
+			GlobalsLookup: func(_ context.Context, key string, _ eval.Scope) (value.Value, bool, error) {
 				return value.Lookup(val, value.NewValue(key))
 			},
 		})

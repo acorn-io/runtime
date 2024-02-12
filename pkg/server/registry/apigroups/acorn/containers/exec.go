@@ -70,7 +70,7 @@ func NewContainerExec(client kclient.WithWatch, cfg *rest.Config) (*ContainerExe
 		proxy: httputil.ReverseProxy{
 			FlushInterval: 200 * time.Millisecond,
 			Transport:     transport,
-			Director:      func(request *http.Request) {},
+			Director:      func(_ *http.Request) {},
 		},
 		RESTClient: k8s.CoreV1().RESTClient(),
 		rbac:       apps.NewRBACValidator(client),

@@ -93,7 +93,7 @@ Volume Syntax
 	}
 	cmd.Flags().SetInterspersed(false)
 
-	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+	cmd.SetHelpFunc(func(cmd *cobra.Command, _ []string) {
 		fmt.Println(cmd.Short + "\n")
 		fmt.Println(cmd.UsageString())
 	})

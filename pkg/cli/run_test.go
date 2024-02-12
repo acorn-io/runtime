@@ -43,7 +43,7 @@ func TestRunArgs_Env(t *testing.T) {
 func TestRun(t *testing.T) {
 	baseMock := func(f *mocks.MockClient) {
 		f.EXPECT().AppGet(gomock.Any(), gomock.Any()).DoAndReturn(
-			func(ctx context.Context, name string) (*apiv1.App, error) {
+			func(_ context.Context, name string) (*apiv1.App, error) {
 				switch name {
 				case "dne":
 					return nil, fmt.Errorf("error: app %s does not exist", name)
@@ -62,7 +62,7 @@ func TestRun(t *testing.T) {
 				return nil, nil
 			}).AnyTimes()
 		f.EXPECT().AppRun(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
-			func(ctx context.Context, image string, opts *client.AppRunOptions) (*apiv1.App, error) {
+			func(_ context.Context, image string, _ *client.AppRunOptions) (*apiv1.App, error) {
 				switch image {
 				case "dne":
 					return nil, fmt.Errorf("error: app %s does not exist", image)

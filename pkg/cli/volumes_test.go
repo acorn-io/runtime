@@ -36,7 +36,7 @@ func TestVolume(t *testing.T) {
 				Status: apiv1.VolumeStatus{AppPublicName: "found", AppName: "found", VolumeName: "vol"},
 			}}, nil).AnyTimes()
 		f.EXPECT().VolumeGet(gomock.Any(), gomock.Any()).DoAndReturn(
-			func(ctx context.Context, name string) (*apiv1.Volume, error) {
+			func(_ context.Context, name string) (*apiv1.Volume, error) {
 				potentialVol := apiv1.Volume{TypeMeta: metav1.TypeMeta{},
 					ObjectMeta: metav1.ObjectMeta{Name: "found.vol",
 						Labels: map[string]string{
@@ -58,7 +58,7 @@ func TestVolume(t *testing.T) {
 				return nil, nil
 			}).AnyTimes()
 		f.EXPECT().VolumeDelete(gomock.Any(), gomock.Any()).DoAndReturn(
-			func(ctx context.Context, name string) (*apiv1.Volume, error) {
+			func(_ context.Context, name string) (*apiv1.Volume, error) {
 				switch name {
 				case "dne":
 					return nil, nil
