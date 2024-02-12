@@ -540,7 +540,7 @@ type Config struct {
 	RegistryMemory             *string `json:"registryMemory" name:"registry-memory" usage:"The memory to allocate to the registry in the format of <req>:<limit> (example 256Mi:1Gi)"`
 	RegistryCPU                *string `json:"registryCPU" name:"registry-cpu" usage:"The CPU to allocate to the registry in the format of <req>:<limit> (example 200m:1000m)"`
 	IgnoreResourceRequirements *bool   `json:"ignoreResourceRequirements" name:"ignore-resource-requirements" usage:"Ignore memory and CPU requests and limits, intended for local development (default is false)"`
-	RequireComputeClass        *bool   `json:"requireComputeClass" name:"require-compute-class" usage:"Require Compute Class to be configured for scheduling (default is false)"`
+	RequireComputeClass        *bool   `json:"requireComputeClass" name:"require-compute-class" usage:"Require applications to have a Compute Class set (default is false)"`
 }
 
 type EncryptionKey struct {
