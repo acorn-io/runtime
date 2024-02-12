@@ -70,29 +70,29 @@ func SetIgnoreResourceRequirementsWithRestore(ctx context.Context, t *testing.T,
 	}
 }
 
-func SetRequireComputeClassWithRestore(t *testing.T, ctx context.Context, kclient kclient.WithWatch) {
-       t.Helper()
+func SetRequireComputeClassWithRestore(ctx context.Context, t *testing.T, kclient kclient.WithWatch) {
+	t.Helper()
 
-       cfg, err := config.Get(ctx, kclient)
-       if err != nil {
-               t.Fatal(err)
-       }
+	cfg, err := config.Get(ctx, kclient)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-       state := z.Dereference(cfg.RequireComputeClass)
+	state := z.Dereference(cfg.RequireComputeClass)
 
-       cfg.RequireComputeClass = z.Pointer(true)
+	cfg.RequireComputeClass = z.Pointer(true)
 
-       t.Cleanup(func() {
-               cfg.RequireComputeClass = z.Pointer(state)
+	t.Cleanup(func() {
+		cfg.RequireComputeClass = z.Pointer(state)
 
-               err = config.Set(ctx, kclient, cfg)
-               if err != nil {
-                       t.Fatal(err)
-               }
-       })
+		err = config.Set(ctx, kclient, cfg)
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
 
-       err = config.Set(ctx, kclient, cfg)
-       if err != nil {
-               t.Fatal(err)
-       }
+	err = config.Set(ctx, kclient, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
