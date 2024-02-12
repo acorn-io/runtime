@@ -632,7 +632,7 @@ func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, proj
 		// Need a ComputeClass to validate it
 		if cc == nil {
 			if z.Dereference(requireCC) {
-				validationErrors = append(validationErrors, field.Invalid(field.NewPath("computeclass"), "", fmt.Sprintf("compute class required but none configured")))
+				validationErrors = append(validationErrors, field.Invalid(field.NewPath("computeclass"), "", "compute class required but none configured"))
 			}
 			continue
 		}
