@@ -931,10 +931,163 @@ func TestDeployParam(t *testing.T) {
 	assert.Equal(t, "5", appInstance.Status.AppSpec.Containers["foo"].Environment[0].Value)
 }
 
+func TestRequireComputeClass(t *testing.T) {
+	ctx := helper.GetCTX(t)
+
+	helper.StartController(t)
+	c, _ := helper.ClientAndProject(t)
+	kc := helper.MustReturn(kclient.Default)
+
+	helper.SetRequireComputeClassWithRestore(t, ctx, kc)
+
+	checks := []struct {
+		name              string
+		noComputeClass    bool
+		testDataDirectory string
+		computeClass      adminv1.ProjectComputeClassInstance
+		expected          map[string]v1.Scheduling
+		waitFor           func(obj *v1.AppInstance) bool
+		fail              bool
+		failMessage       string
+	}{
+		{
+			name:              "no-computeclass",
+			noComputeClass:    true,
+			testDataDirectory: "./testdata/simple",
+			waitFor: func(obj *v1.AppInstance) bool {
+				return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
+					obj.Status.Condition(v1.AppInstanceConditionScheduling).Error &&
+					obj.Status.Condition(v1.AppInstanceConditionScheduling).Message == "compute class required but none configured"
+			},
+		},
+		{
+			name:              "valid",
+			testDataDirectory: "./testdata/computeclass",
+			computeClass: adminv1.ProjectComputeClassInstance{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "acorn-test-custom",
+					Namespace: c.GetNamespace(),
+				},
+				CPUScaler: 0.25,
+				Memory: adminv1.ComputeClassMemory{
+					Min: "512Mi",
+					Max: "1Gi",
+				},
+				Resources: &corev1.ResourceRequirements{
+					Limits: corev1.ResourceList{
+						"mygpu/nvidia": resource.MustParse("1"),
+					}, Requests: corev1.ResourceList{
+						"mygpu/nvidia": resource.MustParse("1"),
+					}},
+				SupportedRegions: []string{apiv1.LocalRegion},
+			},
+			expected: map[string]v1.Scheduling{"simple": {
+				Requirements: corev1.ResourceRequirements{
+					Limits: corev1.ResourceList{
+						corev1.ResourceMemory: resource.MustParse("1Gi"),
+						"mygpu/nvidia":        resource.MustParse("1"),
+					},
+					Requests: corev1.ResourceList{
+						corev1.ResourceMemory: resource.MustParse("1Gi"),
+						corev1.ResourceCPU:    resource.MustParse("250m"),
+						"mygpu/nvidia":        resource.MustParse("1"),
+					},
+				},
+				Tolerations: []corev1.Toleration{
+					{
+						Key:      tolerations.WorkloadTolerationKey,
+						Operator: corev1.TolerationOpExists,
+					},
+				}},
+			},
+			waitFor: func(obj *v1.AppInstance) bool {
+				return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
+					obj.Status.Condition(v1.AppInstanceConditionScheduling).Success
+			},
+		},
+	}
+
+	for _, tt := range checks {
+		asClusterComputeClass := adminv1.ClusterComputeClassInstance(tt.computeClass)
+		// Perform the same test cases on both Project and Cluster ComputeClasses
+		for kind, computeClass := range map[string]crClient.Object{"projectcomputeclass": &tt.computeClass, "clustercomputeclass": &asClusterComputeClass} {
+			testcase := fmt.Sprintf("%v-%v", kind, tt.name)
+			t.Run(testcase, func(t *testing.T) {
+				if !tt.noComputeClass {
+					if err := kc.Create(ctx, computeClass); err != nil {
+						t.Fatal(err)
+					}
+
+					// Clean-up and gurantee the computeclass doesn't exist after this test run
+					t.Cleanup(func() {
+						if err := kc.Delete(context.Background(), computeClass); err != nil && !apierrors.IsNotFound(err) {
+							t.Fatal(err)
+						}
+						err := helper.EnsureDoesNotExist(ctx, func() (crClient.Object, error) {
+							lookingFor := computeClass
+							err := kc.Get(ctx, router.Key(computeClass.GetNamespace(), computeClass.GetName()), lookingFor)
+							return lookingFor, err
+						})
+						if err != nil {
+							t.Fatal(err)
+						}
+					})
+				}
+
+				image, err := c.AcornImageBuild(ctx, tt.testDataDirectory+"/Acornfile", &client.AcornImageBuildOptions{
+					Cwd: tt.testDataDirectory,
+				})
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// Assign a name for the test case so no collisions occur
+				app, err := c.AppRun(ctx, image.ID, &client.AppRunOptions{Name: testcase})
+				if err == nil && tt.fail {
+					t.Fatal("expected error, got nil")
+				} else if err != nil {
+					if !tt.fail {
+						t.Fatal(err)
+					}
+					assert.Contains(t, err.Error(), tt.failMessage)
+				}
+
+				// Clean-up and gurantee the app doesn't exist after this test run
+				if app != nil {
+					t.Cleanup(func() {
+						if err = kc.Delete(context.Background(), app); err != nil && !apierrors.IsNotFound(err) {
+							t.Fatal(err)
+						}
+						err := helper.EnsureDoesNotExist(ctx, func() (crClient.Object, error) {
+							lookingFor := app
+							err := kc.Get(ctx, router.Key(app.GetName(), app.GetNamespace()), lookingFor)
+							return lookingFor, err
+						})
+						if err != nil {
+							t.Fatal(err)
+						}
+					})
+				}
+
+				if tt.waitFor != nil {
+					appInstance := &v1.AppInstance{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      app.Name,
+							Namespace: app.Namespace,
+						},
+					}
+					appInstance = helper.WaitForObject(t, kc.Watch, new(v1.AppInstanceList), appInstance, tt.waitFor)
+					assert.EqualValues(t, appInstance.Status.Scheduling, tt.expected, "generated scheduling rules are incorrect")
+				}
+			})
+		}
+	}
+}
+
 func TestUsingComputeClasses(t *testing.T) {
 	helper.StartController(t)
 	c, _ := helper.ClientAndProject(t)
-	kclient := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(kclient.Default)
 
 	ctx := helper.GetCTX(t)
 
@@ -1150,6 +1303,24 @@ func TestUsingComputeClasses(t *testing.T) {
 			fail: true,
 		},
 		{
+			name:              "no-region",
+			testDataDirectory: "./testdata/computeclass",
+			computeClass: adminv1.ProjectComputeClassInstance{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "acorn-test-custom",
+					Namespace: c.GetNamespace(),
+				},
+				Default:   true,
+				CPUScaler: 0.25,
+				Memory: adminv1.ComputeClassMemory{
+					Default: "512Mi",
+					Max:     "1Gi",
+					Min:     "512Mi",
+				},
+			},
+			fail: true,
+		},
+		{
 			name:              "does-not-exist",
 			noComputeClass:    true,
 			testDataDirectory: "./testdata/computeclass",
@@ -1164,18 +1335,18 @@ func TestUsingComputeClasses(t *testing.T) {
 			testcase := fmt.Sprintf("%v-%v", kind, tt.name)
 			t.Run(testcase, func(t *testing.T) {
 				if !tt.noComputeClass {
-					if err := kclient.Create(ctx, computeClass); err != nil {
+					if err := kc.Create(ctx, computeClass); err != nil {
 						t.Fatal(err)
 					}
 
 					// Clean-up and gurantee the computeclass doesn't exist after this test run
 					t.Cleanup(func() {
-						if err := kclient.Delete(context.Background(), computeClass); err != nil && !apierrors.IsNotFound(err) {
+						if err := kc.Delete(context.Background(), computeClass); err != nil && !apierrors.IsNotFound(err) {
 							t.Fatal(err)
 						}
 						err := helper.EnsureDoesNotExist(ctx, func() (crClient.Object, error) {
 							lookingFor := computeClass
-							err := kclient.Get(ctx, router.Key(computeClass.GetNamespace(), computeClass.GetName()), lookingFor)
+							err := kc.Get(ctx, router.Key(computeClass.GetNamespace(), computeClass.GetName()), lookingFor)
 							return lookingFor, err
 						})
 						if err != nil {
@@ -1204,12 +1375,12 @@ func TestUsingComputeClasses(t *testing.T) {
 				// Clean-up and gurantee the app doesn't exist after this test run
 				if app != nil {
 					t.Cleanup(func() {
-						if err = kclient.Delete(context.Background(), app); err != nil && !apierrors.IsNotFound(err) {
+						if err = kc.Delete(context.Background(), app); err != nil && !apierrors.IsNotFound(err) {
 							t.Fatal(err)
 						}
 						err := helper.EnsureDoesNotExist(ctx, func() (crClient.Object, error) {
 							lookingFor := app
-							err := kclient.Get(ctx, router.Key(app.GetName(), app.GetNamespace()), lookingFor)
+							err := kc.Get(ctx, router.Key(app.GetName(), app.GetNamespace()), lookingFor)
 							return lookingFor, err
 						})
 						if err != nil {
@@ -1225,7 +1396,7 @@ func TestUsingComputeClasses(t *testing.T) {
 							Namespace: app.Namespace,
 						},
 					}
-					appInstance = helper.WaitForObject(t, kclient.Watch, new(v1.AppInstanceList), appInstance, tt.waitFor)
+					appInstance = helper.WaitForObject(t, kc.Watch, new(v1.AppInstanceList), appInstance, tt.waitFor)
 					assert.EqualValues(t, appInstance.Status.Scheduling, tt.expected, "generated scheduling rules are incorrect")
 				}
 			})
@@ -1288,11 +1459,11 @@ func TestAppWithBadDefaultRegion(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kclient := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(kclient.Default)
 	c, project := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
-	err := kclient.List(ctx, storageClasses)
+	err := kc.List(ctx, storageClasses)
 	if err != nil || len(storageClasses.Items) == 0 {
 		t.Skip("No storage classes, so skipping TestAppWithBadDefaultRegion")
 		return
@@ -1307,11 +1478,11 @@ func TestAppWithBadDefaultRegion(t *testing.T) {
 		Default:          true,
 		SupportedRegions: []string{"custom"},
 	}
-	if err = kclient.Create(ctx, &volumeClass); err != nil {
+	if err = kc.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
 	}
 	defer func() {
-		if err = kclient.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
+		if err = kc.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
 			t.Fatal(err)
 		}
 	}()
@@ -1629,8 +1800,8 @@ func TestEnforcedQuota(t *testing.T) {
 		t.Fatal("error while getting rest config:", err)
 	}
 	// Create a project.
-	kclient := helper.MustReturn(kclient.Default)
-	project := helper.TempProject(t, kclient)
+	kc := helper.MustReturn(kclient.Default)
+	project := helper.TempProject(t, kc)
 
 	// Create a client for the project.
 	c, err := client.New(restConfig, project.Name, project.Name)
@@ -1644,7 +1815,7 @@ func TestEnforcedQuota(t *testing.T) {
 			obj.Annotations = make(map[string]string)
 		}
 		obj.Annotations[labels.ProjectEnforcedQuotaAnnotation] = "true"
-		return kclient.Update(ctx, obj) == nil
+		return kc.Update(ctx, obj) == nil
 	})
 
 	// Run a scaled app.
@@ -1673,7 +1844,7 @@ func TestEnforcedQuota(t *testing.T) {
 
 	// Grab the app's QuotaRequest and check that it has the appropriate values set.
 	quotaRequest := &adminv1.QuotaRequestInstance{}
-	err = kclient.Get(ctx, router.Key(app.Namespace, app.Name), quotaRequest)
+	err = kc.Get(ctx, router.Key(app.Namespace, app.Name), quotaRequest)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1690,7 +1861,7 @@ func TestEnforcedQuota(t *testing.T) {
 		}},
 		AllocatedResources: quotaRequest.Spec.Resources,
 	}
-	err = kclient.Status().Update(ctx, quotaRequest)
+	err = kc.Status().Update(ctx, quotaRequest)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1709,8 +1880,8 @@ func TestAutoUpgradeImageValidation(t *testing.T) {
 	if err != nil {
 		t.Fatal("error while getting rest config:", err)
 	}
-	kclient := helper.MustReturn(kclient.Default)
-	project := helper.TempProject(t, kclient)
+	kc := helper.MustReturn(kclient.Default)
+	project := helper.TempProject(t, kc)
 
 	c, err := client.New(restConfig, project.Name, project.Name)
 	if err != nil {
