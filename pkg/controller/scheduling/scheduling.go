@@ -1,6 +1,8 @@
 package scheduling
 
 import (
+	"fmt"
+
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
@@ -69,9 +71,17 @@ func addScheduling(req router.Request, appInstance *v1.AppInstance, workloads ma
 			tolerations []corev1.Toleration
 		)
 
+		cfg, err := config.Get(req.Ctx, req.Client)
+		if err != nil {
+			return err
+		}
+
 		computeClass, err := computeclasses.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.ComputeClasses, container, name, appInstance.Namespace)
 		if err != nil {
 			return err
+		}
+		if z.Dereference(cfg.RequireComputeClass) && computeClass == nil {
+			return fmt.Errorf("compute class required but none configured")
 		}
 
 		requirements, err := ResourceRequirements(req, appInstance, name, container, computeClass)

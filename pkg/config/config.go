@@ -146,6 +146,9 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader, inclu
 	if c.IgnoreResourceRequirements == nil {
 		c.IgnoreResourceRequirements = profile.IgnoreResourceRequirements
 	}
+	if c.RequireComputeClass == nil {
+		c.RequireComputeClass = profile.RequireComputeClass
+	}
 	if c.Features == nil {
 		c.Features = profile.Features
 	} else {
@@ -461,6 +464,9 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	}
 	if newConfig.IgnoreResourceRequirements != nil {
 		mergedConfig.IgnoreResourceRequirements = newConfig.IgnoreResourceRequirements
+	}
+	if newConfig.RequireComputeClass != nil {
+		mergedConfig.RequireComputeClass = newConfig.RequireComputeClass
 	}
 	if newConfig.AutoConfigureKarpenterDontEvictAnnotations != nil {
 		mergedConfig.AutoConfigureKarpenterDontEvictAnnotations = newConfig.AutoConfigureKarpenterDontEvictAnnotations
