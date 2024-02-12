@@ -40,3 +40,8 @@ affinity:
           operator: In
           values:
           - bar
+---
+kind: ProjectInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-namespace

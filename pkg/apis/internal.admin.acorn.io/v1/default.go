@@ -33,7 +33,7 @@ func getCurrentClusterComputeClassDefault(ctx context.Context, c client.Client, 
 			defaultCCC = z.Pointer(clusterComputeClass)
 		}
 
-		if clusterComputeClass.Name == projectDefault {
+		if projectDefault != "" && clusterComputeClass.Name == projectDefault {
 			projectDefaultCCC = z.Pointer(clusterComputeClass)
 		}
 	}
@@ -68,7 +68,7 @@ func getCurrentProjectComputeClassDefault(ctx context.Context, c client.Client, 
 			defaultPCC = z.Pointer(projectComputeClass)
 		}
 
-		if projectDefault projectComputeClass.Name == projectDefault {
+		if projectDefault != "" && projectComputeClass.Name == projectDefault {
 			projectDefaultPCC = z.Pointer(projectComputeClass)
 		}
 	}

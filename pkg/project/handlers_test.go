@@ -14,6 +14,13 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+func TestDefaultComputeClass(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/setdefaultcomputeclass/cc-missing", SetDefaultComputeClass)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/setdefaultcomputeclass/spec-only", SetDefaultComputeClass)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/setdefaultcomputeclass/status-only", SetDefaultComputeClass)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/setdefaultcomputeclass/spec-override", SetDefaultComputeClass)
+}
+
 func TestSetProjectSupportedRegions(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/setsupportedregions/no-default", SetSupportedRegions)
 	tester.DefaultTest(t, scheme.Scheme, "testdata/setsupportedregions/with-supported-regions", SetSupportedRegions)

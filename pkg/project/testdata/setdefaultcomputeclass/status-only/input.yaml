@@ -1,0 +1,6 @@
+kind: ProjectInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: acorn
+status:
+  defaultComputeClass: cluster-compute-class-b

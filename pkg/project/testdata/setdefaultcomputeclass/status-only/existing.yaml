@@ -2,11 +2,9 @@
 kind: ProjectComputeClassInstance
 apiVersion: internal.admin.acorn.io/v1
 metadata:
-  name: sample-compute-class
-  namespace: app-namespace
-description: Simple description for a simple ComputeClass
+  name: compute-class-a
+  namespace: acorn
 cpuScaler: 0.25
-default: true
 memory:
   min: 1Mi # 1Mi
   max: 2Mi # 2Mi
@@ -15,20 +13,17 @@ affinity:
   nodeAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
       nodeSelectorTerms:
-      - matchExpressions:
-        - key: foo
-          operator: In
-          values:
-          - bar
+        - matchExpressions:
+            - key: foo
+              operator: In
+              values:
+                - bar
 ---
-kind: ProjectComputeClassInstance
+kind: ClusterComputeClassInstance
 apiVersion: internal.admin.acorn.io/v1
 metadata:
-  name: sample-compute-class-other
-  namespace: app-namespace
-description: Simple description for a simple ComputeClass
+  name: cluster-compute-class-b
 cpuScaler: 0.25
-default: true
 memory:
   min: 1Mi # 1Mi
   max: 2Mi # 2Mi
@@ -37,13 +32,15 @@ affinity:
   nodeAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
       nodeSelectorTerms:
-      - matchExpressions:
-        - key: foo
-          operator: In
-          values:
-          - bar
+        - matchExpressions:
+            - key: foo
+              operator: In
+              values:
+                - bar
 ---
 kind: ProjectInstance
 apiVersion: internal.acorn.io/v1
 metadata:
-  name: app-namespace
+  name: acorn
+status:
+  defaultComputeClass: cluster-compute-class-b

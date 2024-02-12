@@ -1,0 +1,9 @@
+`apiVersion: internal.acorn.io/v1
+kind: ProjectInstance
+metadata:
+  creationTimestamp: null
+  name: acorn
+spec:
+  defaultComputeClass: compute-class-a
+status: {}
+`

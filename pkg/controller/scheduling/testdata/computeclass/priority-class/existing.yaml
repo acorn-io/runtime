@@ -13,3 +13,8 @@ description: Simple description for a simple ComputeClass
 cpuScaler: 0.25
 default: true
 priorityClassName: exists
+---
+kind: ProjectInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-namespace

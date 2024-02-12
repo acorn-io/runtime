@@ -20,15 +20,14 @@ import (
 // field if set.
 func SetDefaultComputeClass(req router.Request, resp router.Response) error {
 	project := req.Object.(*v1.ProjectInstance)
-	if cc := project.Spec.DefaultComputeClass; cc != "" &&
-		project.Status.DefaultComputeClass != cc {
+	if cc := project.Spec.DefaultComputeClass; cc != "" && project.Status.DefaultComputeClass != cc {
 		// The spec has been changed, update the status field to match.
 		project.Status.DefaultComputeClass = cc
 	}
 
 	// Check if the given compute class exists
 	if project.Status.DefaultComputeClass != "" {
-		if _, err := computeclasses.GetAsProjectComputeClassInstance(req.Ctx, req.Client, project.Status.Namespace, project.Status.DefaultComputeClass); err != nil {
+		if _, err := computeclasses.GetAsProjectComputeClassInstance(req.Ctx, req.Client, project.Name, project.Status.DefaultComputeClass); err != nil {
 			if !apierrors.IsNotFound(err) {
 				return fmt.Errorf("failed to check existence of default compute class on project [%s] status: %w", project.Name, err)
 			}

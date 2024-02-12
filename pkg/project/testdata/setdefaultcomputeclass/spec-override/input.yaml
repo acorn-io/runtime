@@ -1,0 +1,6 @@
+kind: ProjectInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: acorn
+spec:
+  defaultComputeClass: compute-class-a
