@@ -938,7 +938,7 @@ func TestRequireComputeClass(t *testing.T) {
 	c, _ := helper.ClientAndProject(t)
 	kc := helper.MustReturn(kclient.Default)
 
-	helper.SetRequireComputeClassWithRestore(t, ctx, kc)
+	helper.SetRequireComputeClassWithRestore(ctx, t, kc)
 
 	checks := []struct {
 		name              string
