@@ -954,11 +954,8 @@ func TestRequireComputeClass(t *testing.T) {
 			name:              "no-computeclass",
 			noComputeClass:    true,
 			testDataDirectory: "./testdata/simple",
-			waitFor: func(obj *v1.AppInstance) bool {
-				return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
-					obj.Status.Condition(v1.AppInstanceConditionScheduling).Error &&
-					obj.Status.Condition(v1.AppInstanceConditionScheduling).Message == "compute class required but none configured"
-			},
+			fail:              true,
+			failMessage:       "compute class required but none configured",
 		},
 		{
 			name:              "valid",
@@ -991,6 +988,44 @@ func TestRequireComputeClass(t *testing.T) {
 						corev1.ResourceMemory: resource.MustParse("1Gi"),
 						corev1.ResourceCPU:    resource.MustParse("250m"),
 						"mygpu/nvidia":        resource.MustParse("1"),
+					},
+				},
+				Tolerations: []corev1.Toleration{
+					{
+						Key:      tolerations.WorkloadTolerationKey,
+						Operator: corev1.TolerationOpExists,
+					},
+				}},
+			},
+			waitFor: func(obj *v1.AppInstance) bool {
+				return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
+					obj.Status.Condition(v1.AppInstanceConditionScheduling).Success
+			},
+		},
+		{
+			name:              "default",
+			testDataDirectory: "./testdata/simple",
+			computeClass: adminv1.ProjectComputeClassInstance{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "acorn-test-custom",
+					Namespace: c.GetNamespace(),
+				},
+				Default:   true,
+				CPUScaler: 0.25,
+				Memory: adminv1.ComputeClassMemory{
+					Default: "512Mi",
+					Max:     "1Gi",
+					Min:     "512Mi",
+				},
+				SupportedRegions: []string{apiv1.LocalRegion},
+			},
+			expected: map[string]v1.Scheduling{"simple": {
+				Requirements: corev1.ResourceRequirements{
+					Limits: corev1.ResourceList{
+						corev1.ResourceMemory: resource.MustParse("512Mi")},
+					Requests: corev1.ResourceList{
+						corev1.ResourceMemory: resource.MustParse("512Mi"),
+						corev1.ResourceCPU:    resource.MustParse("125m"),
 					},
 				},
 				Tolerations: []corev1.Toleration{

@@ -209,7 +209,8 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 				project,
 				workloadsFromImage,
 				apiv1cfg.WorkloadMemoryDefault,
-				apiv1cfg.WorkloadMemoryMaximum)
+				apiv1cfg.WorkloadMemoryMaximum,
+				apiv1cfg.RequireComputeClass)
 			if len(errs) != 0 {
 				result = append(result, errs...)
 				return
@@ -571,7 +572,7 @@ func (s *RBACValidator) CheckPermissionsForPrivilegeEscalation(ctx context.Conte
 }
 
 // checkScheduling must use apiv1.ComputeClass to validate the scheduling instead of the Instance counterparts.
-func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, project *v1.ProjectInstance, workloads map[string]v1.Container, specMemDefault, specMemMaximum *int64) []*field.Error {
+func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, project *v1.ProjectInstance, workloads map[string]v1.Container, specMemDefault, specMemMaximum *int64, requireCC *bool) []*field.Error {
 	var (
 		memory        = params.Spec.Memory
 		computeClass  = params.Spec.ComputeClasses
@@ -630,6 +631,9 @@ func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, proj
 
 		// Need a ComputeClass to validate it
 		if cc == nil {
+			if z.Dereference(requireCC) {
+				validationErrors = append(validationErrors, field.Invalid(field.NewPath("computeclass"), "", fmt.Sprintf("compute class required but none configured")))
+			}
 			continue
 		}
 
