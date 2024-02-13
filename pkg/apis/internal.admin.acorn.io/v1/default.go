@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"sort"
 
+	"k8s.io/utils/strings/slices"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func getCurrentClusterComputeClassDefault(ctx context.Context, c client.Client) (*ClusterComputeClassInstance, error) {
+func getCurrentClusterComputeClassDefault(ctx context.Context, c client.Client, region string) (*ClusterComputeClassInstance, error) {
 	clusterComputeClasses := ClusterComputeClassInstanceList{}
 	if err := c.List(ctx, &clusterComputeClasses, &client.ListOptions{}); err != nil {
 		return nil, err
@@ -17,6 +18,24 @@ func getCurrentClusterComputeClassDefault(ctx context.Context, c client.Client) 
 	sort.Slice(clusterComputeClasses.Items, func(i, j int) bool {
 		return clusterComputeClasses.Items[i].Name < clusterComputeClasses.Items[j].Name
 	})
+
+	supportedRegions := false
+	for _, ccc := range clusterComputeClasses.Items {
+		if len(ccc.SupportedRegions) > 0 {
+			supportedRegions = true
+			break
+		}
+	}
+
+	if supportedRegions {
+		filteredComputeClasses := ClusterComputeClassInstanceList{}
+		for _, ccc := range clusterComputeClasses.Items {
+			if slices.Contains(ccc.SupportedRegions, region) {
+				filteredComputeClasses.Items = append(filteredComputeClasses.Items, ccc)
+			}
+		}
+		clusterComputeClasses = filteredComputeClasses
+	}
 
 	var defaultCCC *ClusterComputeClassInstance
 	for _, clusterComputeClass := range clusterComputeClasses.Items {
@@ -34,7 +53,7 @@ func getCurrentClusterComputeClassDefault(ctx context.Context, c client.Client) 
 	return defaultCCC, nil
 }
 
-func getCurrentProjectComputeClassDefault(ctx context.Context, c client.Client, namespace string) (*ProjectComputeClassInstance, error) {
+func getCurrentProjectComputeClassDefault(ctx context.Context, c client.Client, namespace, region string) (*ProjectComputeClassInstance, error) {
 	projectComputeClasses := ProjectComputeClassInstanceList{}
 	if err := c.List(ctx, &projectComputeClasses, &client.ListOptions{Namespace: namespace}); err != nil {
 		return nil, err
@@ -43,6 +62,24 @@ func getCurrentProjectComputeClassDefault(ctx context.Context, c client.Client, 
 	sort.Slice(projectComputeClasses.Items, func(i, j int) bool {
 		return projectComputeClasses.Items[i].Name < projectComputeClasses.Items[j].Name
 	})
+
+	supportedRegions := false
+	for _, pcc := range projectComputeClasses.Items {
+		if len(pcc.SupportedRegions) > 0 {
+			supportedRegions = true
+			break
+		}
+	}
+
+	if supportedRegions {
+		filteredComputeClasses := ProjectComputeClassInstanceList{}
+		for _, pcc := range projectComputeClasses.Items {
+			if slices.Contains(pcc.SupportedRegions, region) {
+				filteredComputeClasses.Items = append(filteredComputeClasses.Items, pcc)
+			}
+		}
+		projectComputeClasses = filteredComputeClasses
+	}
 
 	var defaultPCC *ProjectComputeClassInstance
 	for _, projectComputeClass := range projectComputeClasses.Items {
@@ -60,15 +97,15 @@ func getCurrentProjectComputeClassDefault(ctx context.Context, c client.Client, 
 	return defaultPCC, nil
 }
 
-func GetDefaultComputeClass(ctx context.Context, c client.Client, namespace string) (string, error) {
-	pcc, err := getCurrentProjectComputeClassDefault(ctx, c, namespace)
+func GetDefaultComputeClass(ctx context.Context, c client.Client, namespace, region string) (string, error) {
+	pcc, err := getCurrentProjectComputeClassDefault(ctx, c, namespace, region)
 	if err != nil {
 		return "", err
 	} else if pcc != nil {
 		return pcc.Name, nil
 	}
 
-	ccc, err := getCurrentClusterComputeClassDefault(ctx, c)
+	ccc, err := getCurrentClusterComputeClassDefault(ctx, c, region)
 	if err != nil {
 		return "", err
 	} else if ccc != nil {
