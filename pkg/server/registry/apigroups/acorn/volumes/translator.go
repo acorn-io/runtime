@@ -21,6 +21,36 @@ type Translator struct {
 	c kclient.Client
 }
 
+func (t *Translator) FromVolumeToPVName(ctx context.Context, namespace, name string) (string, error) {
+	i := strings.LastIndex(name, ".")
+	// If there is not a period, or string ends with period, parse it not as an alias
+	if i == -1 || i+1 >= len(name) {
+		return name, nil
+	}
+
+	// parse it of the form <appName>.<shortVolName>
+	prefix := name[:i]
+	volumeName := name[i+1:]
+
+	pvs := &corev1.PersistentVolumeList{}
+	err := t.c.List(ctx, pvs, &kclient.ListOptions{
+		LabelSelector: klabels.SelectorFromSet(map[string]string{
+			labels.AcornAppName:      prefix,
+			labels.AcornAppNamespace: namespace,
+			labels.AcornVolumeName:   volumeName,
+		}),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	if len(pvs.Items) == 1 {
+		return pvs.Items[0].Name, nil
+	}
+
+	return name, nil
+}
+
 func (t *Translator) FromPublicName(ctx context.Context, namespace, name string) (string, string, error) {
 	i := strings.LastIndex(name, ".")
 	// If there is not a period, or string ends with period, parse it not as an alias
