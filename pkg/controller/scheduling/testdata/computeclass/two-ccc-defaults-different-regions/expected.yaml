@@ -1,0 +1,61 @@
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+  memory:
+    oneimage: 1048576 # 1Mi
+status:
+  defaults:
+    memory:
+      "": 0
+      left: 1048576
+      oneimage: 1048576
+  observedGeneration: 1
+  resolvedOfferings: {}
+  namespace: app-created-namespace
+  appImage:
+    id: test
+  appSpec:
+    containers:
+      oneimage:
+        sidecars:
+          left:
+            image: "foo"
+            ports:
+              - port: 90
+                targetPort: 91
+                protocol: tcp
+        ports:
+          - port: 80
+            targetPort: 81
+            protocol: http
+        image: "image-name"
+        build:
+          dockerfile: "Dockerfile"
+          context: "."
+  conditions:
+    - reason: Success
+      status: "True"
+      success: true
+      type: scheduling
+  scheduling:
+    left:
+      requirements:
+        limits:
+          memory: 1Mi
+        requests:
+          memory: 1Mi
+    oneimage:
+      requirements:
+        limits:
+          memory: 1Mi
+        requests:
+          memory: 1Mi
+      tolerations:
+      - key: taints.acorn.io/workload
+        operator: Exists
+

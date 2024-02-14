@@ -45,6 +45,14 @@ func TestMemorySameGeneration(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/memory/same-generation", Calculate)
 }
 
+func TestTwoCCCDefaultsCrossRegion(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/memory/two-ccc-defaults-different-regions", Calculate)
+}
+
+func TestTwoPCCDefaultsCrossRegion(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/memory/two-pcc-defaults-different-regions", Calculate)
+}
+
 func TestTwoCCCDefaultsShouldError(t *testing.T) {
 	harness, input, err := tester.FromDir(scheme.Scheme, "testdata/memory/two-ccc-defaults-should-error")
 	if err != nil {

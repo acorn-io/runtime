@@ -73,6 +73,14 @@ func TestRequestScalerFloor(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/request-scaler-floor", Calculate)
 }
 
+func TestTwoCCCDefaultsDifferentRegions(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/two-ccc-defaults-different-regions", Calculate)
+}
+
+func TestTwoPCCDefaultsDifferentRegions(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/two-pcc-defaults-different-regions", Calculate)
+}
+
 func TestTwoCCCDefaultsShouldError(t *testing.T) {
 	harness, input, err := tester.FromDir(scheme.Scheme, "testdata/computeclass/two-ccc-defaults-should-error")
 	if err != nil {

@@ -116,7 +116,7 @@ func resolveComputeClassForContainer(req router.Request, appInstance *v1.AppInst
 	var ccName string
 
 	// First, get the compute class for the workload
-	cc, err := computeclasses.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.ComputeClasses, container, containerName, appInstance.Namespace)
+	cc, err := computeclasses.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.ComputeClasses, container, containerName, appInstance.Namespace, appInstance.GetRegion())
 	if err != nil {
 		return v1.ContainerResolvedOffering{}, err
 	}
