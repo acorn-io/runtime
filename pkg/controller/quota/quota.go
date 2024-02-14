@@ -132,13 +132,19 @@ func addContainers(containers map[string]v1.Container, quotaRequest *adminv1.Quo
 func addCompute(containers map[string]v1.Container, appInstance *v1.AppInstance, quotaRequest *adminv1.QuotaRequestInstance) {
 	// For each workload, add their memory/cpu requests to the quota request
 	for name, container := range containers {
-		var cpu, memory resource.Quantity
+		var (
+			cpu, memory  resource.Quantity
+			computeClass string
+		)
+
 		if specific, ok := appInstance.Status.ResolvedOfferings.Containers[name]; ok {
 			memory = *resource.NewQuantity(z.Dereference(specific.Memory), resource.BinarySI)
 			cpu = *resource.NewMilliQuantity(z.Dereference(specific.CPU), resource.DecimalSI)
+			computeClass = specific.Class
 		} else if all, ok := appInstance.Status.ResolvedOfferings.Containers[""]; ok {
 			cpu = *resource.NewMilliQuantity(z.Dereference(all.CPU), resource.DecimalSI)
 			memory = *resource.NewQuantity(z.Dereference(all.Memory), resource.BinarySI)
+			computeClass = all.Class
 		}
 
 		// Multiply the memory/cpu requests by the scale of the container
@@ -146,14 +152,12 @@ func addCompute(containers map[string]v1.Container, appInstance *v1.AppInstance,
 		memory.Mul(replicas(container.Scale))
 
 		// Add the compute resources to the quota request
-		computeClass := appInstance.Status.ResolvedOfferings.Containers[name].Class
 		quotaRequest.Spec.Resources.Add(adminv1.QuotaRequestResources{BaseResources: adminv1.BaseResources{ComputeClasses: adminv1.ComputeClassResources{
 			computeClass: {
 				Memory: memory,
 				CPU:    cpu,
 			},
-		},
-		}})
+		}}})
 
 		// Recurse over any sidecars. Since sidecars can't have sidecars, this is safe.
 		addCompute(container.Sidecars, appInstance, quotaRequest)

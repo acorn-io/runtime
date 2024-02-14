@@ -11,6 +11,12 @@ func TestBasic(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/basic", EnsureQuotaRequest)
 }
 
+// TestAllSet simulates a secenario where the resolvedOfferings field does not have
+// any usage set for containers, just all.
+func TestOnlyAllSet(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/only-all-set", EnsureQuotaRequest)
+}
+
 func TestNotEnforced(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/not-enforced", EnsureQuotaRequest)
 }
