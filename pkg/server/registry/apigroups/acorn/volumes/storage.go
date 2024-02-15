@@ -13,15 +13,18 @@ import (
 )
 
 func NewStorage(c kclient.WithWatch) rest.Storage {
-	translated := translation.NewTranslationStrategy(&Translator{
+	r := remote.NewRemote(&corev1.PersistentVolume{}, c)
+	t := &Translator{
 		c: c,
-	}, remote.NewRemote(&corev1.PersistentVolume{}, c))
+	}
+	translated := translation.NewTranslationStrategy(t, r)
 	remoteResource := publicname.NewStrategy(translated)
+	policySwitcher := NewPolicySwitcherStrategy(remoteResource, t, r)
 
 	return stores.NewBuilder(c.Scheme(), &apiv1.Volume{}).
 		WithGet(remoteResource).
 		WithList(remoteResource).
-		WithDelete(remoteResource).
+		WithDelete(policySwitcher).
 		WithWatch(remoteResource).
 		WithTableConverter(tables.VolumeConverter).
 		Build()
