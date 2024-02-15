@@ -31,7 +31,6 @@ import (
 	"github.com/acorn-io/schemer/data/convert"
 	"github.com/acorn-io/z"
 	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
@@ -630,7 +629,6 @@ func containerAnnotation(container v1.Container) string {
 }
 
 func resolvedOfferingsAnnotation(appInstance *v1.AppInstance, containerName string) (string, error) {
-	logrus.Infof("resolved offerings annotation - container name: %s", containerName)
 	if resolved, exists := appInstance.Status.ResolvedOfferings.Containers[containerName]; exists {
 		data, err := convert.EncodeToMap(resolved)
 		if err != nil {
