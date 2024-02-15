@@ -26,7 +26,7 @@ func resolveComputeClasses(req router.Request, cfg *apiv1.Config, appInstance *v
 	if value, ok := appInstance.Spec.ComputeClasses[""]; ok {
 		defaultCC = value
 	} else {
-		defaultCC, err = adminv1.GetDefaultComputeClass(req.Ctx, req.Client, appInstance.Namespace)
+		defaultCC, err = adminv1.GetDefaultComputeClassName(req.Ctx, req.Client, appInstance.Namespace)
 		if err != nil {
 			return err
 		}
@@ -132,7 +132,7 @@ func resolveComputeClassForContainer(req router.Request, appInstance *v1.AppInst
 	// Next, determine the memory request. This is the order of priority:
 	// 1. runtime-level overrides from the user (in app.Spec)
 	// 2. defaults in the acorn image
-	// 3. defaults from compute class
+	// 3. defaults from compute class and project status
 	// 4. global default
 
 	var (

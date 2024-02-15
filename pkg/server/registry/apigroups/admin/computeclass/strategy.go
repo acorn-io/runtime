@@ -65,7 +65,7 @@ func (s *Strategy) List(ctx context.Context, namespace string, _ storage.ListOpt
 
 	for _, ccc := range clusterComputeClasses.Items {
 		if _, ok := projectComputeClassesSeen[ccc.Name]; ok {
-			// A project volume class with the same name exists, skipping the cluster volume class
+			// A project compute class with the same name exists, skipping the project compute class
 			continue
 		}
 		if projectDefaultExists {

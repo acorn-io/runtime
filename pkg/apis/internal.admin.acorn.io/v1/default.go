@@ -7,10 +7,11 @@ import (
 
 	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/z"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func getCurrentClusterComputeClassDefault(ctx context.Context, c client.Client, projectDefault string) (*ClusterComputeClassInstance, error) {
+func getCurrentClusterComputeClassDefault(ctx context.Context, c client.Client, projectSpecified string) (*ClusterComputeClassInstance, error) {
 	var clusterComputeClasses ClusterComputeClassInstanceList
 	if err := c.List(ctx, &clusterComputeClasses, &client.ListOptions{}); err != nil {
 		return nil, err
@@ -20,7 +21,7 @@ func getCurrentClusterComputeClassDefault(ctx context.Context, c client.Client, 
 		return clusterComputeClasses.Items[i].Name < clusterComputeClasses.Items[j].Name
 	})
 
-	var defaultCCC, projectDefaultCCC *ClusterComputeClassInstance
+	var defaultCCC, projectSpecifiedCCC *ClusterComputeClassInstance
 	for _, clusterComputeClass := range clusterComputeClasses.Items {
 		if clusterComputeClass.Default {
 			if defaultCCC != nil {
@@ -33,19 +34,19 @@ func getCurrentClusterComputeClassDefault(ctx context.Context, c client.Client, 
 			defaultCCC = z.Pointer(clusterComputeClass)
 		}
 
-		if projectDefault != "" && clusterComputeClass.Name == projectDefault {
-			projectDefaultCCC = z.Pointer(clusterComputeClass)
+		if projectSpecified != "" && clusterComputeClass.Name == projectSpecified {
+			projectSpecifiedCCC = z.Pointer(clusterComputeClass)
 		}
 	}
 
-	if projectDefaultCCC != nil {
-		return projectDefaultCCC, nil
+	if projectSpecifiedCCC != nil {
+		return projectSpecifiedCCC, nil
 	}
 
 	return defaultCCC, nil
 }
 
-func getCurrentProjectComputeClassDefault(ctx context.Context, c client.Client, projectDefault, namespace string) (*ProjectComputeClassInstance, error) {
+func getCurrentProjectComputeClassDefault(ctx context.Context, c client.Client, projectSpecified, namespace string) (*ProjectComputeClassInstance, error) {
 	var projectComputeClasses ProjectComputeClassInstanceList
 	if err := c.List(ctx, &projectComputeClasses, &client.ListOptions{Namespace: namespace}); err != nil {
 		return nil, err
@@ -55,7 +56,7 @@ func getCurrentProjectComputeClassDefault(ctx context.Context, c client.Client, 
 		return projectComputeClasses.Items[i].Name < projectComputeClasses.Items[j].Name
 	})
 
-	var defaultPCC, projectDefaultPCC *ProjectComputeClassInstance
+	var defaultPCC, projectSpecifiedPCC *ProjectComputeClassInstance
 	for _, projectComputeClass := range projectComputeClasses.Items {
 		if projectComputeClass.Default {
 			if defaultPCC != nil {
@@ -68,39 +69,56 @@ func getCurrentProjectComputeClassDefault(ctx context.Context, c client.Client, 
 			defaultPCC = z.Pointer(projectComputeClass)
 		}
 
-		if projectDefault != "" && projectComputeClass.Name == projectDefault {
-			projectDefaultPCC = z.Pointer(projectComputeClass)
+		if projectSpecified != "" && projectComputeClass.Name == projectSpecified {
+			projectSpecifiedPCC = z.Pointer(projectComputeClass)
 		}
 	}
 
-	if projectDefaultPCC != nil {
-		return projectDefaultPCC, nil
+	if projectSpecifiedPCC != nil {
+		return projectSpecifiedPCC, nil
 	}
 
 	return defaultPCC, nil
 }
 
-func GetDefaultComputeClass(ctx context.Context, c client.Client, namespace string) (string, error) {
+// GetDefaultComputeClassName gets the name of the effective default ComputeClass for a given project namespace.
+// The precedence for picking the default ComputeClass is as follows:
+//  1. Any ProjectComputeClassInstance (in the project namespace) or ClusterComputeClassInstance that is specified by the
+//     ProjectInstance's DefaultComputeClass field
+//  2. The ProjectComputeClassInstance (in the project namespace) with a Default field set to true
+//  3. The ClusterComputeClassInstance with a Default field set to true
+//
+// If no default ComputeClass is found, an empty string is returned.
+func GetDefaultComputeClassName(ctx context.Context, c client.Client, namespace string) (string, error) {
 	var project internalv1.ProjectInstance
 	if err := c.Get(ctx, client.ObjectKey{Name: namespace}, &project); err != nil {
 		return "", fmt.Errorf("failed to get projectinstance to determine default compute class: %w", err)
 	}
-	projectDefault := project.Status.DefaultComputeClass
+	projectSpecified := project.Status.DefaultComputeClass
 
-	pcc, err := getCurrentProjectComputeClassDefault(ctx, c, projectDefault, namespace)
+	var defaultComputeClasses []string
+	pcc, err := getCurrentProjectComputeClassDefault(ctx, c, projectSpecified, namespace)
 	if err != nil {
 		return "", err
 	}
 	if pcc != nil {
-		return pcc.Name, nil
+		defaultComputeClasses = append(defaultComputeClasses, pcc.Name)
 	}
 
-	ccc, err := getCurrentClusterComputeClassDefault(ctx, c, projectDefault)
+	ccc, err := getCurrentClusterComputeClassDefault(ctx, c, projectSpecified)
 	if err != nil {
 		return "", err
 	}
 	if ccc != nil {
-		return ccc.Name, nil
+		defaultComputeClasses = append(defaultComputeClasses, ccc.Name)
+	}
+
+	if sets.New(defaultComputeClasses...).Has(projectSpecified) {
+		return projectSpecified, nil
+	}
+
+	if len(defaultComputeClasses) > 0 {
+		return defaultComputeClasses[0], nil
 	}
 
 	return "", nil

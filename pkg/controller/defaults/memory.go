@@ -24,7 +24,7 @@ func addDefaultMemory(req router.Request, cfg *apiv1.Config, appInstance *v1.App
 	if value, ok := appInstance.Spec.ComputeClasses[""]; ok {
 		defaultCC = value
 	} else {
-		defaultCC, err = adminv1.GetDefaultComputeClass(req.Ctx, req.Client, appInstance.Namespace)
+		defaultCC, err = adminv1.GetDefaultComputeClassName(req.Ctx, req.Client, appInstance.Namespace)
 		if err != nil {
 			return err
 		}

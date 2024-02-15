@@ -92,3 +92,7 @@ func TestWithAcornfileMemoryAndSpecOverride(t *testing.T) {
 func TestRemovedContainer(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/removed-container", Calculate)
 }
+
+func TestProjectSpecifiedDefault(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/project-specified-default", Calculate)
+}

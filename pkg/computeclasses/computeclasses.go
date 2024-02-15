@@ -149,7 +149,7 @@ func GetClassForWorkload(ctx context.Context, c client.Client, computeClasses in
 	ccName := GetComputeClassNameForWorkload(workload, container, computeClasses)
 	if ccName == "" {
 		var err error
-		ccName, err = internaladminv1.GetDefaultComputeClass(ctx, c, namespace)
+		ccName, err = internaladminv1.GetDefaultComputeClassName(ctx, c, namespace)
 		if err != nil {
 			return nil, err
 		}

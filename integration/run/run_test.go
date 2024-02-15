@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -18,7 +19,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/imagesource"
-	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
+	rkclient "github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/run"
 	"github.com/acorn-io/runtime/pkg/scheme"
@@ -26,6 +27,7 @@ import (
 	"github.com/acorn-io/z"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	storagev1 "k8s.io/api/storage/v1"
@@ -33,14 +35,14 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
-	crClient "sigs.k8s.io/controller-runtime/pkg/client"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func TestVolume(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kc := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(rkclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	image, err := c.AcornImageBuild(ctx, "./testdata/volume/Acornfile", &client.AcornImageBuildOptions{
@@ -123,7 +125,7 @@ func TestServiceConsumer(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	c, _ := helper.ClientAndProject(t)
-	kc := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(rkclient.Default)
 
 	image, err := c.AcornImageBuild(ctx, "./testdata/serviceconsumer/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/serviceconsumer/",
@@ -170,7 +172,7 @@ func TestVolumeBadClassInImageBoundToGoodClass(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kc := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(rkclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
@@ -231,7 +233,7 @@ func TestVolumeBoundBadClass(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kc := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(rkclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
@@ -278,7 +280,7 @@ func TestVolumeClassInactive(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kc := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(rkclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	volumeClass := adminapiv1.ClusterVolumeClass{
@@ -312,7 +314,7 @@ func TestVolumeClassSizeTooSmall(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kc := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(rkclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	volumeClass := adminapiv1.ClusterVolumeClass{
@@ -356,7 +358,7 @@ func TestVolumeClassSizeTooLarge(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kc := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(rkclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	volumeClass := adminapiv1.ClusterVolumeClass{
@@ -400,7 +402,7 @@ func TestVolumeClassRemoved(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kc := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(rkclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
@@ -466,7 +468,7 @@ func TestClusterVolumeClass(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kclient := helper.MustReturn(kclient.Default)
+	kclient := helper.MustReturn(rkclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
@@ -529,7 +531,7 @@ func TestClusterVolumeClassValuesInAcornfile(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kclient := helper.MustReturn(kclient.Default)
+	kclient := helper.MustReturn(rkclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
@@ -588,7 +590,7 @@ func TestProjectVolumeClass(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kclient := helper.MustReturn(kclient.Default)
+	kclient := helper.MustReturn(rkclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
@@ -651,7 +653,7 @@ func TestProjectVolumeClassDefaultSizeValidation(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kclient := helper.MustReturn(kclient.Default)
+	kclient := helper.MustReturn(rkclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
@@ -718,7 +720,7 @@ func TestProjectVolumeClassDefaultSizeBadValidation(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kclient := helper.MustReturn(kclient.Default)
+	kclient := helper.MustReturn(rkclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
@@ -765,7 +767,7 @@ func TestProjectVolumeClassValuesInAcornfile(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kclient := helper.MustReturn(kclient.Default)
+	kclient := helper.MustReturn(rkclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
@@ -824,7 +826,7 @@ func TestImageNameAnnotation(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	k8sclient := helper.MustReturn(kclient.Default)
+	k8sclient := helper.MustReturn(rkclient.Default)
 	c, _ := helper.ClientAndProject(t)
 
 	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/named/Acornfile", &client.AcornImageBuildOptions{
@@ -889,7 +891,7 @@ func TestDeployParam(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	c, project := helper.ClientAndProject(t)
-	kclient := helper.MustReturn(kclient.Default)
+	kclient := helper.MustReturn(rkclient.Default)
 
 	image, err := c.AcornImageBuild(ctx, "./testdata/params/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/params",
@@ -936,7 +938,7 @@ func TestRequireComputeClass(t *testing.T) {
 
 	helper.StartController(t)
 	c, _ := helper.ClientAndProject(t)
-	kc := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(rkclient.Default)
 
 	helper.SetRequireComputeClassWithRestore(ctx, t, kc)
 
@@ -1045,7 +1047,7 @@ func TestRequireComputeClass(t *testing.T) {
 	for _, tt := range checks {
 		asClusterComputeClass := adminv1.ClusterComputeClassInstance(tt.computeClass)
 		// Perform the same test cases on both Project and Cluster ComputeClasses
-		for kind, computeClass := range map[string]crClient.Object{"projectcomputeclass": &tt.computeClass, "clustercomputeclass": &asClusterComputeClass} {
+		for kind, computeClass := range map[string]kclient.Object{"projectcomputeclass": &tt.computeClass, "clustercomputeclass": &asClusterComputeClass} {
 			testcase := fmt.Sprintf("%v-%v", kind, tt.name)
 			t.Run(testcase, func(t *testing.T) {
 				if !tt.noComputeClass {
@@ -1058,7 +1060,7 @@ func TestRequireComputeClass(t *testing.T) {
 						if err := kc.Delete(context.Background(), computeClass); err != nil && !apierrors.IsNotFound(err) {
 							t.Fatal(err)
 						}
-						err := helper.EnsureDoesNotExist(ctx, func() (crClient.Object, error) {
+						err := helper.EnsureDoesNotExist(ctx, func() (kclient.Object, error) {
 							lookingFor := computeClass
 							err := kc.Get(ctx, router.Key(computeClass.GetNamespace(), computeClass.GetName()), lookingFor)
 							return lookingFor, err
@@ -1093,7 +1095,7 @@ func TestRequireComputeClass(t *testing.T) {
 						if err = kc.Delete(context.Background(), app); err != nil && !apierrors.IsNotFound(err) {
 							t.Fatal(err)
 						}
-						err := helper.EnsureDoesNotExist(ctx, func() (crClient.Object, error) {
+						err := helper.EnsureDoesNotExist(ctx, func() (kclient.Object, error) {
 							lookingFor := app
 							err := kc.Get(ctx, router.Key(app.GetName(), app.GetNamespace()), lookingFor)
 							return lookingFor, err
@@ -1122,7 +1124,7 @@ func TestRequireComputeClass(t *testing.T) {
 func TestUsingComputeClasses(t *testing.T) {
 	helper.StartController(t)
 	c, _ := helper.ClientAndProject(t)
-	kc := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(rkclient.Default)
 
 	ctx := helper.GetCTX(t)
 
@@ -1366,7 +1368,7 @@ func TestUsingComputeClasses(t *testing.T) {
 	for _, tt := range checks {
 		asClusterComputeClass := adminv1.ClusterComputeClassInstance(tt.computeClass)
 		// Perform the same test cases on both Project and Cluster ComputeClasses
-		for kind, computeClass := range map[string]crClient.Object{"projectcomputeclass": &tt.computeClass, "clustercomputeclass": &asClusterComputeClass} {
+		for kind, computeClass := range map[string]kclient.Object{"projectcomputeclass": &tt.computeClass, "clustercomputeclass": &asClusterComputeClass} {
 			testcase := fmt.Sprintf("%v-%v", kind, tt.name)
 			t.Run(testcase, func(t *testing.T) {
 				if !tt.noComputeClass {
@@ -1379,7 +1381,7 @@ func TestUsingComputeClasses(t *testing.T) {
 						if err := kc.Delete(context.Background(), computeClass); err != nil && !apierrors.IsNotFound(err) {
 							t.Fatal(err)
 						}
-						err := helper.EnsureDoesNotExist(ctx, func() (crClient.Object, error) {
+						err := helper.EnsureDoesNotExist(ctx, func() (kclient.Object, error) {
 							lookingFor := computeClass
 							err := kc.Get(ctx, router.Key(computeClass.GetNamespace(), computeClass.GetName()), lookingFor)
 							return lookingFor, err
@@ -1413,7 +1415,7 @@ func TestUsingComputeClasses(t *testing.T) {
 						if err = kc.Delete(context.Background(), app); err != nil && !apierrors.IsNotFound(err) {
 							t.Fatal(err)
 						}
-						err := helper.EnsureDoesNotExist(ctx, func() (crClient.Object, error) {
+						err := helper.EnsureDoesNotExist(ctx, func() (kclient.Object, error) {
 							lookingFor := app
 							err := kc.Get(ctx, router.Key(app.GetName(), app.GetNamespace()), lookingFor)
 							return lookingFor, err
@@ -1437,6 +1439,91 @@ func TestUsingComputeClasses(t *testing.T) {
 			})
 		}
 	}
+}
+
+func TestProjectSpecifiedDefaultComputeClass(t *testing.T) {
+	helper.StartController(t)
+
+	ctx := helper.GetCTX(t)
+	c, project := helper.ClientAndProject(t)
+	kc := helper.MustReturn(rkclient.Default)
+
+	projectComputeClass := adminv1.ProjectComputeClassInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "self-specified-default",
+			Namespace: c.GetNamespace(),
+		},
+		CPUScaler: 0.25,
+		Default:   true,
+		Memory: adminv1.ComputeClassMemory{
+			Min: "1024",
+			Max: "2Gi",
+		},
+		SupportedRegions: []string{apiv1.LocalRegion},
+	}
+	clusterComputeClass := adminv1.ClusterComputeClassInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "project-specified-default",
+		},
+		CPUScaler: 0.25,
+		Memory: adminv1.ComputeClassMemory{
+			Min: "512",
+			Max: "1Gi",
+		},
+		SupportedRegions: []string{apiv1.LocalRegion},
+	}
+
+	for _, cc := range []kclient.Object{&projectComputeClass, &clusterComputeClass} {
+		obj := cc
+		t.Cleanup(func() {
+			assert.NoError(t, kclient.IgnoreNotFound(kc.Delete(ctx, obj)))
+		})
+		assert.NoError(t, kc.Create(ctx, obj))
+	}
+
+	// Set the project's default field and wait until the status field is set
+	require.EventuallyWithT(t, func(c *assert.CollectT) {
+		var p v1.ProjectInstance
+		require.NoError(c, kc.Get(ctx, router.Key("", project.Name), &p))
+		p.Spec.DefaultComputeClass = clusterComputeClass.Name
+
+		require.NoError(c, kc.Update(ctx, &p))
+		project = &p
+	}, time.Minute, time.Second, "failed to update project default")
+
+	project = helper.WaitForObject(t, kc.Watch, new(v1.ProjectInstanceList), project, func(obj *v1.ProjectInstance) bool {
+		return obj.Status.DefaultComputeClass == clusterComputeClass.Name
+	})
+
+	cwd := "./testdata/simple"
+	image, err := c.AcornImageBuild(ctx, cwd+"/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: cwd,
+	})
+	require.NoError(t, err)
+
+	appName := "app"
+	t.Cleanup(func() {
+		err := kc.Delete(ctx, &v1.AppInstance{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      appName,
+				Namespace: c.GetNamespace(),
+			},
+		})
+		assert.NoError(t, kclient.IgnoreNotFound(err))
+	})
+
+	app, err := c.AppRun(ctx, image.ID, &client.AppRunOptions{Name: appName})
+	require.NoError(t, err)
+
+	// Wait for the app to be scheduled and ensure the computeclass matches the project's default
+	helper.WaitForObject(t, kc.Watch, new(v1.AppInstanceList), apiv1.AppToAppInstance(app), func(obj *v1.AppInstance) bool {
+		containers, ok := obj.Status.ResolvedOfferings.Containers[""]
+		if !ok {
+			return false
+		}
+
+		return containers.Class == clusterComputeClass.Name
+	})
 }
 
 func TestJobDelete(t *testing.T) {
@@ -1466,7 +1553,7 @@ func TestJobDelete(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_ = helper.EnsureDoesNotExist(ctx, func() (crClient.Object, error) {
+	_ = helper.EnsureDoesNotExist(ctx, func() (kclient.Object, error) {
 		return c.AppGet(ctx, app.Name)
 	})
 }
@@ -1494,7 +1581,7 @@ func TestAppWithBadDefaultRegion(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	kc := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(rkclient.Default)
 	c, project := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
@@ -1561,7 +1648,7 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 	}
 	ctx := helper.GetCTX(t)
 	c, _ := helper.ClientAndProject(t)
-	kc := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(rkclient.Default)
 
 	cfg, err := config.Get(ctx, kc)
 	if err != nil {
@@ -1706,7 +1793,7 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 	}
 }
 
-func getPodIPFromAppName(ctx context.Context, t *testing.T, kc *crClient.WithWatch, appName, namespace string) string {
+func getPodIPFromAppName(ctx context.Context, t *testing.T, kc *kclient.WithWatch, appName, namespace string) string {
 	t.Helper()
 	selector, err := k8slabels.Parse(fmt.Sprintf("%s=%s", labels.AcornAppName, appName))
 	if err != nil {
@@ -1716,7 +1803,7 @@ func getPodIPFromAppName(ctx context.Context, t *testing.T, kc *crClient.WithWat
 	var podList corev1.PodList
 	podIP := ""
 	for podIP == "" {
-		err = (*kc).List(ctx, &podList, &kclient.ListOptions{
+		err = (*kc).List(ctx, &podList, &rkclient.ListOptions{
 			LabelSelector: selector,
 			Namespace:     namespace,
 		})
@@ -1835,7 +1922,7 @@ func TestEnforcedQuota(t *testing.T) {
 		t.Fatal("error while getting rest config:", err)
 	}
 	// Create a project.
-	kc := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(rkclient.Default)
 	project := helper.TempProject(t, kc)
 
 	// Create a client for the project.
@@ -1915,7 +2002,7 @@ func TestAutoUpgradeImageValidation(t *testing.T) {
 	if err != nil {
 		t.Fatal("error while getting rest config:", err)
 	}
-	kc := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(rkclient.Default)
 	project := helper.TempProject(t, kc)
 
 	c, err := client.New(restConfig, project.Name, project.Name)
@@ -1951,7 +2038,7 @@ func TestAutoUpgradeLocalImage(t *testing.T) {
 	if err != nil {
 		t.Fatal("error while getting rest config:", err)
 	}
-	kc := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(rkclient.Default)
 	project := helper.TempProject(t, kc)
 
 	c, err := client.New(restConfig, project.Name, project.Name)
@@ -2003,7 +2090,7 @@ func TestIgnoreResourceRequirements(t *testing.T) {
 	if err != nil {
 		t.Fatal("error while getting rest config:", err)
 	}
-	kc := helper.MustReturn(kclient.Default)
+	kc := helper.MustReturn(rkclient.Default)
 	project := helper.TempProject(t, kc)
 
 	helper.SetIgnoreResourceRequirementsWithRestore(ctx, t, kc)

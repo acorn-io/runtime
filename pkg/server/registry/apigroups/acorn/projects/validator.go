@@ -42,7 +42,6 @@ func (v *Validator) Validate(ctx context.Context, obj runtime.Object) field.Erro
 			// Some other error occurred while trying to get the compute class, return an internal error.
 			result = append(result, field.InternalError(field.NewPath("spec", "defaultComputeClass"), err))
 		}
-		// TODO(njhale): Validate that the compute class shares the project's supported regions?
 	}
 
 	return result

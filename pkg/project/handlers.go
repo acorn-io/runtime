@@ -35,7 +35,6 @@ func SetDefaultComputeClass(req router.Request, resp router.Response) error {
 			// The compute class does not exist, clear the status field.
 			project.Status.DefaultComputeClass = ""
 		}
-		// TODO(njhale): Unset the status field if the project does not support the same regions as the compute class?
 	}
 
 	resp.Objects(req.Object)
