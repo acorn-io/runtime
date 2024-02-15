@@ -629,7 +629,7 @@ func containerAnnotation(container v1.Container) string {
 }
 
 func resolvedOfferingsAnnotation(appInstance *v1.AppInstance, container v1.Container) (string, error) {
-	if resolved, exists := appInstance.Status.ResolvedOfferings.Containers[container.Name]; exists {
+	if resolved, exists := appInstance.Status.ResolvedOfferings.Containers[strings.ToLower(container.Name)]; exists {
 		data, err := convert.EncodeToMap(resolved)
 		if err != nil {
 			return "", err

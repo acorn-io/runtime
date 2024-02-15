@@ -8,11 +8,6 @@ import (
 )
 
 // Calculate is a handler that sets the resolved offerings for an AppInstance to its status.
-//
-// This is necessary because querying for resolved offerings will result in all running
-// AppInstances using that default to redeploy when a default changes. By
-// calculating the resolved offerings only when the generation changes, we can ensure that
-// updated resolved offerings are only applied when an AppInstance is updated directly.
 func Calculate(req router.Request, resp router.Response) (err error) {
 	appInstance := req.Object.(*internalv1.AppInstance)
 	status := condition.Setter(appInstance, resp, internalv1.AppInstanceConditionResolvedOfferings)
@@ -34,7 +29,10 @@ func Calculate(req router.Request, resp router.Response) (err error) {
 		return err
 	}
 
-	if appInstance.Generation != appInstance.Status.ObservedGeneration {
+	// Calculate the resolved offerings for the AppInstance if its generation changed, or if at least one of
+	// the containers has not been resolved yet. The generation check prevents the app from redeploying
+	// if its compute class gets changed.
+	if appInstance.Generation != appInstance.Status.ObservedGeneration || needsCalculation(appInstance) {
 		if err = calculate(req, appInstance); err != nil {
 			return err
 		}
@@ -60,4 +58,13 @@ func calculate(req router.Request, appInstance *internalv1.AppInstance) error {
 	}
 
 	return nil
+}
+
+func needsCalculation(appInstance *internalv1.AppInstance) bool {
+	for _, name := range appInstance.GetAllContainerNames() {
+		if _, ok := appInstance.Status.ResolvedOfferings.Containers[name]; !ok {
+			return true
+		}
+	}
+	return false
 }
