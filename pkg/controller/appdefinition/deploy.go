@@ -628,8 +628,8 @@ func containerAnnotation(container v1.Container) string {
 	return string(json)
 }
 
-func resolvedOfferingsAnnotation(appInstance *v1.AppInstance, container v1.Container) (string, error) {
-	if resolved, exists := appInstance.Status.ResolvedOfferings.Containers[container.Name]; exists {
+func resolvedOfferingsAnnotation(appInstance *v1.AppInstance, containerName string) (string, error) {
+	if resolved, exists := appInstance.Status.ResolvedOfferings.Containers[containerName]; exists {
 		data, err := convert.EncodeToMap(resolved)
 		if err != nil {
 			return "", err
@@ -645,13 +645,13 @@ func resolvedOfferingsAnnotation(appInstance *v1.AppInstance, container v1.Conta
 	return "", nil
 }
 
-func podAnnotations(appInstance *v1.AppInstance, container v1.Container) map[string]string {
+func podAnnotations(appInstance *v1.AppInstance, containerName string, container v1.Container) map[string]string {
 	annotations := map[string]string{
 		labels.AcornContainerSpec: containerAnnotation(container),
 	}
 	addPrometheusAnnotations(annotations, container)
 
-	offerings, err := resolvedOfferingsAnnotation(appInstance, container)
+	offerings, err := resolvedOfferingsAnnotation(appInstance, containerName)
 	if err == nil && offerings != "" {
 		annotations[labels.AcornContainerResolvedOfferings] = offerings
 	}
@@ -814,7 +814,7 @@ func toFunctionDeployment(req router.Request, appInstance *v1.AppInstance, tag n
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      podLabels,
-					Annotations: typed.Concat(deploymentAnnotations, podAnnotations(appInstance, container), secretAnnotations),
+					Annotations: typed.Concat(deploymentAnnotations, podAnnotations(appInstance, name, container), secretAnnotations),
 				},
 				Spec: corev1.PodSpec{
 					Affinity:           appInstance.Status.Scheduling[name].Affinity,
@@ -906,7 +906,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      podLabels,
-					Annotations: typed.Concat(deploymentAnnotations, podAnnotations(appInstance, container), secretAnnotations),
+					Annotations: typed.Concat(deploymentAnnotations, podAnnotations(appInstance, name, container), secretAnnotations),
 				},
 				Spec: corev1.PodSpec{
 					Affinity:                      appInstance.Status.Scheduling[name].Affinity,
