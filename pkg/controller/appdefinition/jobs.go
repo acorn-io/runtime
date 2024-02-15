@@ -147,7 +147,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels:      podLabels,
-				Annotations: labels.Merge(podAnnotations(appInstance, container), baseAnnotations),
+				Annotations: labels.Merge(podAnnotations(appInstance, name, container), baseAnnotations),
 			},
 			Spec: corev1.PodSpec{
 				Affinity:                      appInstance.Status.Scheduling[name].Affinity,
