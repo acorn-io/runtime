@@ -59,7 +59,7 @@ spec:
     spec:
       containers:
         - name: acorn-api
-          image: ghcr.io/acorn-io/runtime
+          image: images.acornlabs.com/acorn-io/runtime
           args:
             - api-server
           ports:

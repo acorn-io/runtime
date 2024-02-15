@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	InstallImage     = "ghcr.io/acorn-io/runtime"
+	InstallImage     = "images.acornlabs.com/acorn-io/runtime"
 	LocalImage       = "acorn-local"
 	LocalDockerImage = os.Getenv("ACORN_DOCKER_IMAGE")
 	LocalImageBind   = "ghcr.io/acorn-io/acorn-local-bind:latest"
