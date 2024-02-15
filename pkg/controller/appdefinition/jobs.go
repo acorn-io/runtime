@@ -46,13 +46,15 @@ func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSe
 				addBusybox = true
 			}
 		}
-		job, err := toJob(req, appInstance, pullSecrets, tag, jobName, jobDef, interpolator, addBusybox)
+		jbs, err := toJobAndCronJob(req, appInstance, pullSecrets, tag, jobName, jobDef, interpolator, addBusybox)
 		if err != nil {
 			return nil, err
 		}
-		if job == nil {
+		if len(jbs) == 0 {
 			continue
 		}
+
+		job := jbs[0]
 		perms := v1.FindPermission(jobName, appInstance.Status.Permissions)
 		sa, err := toServiceAccount(req, job.GetName(), job.GetLabels(), stripPruneAndUpdate(job.GetAnnotations()), appInstance, perms)
 		if err != nil {
@@ -65,8 +67,10 @@ func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSe
 			}
 			result = append(result, perms...)
 		}
-		result = append(result, sa, job)
+		result = append(result, sa)
+		result = append(result, jbs...)
 	}
+
 	return result, nil
 }
 
@@ -91,18 +95,16 @@ func setSecretOutputVolume(containers []corev1.Container) (result []corev1.Conta
 	return
 }
 
-func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, name string, container v1.Container, interpolator *secrets.Interpolator, addBusybox bool) (kclient.Object, error) {
+func toJobAndCronJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, name string, container v1.Container, interpolator *secrets.Interpolator, addBusybox bool) ([]kclient.Object, error) {
+	var result []kclient.Object
 	interpolator = interpolator.ForJob(name)
 	jobEventName := jobs.GetEvent(name, appInstance)
 
 	jobStatus := appInstance.Status.AppStatus.Jobs[name]
 	jobStatus.Skipped = !jobs.ShouldRunForEvent(jobEventName, container)
-	if appInstance.Status.AppStatus.Jobs == nil {
-		appInstance.Status.AppStatus.Jobs = make(map[string]v1.JobStatus, len(appInstance.Status.AppSpec.Jobs))
-	}
-	appInstance.Status.AppStatus.Jobs[name] = jobStatus
+	appInstance.Status.AppStatus.Jobs = z.AddToMap(appInstance.Status.AppStatus.Jobs, name, jobStatus)
 
-	if jobStatus.Skipped {
+	if jobStatus.Skipped && container.Schedule == "" {
 		return nil, nil
 	}
 
@@ -125,20 +127,20 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 		return nil, err
 	}
 
-	baseAnnotations := labels.Merge(secretAnnotations, labels.GatherScoped(name, v1.LabelTypeJob,
-		appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations))
+	baseAnnotations := labels.Merge(
+		secretAnnotations,
+		labels.GatherScoped(name, v1.LabelTypeJob, appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations),
+	)
 
 	baseAnnotations[labels.AcornConfigHashAnnotation] = appInstance.Status.AppStatus.Jobs[name].ConfigHash
-
-	if appInstance.Generation > 0 {
-		baseAnnotations[labels.AcornAppGeneration] = strconv.FormatInt(appInstance.Generation, 10)
-	}
+	baseAnnotations[labels.AcornAppGeneration] = strconv.FormatInt(appInstance.Generation, 10)
 
 	podLabels, err := jobLabels(appInstance, container, name, interpolator,
 		labels.AcornManaged, "true",
 		labels.AcornAppPublicName, publicname.Get(appInstance),
 		labels.AcornJobName, name,
-		labels.AcornContainerName, "")
+		labels.AcornContainerName, "",
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -173,19 +175,22 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 		},
 	}
 
+	objectMeta := metav1.ObjectMeta{
+		Name:        name,
+		Namespace:   appInstance.Status.Namespace,
+		Labels:      jobSpec.Template.Labels,
+		Annotations: labels.Merge(getDependencyAnnotations(appInstance, name, container.Dependencies), baseAnnotations),
+	}
+
 	interpolator.AddMissingAnnotations(appInstance.GetStopped(), baseAnnotations)
 
-	if container.Schedule == "" {
-		jobSpec.BackoffLimit = z.Pointer[int32](1000)
+	if container.Schedule == "" || !jobStatus.Skipped {
 		job := &batchv1.Job{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:        name,
-				Namespace:   appInstance.Status.Namespace,
-				Labels:      jobSpec.Template.Labels,
-				Annotations: labels.Merge(getDependencyAnnotations(appInstance, name, container.Dependencies), baseAnnotations),
-			},
-			Spec: jobSpec,
+			ObjectMeta: *objectMeta.DeepCopy(),
+			Spec:       *jobSpec.DeepCopy(),
 		}
+
+		job.Spec.BackoffLimit = z.Pointer[int32](1000)
 		job.Spec.Template.Spec.Containers = setJobEventName(setSecretOutputVolume(containers), jobEventName)
 		job.Spec.Template.Spec.InitContainers = setJobEventName(setSecretOutputVolume(initContainers), jobEventName)
 		job.Annotations[apply.AnnotationPrune] = "false"
@@ -193,32 +198,29 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 			// getDependencyAnnotations may set this annotation, so don't override here
 			job.Annotations[apply.AnnotationUpdate] = "true"
 		}
-		job.Annotations[labels.AcornAppGeneration] = strconv.FormatInt(appInstance.Generation, 10)
-		return job, nil
+
+		result = append(result, job)
 	}
 
-	cronJob := &batchv1.CronJob{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        name,
-			Namespace:   appInstance.Status.Namespace,
-			Labels:      jobSpec.Template.Labels,
-			Annotations: labels.Merge(getDependencyAnnotations(appInstance, name, container.Dependencies), baseAnnotations),
-		},
-		Spec: batchv1.CronJobSpec{
-			FailedJobsHistoryLimit:     z.Pointer[int32](3),
-			SuccessfulJobsHistoryLimit: z.Pointer[int32](1),
-			ConcurrencyPolicy:          batchv1.ReplaceConcurrent,
-			Schedule:                   toCronJobSchedule(container.Schedule),
-			JobTemplate: batchv1.JobTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: jobSpec.Template.Labels,
+	if container.Schedule != "" {
+		result = append(result, &batchv1.CronJob{
+			ObjectMeta: objectMeta,
+			Spec: batchv1.CronJobSpec{
+				FailedJobsHistoryLimit:     z.Pointer[int32](3),
+				SuccessfulJobsHistoryLimit: z.Pointer[int32](1),
+				ConcurrencyPolicy:          batchv1.ReplaceConcurrent,
+				Schedule:                   toCronJobSchedule(container.Schedule),
+				JobTemplate: batchv1.JobTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: jobSpec.Template.Labels,
+					},
+					Spec: jobSpec,
 				},
-				Spec: jobSpec,
 			},
-		},
+		})
 	}
-	cronJob.Annotations[labels.AcornAppGeneration] = strconv.FormatInt(appInstance.Generation, 10)
-	return cronJob, nil
+
+	return result, nil
 }
 
 func toCronJobSchedule(schedule string) string {

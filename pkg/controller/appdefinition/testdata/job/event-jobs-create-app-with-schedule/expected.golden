@@ -1,0 +1,584 @@
+`apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJnaGNyLmlvIjp7ImF1dGgiOiJPZz09In0sImluZGV4LmRvY2tlci5pbyI6eyJhdXRoIjoiT2c9PSJ9fX0=
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+  name: create-only-pull-1234567890ab
+  namespace: app-created-namespace
+type: kubernetes.io/dockerconfigjson
+
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJnaGNyLmlvIjp7ImF1dGgiOiJPZz09In0sImluZGV4LmRvY2tlci5pbyI6eyJhdXRoIjoiT2c9PSJ9fX0=
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+  name: delete-only-pull-1234567890ab
+  namespace: app-created-namespace
+type: kubernetes.io/dockerconfigjson
+
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJnaGNyLmlvIjp7ImF1dGgiOiJPZz09In0sImluZGV4LmRvY2tlci5pbyI6eyJhdXRoIjoiT2c9PSJ9fX0=
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+  name: stop-only-pull-1234567890ab
+  namespace: app-created-namespace
+type: kubernetes.io/dockerconfigjson
+
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJnaGNyLmlvIjp7ImF1dGgiOiJPZz09In0sImluZGV4LmRvY2tlci5pbyI6eyJhdXRoIjoiT2c9PSJ9fX0=
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+  name: update-only-pull-1234567890ab
+  namespace: app-created-namespace
+type: kubernetes.io/dockerconfigjson
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    acorn.io/app-generation: "1"
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/job-name: create-only
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: create-only
+  namespace: app-created-namespace
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    acorn.io/app-generation: "1"
+    acorn.io/config-hash: ""
+    apply.acorn.io/prune: "false"
+    apply.acorn.io/update: "true"
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/job-name: create-only
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: create-only
+  namespace: app-created-namespace
+spec:
+  backoffLimit: 1000
+  template:
+    metadata:
+      annotations:
+        acorn.io/app-generation: "1"
+        acorn.io/config-hash: ""
+        acorn.io/container-spec: '{"events":["create"],"image":"create-only-image","metrics":{},"probes":null,"schedule":"*/5
+          * * * * *"}'
+      creationTimestamp: null
+      labels:
+        acorn.io/app-name: app-name
+        acorn.io/app-namespace: app-namespace
+        acorn.io/app-public-name: app-name
+        acorn.io/job-name: create-only
+        acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
+    spec:
+      containers:
+      - env:
+        - name: ACORN_EVENT
+          value: create
+        image: create-only-image
+        name: create-only
+        resources: {}
+        volumeMounts:
+        - mountPath: /run/secrets
+          name: acorn-job-output-helper
+      - command:
+        - /usr/local/bin/acorn-job-helper-init
+        env:
+        - name: ACORN_EVENT
+          value: create
+        image: ghcr.io/acorn-io/runtime:main
+        imagePullPolicy: IfNotPresent
+        name: acorn-job-output-helper
+        resources: {}
+        volumeMounts:
+        - mountPath: /run/secrets
+          name: acorn-job-output-helper
+      enableServiceLinks: false
+      imagePullSecrets:
+      - name: create-only-pull-1234567890ab
+      restartPolicy: Never
+      serviceAccountName: create-only
+      terminationGracePeriodSeconds: 5
+      volumes:
+      - emptyDir:
+          medium: Memory
+          sizeLimit: 1M
+        name: acorn-job-output-helper
+status: {}
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  annotations:
+    acorn.io/app-generation: "1"
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/job-name: create-only
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: create-only
+  namespace: app-created-namespace
+spec:
+  concurrencyPolicy: Replace
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+      labels:
+        acorn.io/app-name: app-name
+        acorn.io/app-namespace: app-namespace
+        acorn.io/app-public-name: app-name
+        acorn.io/job-name: create-only
+        acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
+    spec:
+      template:
+        metadata:
+          annotations:
+            acorn.io/app-generation: "1"
+            acorn.io/config-hash: ""
+            acorn.io/container-spec: '{"events":["create"],"image":"create-only-image","metrics":{},"probes":null,"schedule":"*/5
+              * * * * *"}'
+          creationTimestamp: null
+          labels:
+            acorn.io/app-name: app-name
+            acorn.io/app-namespace: app-namespace
+            acorn.io/app-public-name: app-name
+            acorn.io/job-name: create-only
+            acorn.io/managed: "true"
+            acorn.io/project-name: app-namespace
+        spec:
+          containers:
+          - image: create-only-image
+            name: create-only
+            resources: {}
+            volumeMounts:
+            - mountPath: /run/secrets
+              name: acorn-job-output-helper
+          - command:
+            - /usr/local/bin/acorn-job-helper-init
+            image: ghcr.io/acorn-io/runtime:main
+            imagePullPolicy: IfNotPresent
+            name: acorn-job-output-helper
+            resources: {}
+            volumeMounts:
+            - mountPath: /run/secrets
+              name: acorn-job-output-helper
+          enableServiceLinks: false
+          imagePullSecrets:
+          - name: create-only-pull-1234567890ab
+          restartPolicy: Never
+          serviceAccountName: create-only
+          terminationGracePeriodSeconds: 5
+          volumes:
+          - emptyDir:
+              medium: Memory
+              sizeLimit: 1M
+            name: acorn-job-output-helper
+  schedule: '*/5 * * * * *'
+  successfulJobsHistoryLimit: 1
+status: {}
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    acorn.io/app-generation: "1"
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/job-name: delete-only
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: delete-only
+  namespace: app-created-namespace
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  annotations:
+    acorn.io/app-generation: "1"
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/job-name: delete-only
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: delete-only
+  namespace: app-created-namespace
+spec:
+  concurrencyPolicy: Replace
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+      labels:
+        acorn.io/app-name: app-name
+        acorn.io/app-namespace: app-namespace
+        acorn.io/app-public-name: app-name
+        acorn.io/job-name: delete-only
+        acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
+    spec:
+      template:
+        metadata:
+          annotations:
+            acorn.io/app-generation: "1"
+            acorn.io/config-hash: ""
+            acorn.io/container-spec: '{"events":["delete"],"image":"delete-only-image","metrics":{},"probes":null,"schedule":"*/5
+              * * * * *"}'
+          creationTimestamp: null
+          labels:
+            acorn.io/app-name: app-name
+            acorn.io/app-namespace: app-namespace
+            acorn.io/app-public-name: app-name
+            acorn.io/job-name: delete-only
+            acorn.io/managed: "true"
+            acorn.io/project-name: app-namespace
+        spec:
+          containers:
+          - image: delete-only-image
+            name: delete-only
+            resources: {}
+            volumeMounts:
+            - mountPath: /run/secrets
+              name: acorn-job-output-helper
+          - command:
+            - /usr/local/bin/acorn-job-helper-init
+            image: ghcr.io/acorn-io/runtime:main
+            imagePullPolicy: IfNotPresent
+            name: acorn-job-output-helper
+            resources: {}
+            volumeMounts:
+            - mountPath: /run/secrets
+              name: acorn-job-output-helper
+          enableServiceLinks: false
+          imagePullSecrets:
+          - name: delete-only-pull-1234567890ab
+          restartPolicy: Never
+          serviceAccountName: delete-only
+          terminationGracePeriodSeconds: 5
+          volumes:
+          - emptyDir:
+              medium: Memory
+              sizeLimit: 1M
+            name: acorn-job-output-helper
+  schedule: '*/5 * * * * *'
+  successfulJobsHistoryLimit: 1
+status: {}
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    acorn.io/app-generation: "1"
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/job-name: stop-only
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: stop-only
+  namespace: app-created-namespace
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  annotations:
+    acorn.io/app-generation: "1"
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/job-name: stop-only
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: stop-only
+  namespace: app-created-namespace
+spec:
+  concurrencyPolicy: Replace
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+      labels:
+        acorn.io/app-name: app-name
+        acorn.io/app-namespace: app-namespace
+        acorn.io/app-public-name: app-name
+        acorn.io/job-name: stop-only
+        acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
+    spec:
+      template:
+        metadata:
+          annotations:
+            acorn.io/app-generation: "1"
+            acorn.io/config-hash: ""
+            acorn.io/container-spec: '{"events":["stop"],"image":"stop-only-image","metrics":{},"probes":null,"schedule":"*/5
+              * * * * *"}'
+          creationTimestamp: null
+          labels:
+            acorn.io/app-name: app-name
+            acorn.io/app-namespace: app-namespace
+            acorn.io/app-public-name: app-name
+            acorn.io/job-name: stop-only
+            acorn.io/managed: "true"
+            acorn.io/project-name: app-namespace
+        spec:
+          containers:
+          - image: stop-only-image
+            name: stop-only
+            resources: {}
+            volumeMounts:
+            - mountPath: /run/secrets
+              name: acorn-job-output-helper
+          - command:
+            - /usr/local/bin/acorn-job-helper-init
+            image: ghcr.io/acorn-io/runtime:main
+            imagePullPolicy: IfNotPresent
+            name: acorn-job-output-helper
+            resources: {}
+            volumeMounts:
+            - mountPath: /run/secrets
+              name: acorn-job-output-helper
+          enableServiceLinks: false
+          imagePullSecrets:
+          - name: stop-only-pull-1234567890ab
+          restartPolicy: Never
+          serviceAccountName: stop-only
+          terminationGracePeriodSeconds: 5
+          volumes:
+          - emptyDir:
+              medium: Memory
+              sizeLimit: 1M
+            name: acorn-job-output-helper
+  schedule: '*/5 * * * * *'
+  successfulJobsHistoryLimit: 1
+status: {}
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    acorn.io/app-generation: "1"
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/job-name: update-only
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: update-only
+  namespace: app-created-namespace
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  annotations:
+    acorn.io/app-generation: "1"
+    acorn.io/config-hash: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/job-name: update-only
+    acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
+  name: update-only
+  namespace: app-created-namespace
+spec:
+  concurrencyPolicy: Replace
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+      labels:
+        acorn.io/app-name: app-name
+        acorn.io/app-namespace: app-namespace
+        acorn.io/app-public-name: app-name
+        acorn.io/job-name: update-only
+        acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
+    spec:
+      template:
+        metadata:
+          annotations:
+            acorn.io/app-generation: "1"
+            acorn.io/config-hash: ""
+            acorn.io/container-spec: '{"events":["update"],"image":"update-only-image","metrics":{},"probes":null,"schedule":"*/5
+              * * * * *"}'
+          creationTimestamp: null
+          labels:
+            acorn.io/app-name: app-name
+            acorn.io/app-namespace: app-namespace
+            acorn.io/app-public-name: app-name
+            acorn.io/job-name: update-only
+            acorn.io/managed: "true"
+            acorn.io/project-name: app-namespace
+        spec:
+          containers:
+          - image: update-only-image
+            name: update-only
+            resources: {}
+            volumeMounts:
+            - mountPath: /run/secrets
+              name: acorn-job-output-helper
+          - command:
+            - /usr/local/bin/acorn-job-helper-init
+            image: ghcr.io/acorn-io/runtime:main
+            imagePullPolicy: IfNotPresent
+            name: acorn-job-output-helper
+            resources: {}
+            volumeMounts:
+            - mountPath: /run/secrets
+              name: acorn-job-output-helper
+          enableServiceLinks: false
+          imagePullSecrets:
+          - name: update-only-pull-1234567890ab
+          restartPolicy: Never
+          serviceAccountName: update-only
+          terminationGracePeriodSeconds: 5
+          volumes:
+          - emptyDir:
+              medium: Memory
+              sizeLimit: 1M
+            name: acorn-job-output-helper
+  schedule: '*/5 * * * * *'
+  successfulJobsHistoryLimit: 1
+status: {}
+
+---
+apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  creationTimestamp: null
+  generation: 1
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+status:
+  appImage:
+    buildContext: {}
+    id: test
+    imageData: {}
+    vcs: {}
+  appSpec:
+    jobs:
+      create-only:
+        events:
+        - create
+        image: create-only-image
+        metrics: {}
+        probes: null
+        schedule: '*/5 * * * * *'
+      delete-only:
+        events:
+        - delete
+        image: delete-only-image
+        metrics: {}
+        probes: null
+        schedule: '*/5 * * * * *'
+      stop-only:
+        events:
+        - stop
+        image: stop-only-image
+        metrics: {}
+        probes: null
+        schedule: '*/5 * * * * *'
+      update-only:
+        events:
+        - update
+        image: update-only-image
+        metrics: {}
+        probes: null
+        schedule: '*/5 * * * * *'
+  appStatus:
+    jobs:
+      create-only: {}
+      delete-only:
+        skipped: true
+      stop-only:
+        skipped: true
+      update-only:
+        skipped: true
+  columns: {}
+  conditions:
+    observedGeneration: 1
+    reason: Success
+    status: "True"
+    success: true
+    type: defined
+  defaults: {}
+  namespace: app-created-namespace
+  resolvedOfferings: {}
+  staged:
+    appImage:
+      buildContext: {}
+      imageData: {}
+      vcs: {}
+  summary: {}
+`

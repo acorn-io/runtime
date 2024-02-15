@@ -1439,38 +1439,6 @@ func TestUsingComputeClasses(t *testing.T) {
 	}
 }
 
-func TestJobDelete(t *testing.T) {
-	helper.StartController(t)
-
-	ctx := helper.GetCTX(t)
-	c, _ := helper.ClientAndProject(t)
-
-	image, err := c.AcornImageBuild(ctx, "./testdata/jobfinalize/Acornfile", &client.AcornImageBuildOptions{
-		Cwd: "./testdata/jobfinalize",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	app, err := c.AppRun(ctx, image.ID, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	app = helper.WaitForObject(t, helper.Watcher(t, c), new(apiv1.AppList), app, func(app *apiv1.App) bool {
-		return len(app.Finalizers) > 0
-	})
-
-	app, err = c.AppDelete(ctx, app.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_ = helper.EnsureDoesNotExist(ctx, func() (crClient.Object, error) {
-		return c.AppGet(ctx, app.Name)
-	})
-}
-
 func TestAppWithBadRegion(t *testing.T) {
 	helper.StartController(t)
 

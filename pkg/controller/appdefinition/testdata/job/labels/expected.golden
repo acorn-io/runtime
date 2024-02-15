@@ -73,6 +73,7 @@ spec:
   template:
     metadata:
       annotations:
+        acorn.io/app-generation: "0"
         acorn.io/config-hash: ""
         acorn.io/container-spec: '{"annotations":{"job3a":"value"},"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","labels":{"job3":"value"},"metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
         alljobsa: value

@@ -173,6 +173,7 @@ spec:
   template:
     metadata:
       annotations:
+        acorn.io/app-generation: "0"
         acorn.io/config-hash: ""
         acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
       creationTimestamp: null

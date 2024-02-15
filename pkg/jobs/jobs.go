@@ -118,7 +118,8 @@ func getOutput(ctx context.Context, c kclient.Client, appInstance *v1.AppInstanc
 
 // ShouldRunForEvent returns true if the job is configured to run for the given event.
 func ShouldRunForEvent(eventName string, container v1.Container) bool {
-	if len(container.Events) == 0 {
+	if len(container.Events) == 0 && container.Schedule == "" {
+		// The default for non cronjobs is "create" and "update".
 		return slices.Contains([]string{"create", "update"}, eventName)
 	}
 	return slices.Contains(container.Events, eventName)

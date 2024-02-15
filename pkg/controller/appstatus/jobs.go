@@ -52,14 +52,12 @@ func (a *appStatusRenderer) readJobs() error {
 		c.JobName = jobName
 		c.JobNamespace = a.app.Status.Namespace
 
-		if c.Skipped {
+		if c.Skipped && jobDef.Schedule == "" {
 			c.CreationTime = &a.app.CreationTimestamp
 			c.State = "completed"
 			c.Ready = true
 			c.UpToDate = true
 			c.Defined = true
-			c.ErrorCount = 0
-			c.RunningCount = 0
 			c.Dependencies = nil
 			a.app.Status.AppStatus.Jobs[jobName] = c
 			continue
@@ -67,10 +65,13 @@ func (a *appStatusRenderer) readJobs() error {
 
 		var job batchv1.Job
 		err = a.c.Get(a.ctx, router.Key(a.app.Status.Namespace, jobName), &job)
-		if apierror.IsNotFound(err) {
+		if apierror.IsNotFound(err) || job.Status.Succeeded > 0 && jobDef.Schedule != "" && job.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) && job.Annotations[labels.AcornConfigHashAnnotation] == hash {
+			// If the job is not found, or it has succeeded and there should be an associated cronjob, then process that cronjob instead.
 			var cronJob batchv1.CronJob
-			err := a.c.Get(a.ctx, router.Key(a.app.Status.Namespace, jobName), &cronJob)
-			if err == nil {
+			err = a.c.Get(a.ctx, router.Key(a.app.Status.Namespace, jobName), &cronJob)
+			if kclient.IgnoreNotFound(err) != nil {
+				return err
+			} else if err == nil {
 				c.CreationTime = &cronJob.CreationTimestamp
 				c.LastRun = cronJob.Status.LastScheduleTime
 				c.CompletionTime = cronJob.Status.LastSuccessfulTime
@@ -87,24 +88,20 @@ func (a *appStatusRenderer) readJobs() error {
 					c.ErrorCount += int(nestedJob.Status.Failed)
 				}
 
-				if cronJob.Status.LastSuccessfulTime != nil {
-					c.CreateEventSucceeded = true
-					c.Ready = c.UpToDate
-				}
+				c.CreateEventSucceeded = cronJob.Status.LastSuccessfulTime != nil
+				c.Ready = c.UpToDate && c.ErrorCount == 0
 
-				nextRun, err := nextRun(c.Schedule, cronJob.CreationTimestamp, cronJob.Status.LastScheduleTime)
+				c.NextRun, err = nextRun(c.Schedule, cronJob.CreationTimestamp, cronJob.Status.LastScheduleTime)
 				if err != nil {
 					return err
 				}
-				c.NextRun = nextRun
-			} else if kclient.IgnoreNotFound(err) != nil {
-				return err
 			}
 		} else if err != nil {
 			return err
 		} else {
 			c.CreationTime = &job.CreationTimestamp
 			c.CompletionTime = job.Status.CompletionTime
+			c.StartTime = job.Status.StartTime
 			c.LastRun = job.Status.StartTime
 			c.Defined = true
 			c.UpToDate = job.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) && (c.Skipped || job.Annotations[labels.AcornConfigHashAnnotation] == hash)
@@ -233,7 +230,5 @@ func nextRun(expression string, creation metav1.Time, last *metav1.Time) (*metav
 		last = &creation
 	}
 
-	return z.Pointer(
-		metav1.NewTime(schedule.Next(last.Time)),
-	), nil
+	return z.Pointer(metav1.NewTime(schedule.Next(last.Time))), nil
 }

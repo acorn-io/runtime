@@ -225,6 +225,7 @@ spec:
   template:
     metadata:
       annotations:
+        acorn.io/app-generation: "0"
         acorn.io/config-hash: ""
         acorn.io/container-spec: '{"annotations":{"jobAnn":"test-job-ann"},"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","labels":{"jobLabel":"test-job-label"},"metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
         appSpecAnn: test-app-spec-ann

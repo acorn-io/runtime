@@ -1,0 +1,11 @@
+args: {
+	forceUpdateGen: 1
+}
+
+jobs: update: {
+    image: "ghcr.io/acorn-io/images-mirror/busybox:latest"
+    schedule: "0 0 31 2 *" // February 31st, never runs
+    events: ["update"]
+    dirs: "/app": "./scripts"
+    command: "/app/run.sh"
+}

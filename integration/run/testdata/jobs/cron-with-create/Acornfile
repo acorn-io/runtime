@@ -1,0 +1,7 @@
+jobs: create: {
+    image: "ghcr.io/acorn-io/images-mirror/busybox:latest"
+    schedule: "0 0 31 2 *" // February 31st, never runs
+    events: ["create"]
+    dirs: "/app": "./scripts"
+    command: "/app/run.sh"
+}

@@ -229,6 +229,7 @@ spec:
   template:
     metadata:
       annotations:
+        acorn.io/app-generation: "0"
         acorn.io/config-hash: ""
         acorn.io/container-spec: '{"annotations":{"admit-job.io":"test-admit-job-ann"},"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","labels":{"allowed-job.io":"test-allowed-job-label"},"metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
         admit-job.io: test-admit-job-ann
