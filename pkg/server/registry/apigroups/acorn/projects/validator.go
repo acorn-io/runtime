@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/runtime/pkg/computeclasses"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -35,7 +34,9 @@ func (v *Validator) Validate(ctx context.Context, obj runtime.Object) field.Erro
 	}
 
 	if defaultComputeClass := project.Spec.DefaultComputeClass; defaultComputeClass != "" {
-		if _, err := computeclasses.GetAsProjectComputeClassInstance(ctx, v.Client, project.Name, defaultComputeClass); apierrors.IsNotFound(err) {
+		// Check if the default project compute class exists
+		var cc apiv1.ComputeClass
+		if err := v.Client.Get(ctx, kclient.ObjectKey{Namespace: project.Name, Name: defaultComputeClass}, &cc); !apierrors.IsNotFound(err) {
 			// The compute class does not exist, return an invalid error
 			result = append(result, field.Invalid(field.NewPath("spec", "defaultComputeClass"), defaultComputeClass, "default compute class does not exist"))
 		} else if err != nil {

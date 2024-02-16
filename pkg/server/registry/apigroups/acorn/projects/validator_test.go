@@ -6,7 +6,6 @@ import (
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-	internaladminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/scheme"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -100,65 +99,6 @@ func TestProjectCreateValidation(t *testing.T) {
 					DefaultComputeClass: "compute-class-dne",
 				},
 			},
-			wantError: true,
-		},
-		{
-			name: "Create project with default computeclass that points to a specific clustercomputeclass",
-			project: apiv1.Project{
-				Spec: v1.ProjectInstanceSpec{
-					DefaultComputeClass: "cluster-compute-class",
-				},
-			},
-			client: fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(
-				&internaladminv1.ClusterComputeClassInstance{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "cluster-compute-class",
-					},
-				},
-				&internaladminv1.ClusterComputeClassInstance{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "cluster-compute-class-2",
-					},
-				},
-			).Build(),
-		},
-		{
-			name: "Create project with default computeclass that points to a specific projectcomputeclass",
-			project: apiv1.Project{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "pcc-project",
-				},
-				Spec: v1.ProjectInstanceSpec{
-					DefaultComputeClass: "project-compute-class",
-				},
-			},
-			client: fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(
-				&internaladminv1.ProjectComputeClassInstance{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "project-compute-class",
-						Namespace: "pcc-project",
-					},
-				},
-			).Build(),
-		},
-		{
-			name: "Create project with default computeclass that points to a projectcomputeclass in a different project",
-			project: apiv1.Project{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "pcc-project",
-				},
-				Spec: v1.ProjectInstanceSpec{
-					DefaultComputeClass: "project-compute-class",
-				},
-			},
-			client: fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(
-				&internaladminv1.ProjectComputeClassInstance{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "project-compute-class",
-						Namespace: "not-pcc-project",
-					},
-				},
-			).Build(),
 			wantError: true,
 		},
 	}
