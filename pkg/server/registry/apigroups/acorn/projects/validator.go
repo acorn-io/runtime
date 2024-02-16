@@ -30,18 +30,34 @@ func (v *Validator) Validate(ctx context.Context, obj runtime.Object) field.Erro
 	if project.Spec.DefaultRegion != "" &&
 		!slices.Contains(project.Spec.SupportedRegions, project.Spec.DefaultRegion) &&
 		!slices.Contains(project.Spec.SupportedRegions, apiv1.AllRegions) {
-		result = append(result, field.Invalid(field.NewPath("spec", "defaultRegion"), project.Spec.DefaultRegion, "default region is not in the supported regions list"))
+		result = append(result, field.Invalid(
+			field.NewPath("spec", "defaultRegion"),
+			project.Spec.DefaultRegion,
+			"default region is not in the supported regions list",
+		))
 	}
 
 	if defaultComputeClass := project.Spec.DefaultComputeClass; defaultComputeClass != "" {
-		// Check if the default project compute class exists
+		// Check if the project specified default compute class exists
 		var cc apiv1.ComputeClass
-		if err := v.Client.Get(ctx, kclient.ObjectKey{Namespace: project.Name, Name: defaultComputeClass}, &cc); !apierrors.IsNotFound(err) {
+		switch err := v.Client.Get(ctx, kclient.ObjectKey{Namespace: project.Name, Name: defaultComputeClass}, &cc); {
+		case !apierrors.IsNotFound(err):
 			// The compute class does not exist, return an invalid error
-			result = append(result, field.Invalid(field.NewPath("spec", "defaultComputeClass"), defaultComputeClass, "default compute class does not exist"))
-		} else if err != nil {
+			result = append(result, field.Invalid(
+				field.NewPath("spec", "defaultComputeClass"),
+				defaultComputeClass,
+				"default compute class does not exist",
+			))
+		case err != nil:
 			// Some other error occurred while trying to get the compute class, return an internal error.
 			result = append(result, field.InternalError(field.NewPath("spec", "defaultComputeClass"), err))
+		case project.Spec.DefaultRegion != "" && !slices.Contains(cc.SupportedRegions, project.Spec.DefaultRegion):
+			// Compute class does not support the default region
+			result = append(result, field.Invalid(
+				field.NewPath("spec", "defaultComputeClass"),
+				defaultComputeClass,
+				"default compute class does not support the default region",
+			))
 		}
 	}
 
