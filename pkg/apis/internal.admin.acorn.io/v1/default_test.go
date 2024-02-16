@@ -172,7 +172,7 @@ func TestGetDefaultComputeClass(t *testing.T) {
 						ObjectMeta: metav1.ObjectMeta{
 							Name: "pcc-project",
 						},
-						Spec: internalv1.ProjectInstanceSpec{
+						Status: internalv1.ProjectInstanceStatus{
 							DefaultComputeClass: "project-specified-default",
 						},
 					},
@@ -185,7 +185,7 @@ func TestGetDefaultComputeClass(t *testing.T) {
 				).Build(),
 			},
 			expected: expected{
-				computeClassName: "self-specified-default",
+				error: true,
 			},
 		},
 	} {
