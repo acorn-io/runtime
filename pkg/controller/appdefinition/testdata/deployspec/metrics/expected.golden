@@ -88,36 +88,6 @@ spec:
 status: {}
 
 ---
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  annotations:
-    acorn.io/config-hash: ""
-  creationTimestamp: null
-  labels:
-    acorn.io/app-name: app-with-metrics
-    acorn.io/app-namespace: app-namespace
-    acorn.io/app-public-name: app-with-metrics
-    acorn.io/container-name: nginx
-    acorn.io/managed: "true"
-    acorn.io/project-name: app-namespace
-  name: nginx
-  namespace: app-created-namespace
-spec:
-  maxUnavailable: 25%
-  selector:
-    matchLabels:
-      acorn.io/app-name: app-with-metrics
-      acorn.io/app-namespace: app-namespace
-      acorn.io/container-name: nginx
-      acorn.io/managed: "true"
-status:
-  currentHealthy: 0
-  desiredHealthy: 0
-  disruptionsAllowed: 0
-  expectedPods: 0
-
----
 apiVersion: internal.acorn.io/v1
 kind: ServiceInstance
 metadata:

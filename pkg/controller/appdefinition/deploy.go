@@ -980,7 +980,10 @@ func ToFunctions(req router.Request, appInstance *v1.AppInstance, tag name.Refer
 			}
 			result = append(result, perms...)
 		}
-		result = append(result, sa, dep, pdb.ToPodDisruptionBudget(dep))
+		result = append(result, sa, dep)
+		if dep.Spec.Replicas != nil && *dep.Spec.Replicas > 1 {
+			result = append(result, pdb.ToPodDisruptionBudget(dep))
+		}
 	}
 
 	return result, nil
@@ -1036,7 +1039,11 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 			}
 			result = append(result, perms...)
 		}
-		result = append(result, sa, dep, pdb.ToPodDisruptionBudget(dep))
+		result = append(result, sa, dep)
+
+		if dep.Spec.Replicas != nil && *dep.Spec.Replicas > 1 {
+			result = append(result, pdb.ToPodDisruptionBudget(dep))
+		}
 	}
 
 	return result, nil

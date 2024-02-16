@@ -353,7 +353,7 @@ func TestFiles(t *testing.T) {
 	assert.Equal(t, "/a/b2/c", dep.Spec.Template.Spec.Containers[1].VolumeMounts[1].MountPath)
 	assert.Equal(t, toHash("ZA=="), dep.Spec.Template.Spec.Containers[1].VolumeMounts[1].SubPath)
 
-	configMap := objs[6].(*corev1.Secret)
+	configMap := objs[4].(*corev1.Secret)
 
 	assert.Len(t, configMap.Data, 2)
 	assert.Equal(t, []byte("d"), configMap.Data[toHash("ZA==")])

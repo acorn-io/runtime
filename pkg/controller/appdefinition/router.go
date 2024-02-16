@@ -160,7 +160,7 @@ func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router, 
 		dep.Spec.Replicas = new(int32)
 	}
 
-	return []kclient.Object{
+	objects := []kclient.Object{
 		dep,
 		&corev1.ConfigMap{
 			TypeMeta: metav1.TypeMeta{},
@@ -180,8 +180,13 @@ func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router, 
 				Annotations: deploymentAnnotations,
 			},
 		},
-		pdb.ToPodDisruptionBudget(dep),
-	}, nil
+	}
+
+	if dep.Spec.Replicas != nil && *dep.Spec.Replicas > 1 {
+		objects = append(objects, pdb.ToPodDisruptionBudget(dep))
+	}
+
+	return objects, nil
 }
 
 func toNginxConf(internalClusterDomain, namespace, routerName string, router v1.Router) (string, string) {
