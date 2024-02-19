@@ -7,6 +7,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	internaladminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/computeclasses"
 	"github.com/acorn-io/runtime/pkg/labels"
 	corev1 "k8s.io/api/core/v1"
@@ -18,7 +19,7 @@ import (
 
 // SetDefaultComputeClass sets the default compute class status field of a [v1.ProjectInstance] to the value of its spec
 // field if set.
-func SetDefaultComputeClass(req router.Request, resp router.Response) error {
+func SetDefaultComputeClass(req router.Request, _ router.Response) error {
 	project := req.Object.(*v1.ProjectInstance)
 	if cc := project.Spec.DefaultComputeClass; cc != "" && project.Status.DefaultComputeClass != cc {
 		// The spec has been changed, update the status field to match.
@@ -26,10 +27,10 @@ func SetDefaultComputeClass(req router.Request, resp router.Response) error {
 	}
 
 	// Check if the given compute class exists
-	if project.Status.DefaultComputeClass != "" {
-		if _, err := computeclasses.GetAsProjectComputeClassInstance(req.Ctx, req.Client, project.Name, project.Status.DefaultComputeClass); err != nil {
+	if computeClassName := project.Status.DefaultComputeClass; computeClassName != "" {
+		if _, err := computeclasses.GetAsProjectComputeClassInstance(req.Ctx, req.Client, project.Name, computeClassName); err != nil {
 			if !apierrors.IsNotFound(err) {
-				return fmt.Errorf("failed to check existence of default compute class on project [%s] status: %w", project.Name, err)
+				return fmt.Errorf("failed to check existence of default compute class [%s] specified by project [%s] status: %w", computeClassName, project.Name, err)
 			}
 
 			// The compute class does not exist, clear the status field.
@@ -37,7 +38,16 @@ func SetDefaultComputeClass(req router.Request, resp router.Response) error {
 		}
 	}
 
-	resp.Objects(req.Object)
+	// Pick a default from the available compute classes
+	if project.Status.DefaultComputeClass == "" {
+		computeClassName, err := internaladminv1.GetDefaultComputeClassName(req.Ctx, req.Client, project.Name)
+		if kclient.IgnoreNotFound(err) != nil {
+			return fmt.Errorf("failed to get default compute class for project [%s]: %w", project.Name, err)
+		}
+
+		project.Status.DefaultComputeClass = computeClassName
+	}
+
 	return nil
 }
 

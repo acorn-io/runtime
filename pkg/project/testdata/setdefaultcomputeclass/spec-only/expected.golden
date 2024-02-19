@@ -1,10 +1,1 @@
-`apiVersion: internal.acorn.io/v1
-kind: ProjectInstance
-metadata:
-  creationTimestamp: null
-  name: acorn
-spec:
-  defaultComputeClass: cluster-compute-class-b
-status:
-  defaultComputeClass: cluster-compute-class-b
-`
+""
