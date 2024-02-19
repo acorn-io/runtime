@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"net"
 	"strings"
 	"time"
 
@@ -49,6 +50,24 @@ func RequireSecretTypeTLS(h router.Handler) router.Handler {
 	})
 }
 
+func WaitForDomain(domain string, retryInterval time.Duration, maxRetries int) error {
+	done := make(chan error)
+
+	go func() {
+		for retries := 0; retries < maxRetries; retries++ {
+			ips, err := net.LookupIP(domain)
+			if err == nil && len(ips) > 0 {
+				done <- nil // Domain is resolvable
+				return
+			}
+			time.Sleep(retryInterval)
+		}
+		done <- fmt.Errorf("domain %s is not resolvable after %d retries", domain, maxRetries) // Domain is not resolvable
+	}()
+
+	return <-done
+}
+
 // RenewCert handles the renewal of existing TLS certificates
 func RenewCert(req router.Request, resp router.Response) error {
 	sec := req.Object.(*corev1.Secret)
@@ -87,6 +106,11 @@ func RenewCert(req router.Request, resp router.Response) error {
 		defer unlockDomain(domain)
 
 		logrus.Infof("Renewing TLS cert for %s", domain)
+
+		if err := WaitForDomain(domain, 5*time.Second, 12); err != nil {
+			logrus.Warnf("Domain %s is not resolvable, skipping certificate renewal: %v", domain, err)
+			return
+		}
 
 		// Get new certificate
 		cert, err := leUser.getCert(req.Ctx, domain)

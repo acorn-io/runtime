@@ -5,11 +5,14 @@ import (
 	"encoding/pem"
 	"fmt"
 	"sort"
+	"sync"
+	"time"
 
 	"github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/controller/tls"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/sirupsen/logrus"
@@ -158,6 +161,25 @@ func setupCertsForRules(req router.Request, svc *v1.ServiceInstance, rules []net
 		ingressTLS = setupCertManager(svc.Name, rules)
 	}
 
+	// Best effort to wait for all domains to be ready, so we don't spam Let's Encrypt
+	// with requests for domains where the DNS entry was not yet propagated
+	hostsSeen := map[string]struct{}{}
+	wg := sync.WaitGroup{}
+	for _, rule := range rules {
+		if _, ok := hostsSeen[rule.Host]; ok {
+			continue
+		}
+		hostsSeen[rule.Host] = struct{}{}
+		wg.Add(1)
+		go func(host string) {
+			err := tls.WaitForDomain(host, 5*time.Second, 6)
+			if err != nil {
+				logrus.Debugln(err)
+			}
+			wg.Done()
+		}(rule.Host)
+	}
+	wg.Wait()
 	return secrets, ingressTLS, annotations, nil
 }
 
