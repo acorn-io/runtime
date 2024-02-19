@@ -34,7 +34,7 @@ const (
 )
 
 func Pulse(ctx context.Context, c kclient.Client, component RuntimeComponent, action RuntimeAction, elements ...string) error {
-	if !UsageMetricsEnabled(ctx, c) {
+	if !MetricsEnabled(ctx, c) {
 		return nil
 	}
 
@@ -64,13 +64,13 @@ func Heartbeat(ctx context.Context, c kclient.Client, component RuntimeComponent
 	}, interval)
 }
 
-// UsageMetricsEnabled returns true if usage metrics are enabled.
+// MetricsEnabled returns true if usage metrics are enabled.
 // Usage Metrics are enabled by default, but are disabled by
 // a) setting the ACORN_USAGE_METRICS environment variable to "disabled"
 // b) setting the DisableUsageMetrics field in the acorn config to true
 // c) running a development build (dirty or tag ending in -dev)
 // d) running in an unofficial build (BaseURL is empty)
-func UsageMetricsEnabled(ctx context.Context, c kclient.Client) bool {
+func MetricsEnabled(ctx context.Context, c kclient.Client) bool {
 	enabled := true
 	if c != nil {
 		cfg, err := config.Get(ctx, c)
