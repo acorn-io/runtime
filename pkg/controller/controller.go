@@ -21,6 +21,8 @@ import (
 	"github.com/acorn-io/runtime/pkg/logserver"
 	"github.com/acorn-io/runtime/pkg/scheme"
 	"github.com/acorn-io/runtime/pkg/system"
+	"github.com/acorn-io/runtime/pkg/usage"
+	"github.com/acorn-io/runtime/pkg/version"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -114,6 +116,8 @@ func (c *Controller) Start(ctx context.Context) error {
 	}()
 
 	logserver.StartServerWithDefaults()
+
+	go usage.Heartbeat(ctx, c.client, usage.ComponentController, 24*time.Hour, version.Get().String())
 
 	// Every 5 minutes, delete EventInstances until only the most recent 1000 remain.
 	// Use c.Router.Backend() to ensure we hit the cache when possible.

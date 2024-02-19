@@ -31,6 +31,8 @@ import (
 	"github.com/acorn-io/runtime/pkg/scheme"
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/acorn-io/runtime/pkg/term"
+	"github.com/acorn-io/runtime/pkg/usage"
+	"github.com/acorn-io/runtime/pkg/version"
 	"github.com/acorn-io/z"
 	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
@@ -308,6 +310,9 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	if !opts.Quiet {
 		pterm.Success.Println("Installation done")
 	}
+
+	_ = usage.Pulse(ctx, c, usage.ComponentCLI, usage.ActionInstall, version.Get().String())
+
 	return nil
 }
 

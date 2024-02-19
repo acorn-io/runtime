@@ -76,5 +76,6 @@ func defaultProfile() apiv1.Config {
 		IgnoreResourceRequirements:     new(bool),
 		RequireComputeClass:            new(bool),
 		AutoConfigureKarpenterDontEvictAnnotations: z.Pointer(true),
+		DisableUsageMetrics:                        new(bool),
 	}
 }

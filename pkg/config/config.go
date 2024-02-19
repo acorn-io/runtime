@@ -164,6 +164,9 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader, inclu
 	if c.AutoConfigureKarpenterDontEvictAnnotations == nil {
 		c.AutoConfigureKarpenterDontEvictAnnotations = profile.AutoConfigureKarpenterDontEvictAnnotations
 	}
+	if c.DisableUsageMetrics == nil {
+		c.DisableUsageMetrics = profile.DisableUsageMetrics
+	}
 	return nil
 }
 
@@ -470,6 +473,9 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	}
 	if newConfig.AutoConfigureKarpenterDontEvictAnnotations != nil {
 		mergedConfig.AutoConfigureKarpenterDontEvictAnnotations = newConfig.AutoConfigureKarpenterDontEvictAnnotations
+	}
+	if newConfig.DisableUsageMetrics != nil {
+		mergedConfig.DisableUsageMetrics = newConfig.DisableUsageMetrics
 	}
 
 	return &mergedConfig

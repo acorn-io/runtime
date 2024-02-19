@@ -37,5 +37,7 @@ func productionProfile() apiv1.Config {
 	conf.RequireComputeClass = z.Pointer(true)
 	conf.AutoConfigureKarpenterDontEvictAnnotations = z.Pointer(true)
 
+	conf.DisableUsageMetrics = z.Pointer(false)
+
 	return conf
 }

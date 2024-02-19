@@ -43,6 +43,7 @@ acorn install
       --controller-memory string                          The memory to allocate to the runtime-controller in the format of <req>:<limit> (example 256Mi:1Gi)
       --controller-replicas int                           acorn-controller deployment replica count
       --controller-service-account-annotation strings     annotation to apply to the acorn-system service account
+      --disable-usage-metrics                             Disable usage metrics collection (default is false)
       --event-ttl string                                  Amount of time an Acorn event will be stored before being deleted (default '168h' - 7 days)
       --features strings                                  Enable or disable features. (example foo=true,bar=false)
   -h, --help                                              help for install

@@ -25,6 +25,7 @@ builds:
       - -s
       - -w
       - -X "github.com/acorn-io/runtime/pkg/version.Tag=v{{ .Version }}"
+      - -X 'github.com/acorn-io/runtime/pkg/usage.BaseURL="{{ .Env.USAGE_METRICS_URL }}"
 
 universal_binaries:
   - id: mac

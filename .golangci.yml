@@ -24,3 +24,12 @@ linters:
   - revive
   fast: false
   max-same-issues: 50
+
+linters-settings:
+  revive:
+    ignore-generated-header: false
+    severity: warning
+    rules:
+      - name: unused-parameter
+        severity: warning
+        disabled: true
