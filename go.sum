@@ -1078,8 +1078,8 @@ github.com/titanous/rocacheck v0.0.0-20171023193734-afe73141d399 h1:e/5i7d4oYZ+C
 github.com/titanous/rocacheck v0.0.0-20171023193734-afe73141d399/go.mod h1:LdwHTNJT99C5fTAzDz0ud328OgXz+gierycbcIx2fRs=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20220101234140-673ab2c3ae75 h1:6fotK7otjonDflCTK0BCfls4SPy3NcCVb5dqqmbRknE=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20220101234140-673ab2c3ae75/go.mod h1:KO6IkyS8Y3j8OdNO85qEYBsRPuteD+YciPomcXdrMnk=
-github.com/tonistiigi/fsutil v0.0.0-20230629203738-36ef4d8c0dbb h1:uUe8rNyVXM8moActoBol6Xf6xX2GMr7SosR2EywMvGg=
-github.com/tonistiigi/fsutil v0.0.0-20230629203738-36ef4d8c0dbb/go.mod h1:SxX/oNQ/ag6Vaoli547ipFK9J7BZn5JqJG0JE8lf8bA=
+github.com/tonistiigi/fsutil v0.0.0-20240301111122-7525a1af2bb5 h1:oZS8KCqAg62sxJkEq/Ppzqrb6EooqzWtL8Oaex7bc5c=
+github.com/tonistiigi/fsutil v0.0.0-20240301111122-7525a1af2bb5/go.mod h1:vbbYqJlnswsbJqWUcJN8fKtBhnEgldDrcagTgnBVKKM=
 github.com/tonistiigi/units v0.0.0-20180711220420-6950e57a87ea h1:SXhTLE6pb6eld/v/cCndK0AMpt1wiVFb/YYmqB3/QG0=
 github.com/tonistiigi/units v0.0.0-20180711220420-6950e57a87ea/go.mod h1:WPnis/6cRcDZSUvVmezrxJPkiO87ThFYsoUiMwWNDJk=
 github.com/tonistiigi/vt100 v0.0.0-20210615222946-8066bb97264f h1:DLpt6B5oaaS8jyXHa9VA4rrZloBVPVXeCtrOsrFauxc=
