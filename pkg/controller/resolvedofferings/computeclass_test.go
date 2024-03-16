@@ -73,6 +73,14 @@ func TestTwoPCCDefaultsShouldError(t *testing.T) {
 	assert.True(t, resp.NoPrune, "NoPrune should be true when error occurs")
 }
 
+func TestTwoCCCDefaultsDifferentRegions(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/two-ccc-defaults-different-regions", Calculate)
+}
+
+func TestTwoPCCDefaultsDifferentRegions(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/two-pcc-defaults-different-regions", Calculate)
+}
+
 func TestComputeClassDefault(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/compute-class-default", Calculate)
 }

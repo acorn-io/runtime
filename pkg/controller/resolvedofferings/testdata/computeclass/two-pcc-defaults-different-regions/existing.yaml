@@ -1,0 +1,54 @@
+---
+kind: ProjectComputeClassInstance
+apiVersion: internal.admin.acorn.io/v1
+metadata:
+  name: sample-compute-class
+description: Simple description for a simple ComputeClass
+cpuScaler: 0.25
+default: true
+supportedRegions: [local]
+memory:
+  min: 1Mi # 1Mi
+  max: 2Mi # 2Mi
+  default: 1Mi # 1Mi
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: foo
+          operator: In
+          values:
+          - bar
+---
+kind: ProjectComputeClassInstance
+apiVersion: internal.admin.acorn.io/v1
+metadata:
+  name: sample-compute-class-other
+description: Simple description for a simple ComputeClass
+cpuScaler: 0.25
+default: true
+supportedRegions: [non-local]
+memory:
+  min: 1Mi # 1Mi
+  max: 2Mi # 2Mi
+  default: 2Mi # 2Mi
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: foo
+          operator: In
+          values:
+          - bar
+---
+kind: ProjectInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-namespace
+spec: {}
+status:
+  defaultRegion: local
+  supportedRegions:
+    - local
