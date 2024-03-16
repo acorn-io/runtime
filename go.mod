@@ -20,7 +20,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iam v1.19.10
 	github.com/charmbracelet/glamour v0.6.0
 	github.com/containerd/console v1.0.3
-	github.com/containerd/containerd v1.6.20
+	github.com/containerd/containerd v1.6.26
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/depot/depot-go v0.0.0-20230819013533-12cec5cbd2f9
 	github.com/docker/cli v24.0.0+incompatible
@@ -83,6 +83,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/MakeNowJust/heredoc v1.0.0 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
+	github.com/Microsoft/hcsshim v0.9.10 // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20230828082145-3c4c8a2d2371 // indirect
 	github.com/ThalesIgnite/crypto11 v1.2.5 // indirect
@@ -115,6 +116,7 @@ require (
 	github.com/chai2010/gettext-go v1.0.2 // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/containerd/continuity v0.4.1 // indirect
+	github.com/containerd/log v0.1.0 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.14.3 // indirect
 	github.com/containerd/typeurl v1.0.3-0.20220422153119-7f6e6d160d67 // indirect
 	github.com/coreos/go-semver v0.3.1 // indirect
