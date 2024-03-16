@@ -1,5 +1,3 @@
-⚠️ This project is being archived. Checkout our [post](https://www.acorn.io/resources/blog/our-new-focus-developing-an-llm-app-platform-based-on-gpt-script-technology) for more details on our new directoin
-
 # Acorn
 
 ![main-release](https://github.com/acorn-io/runtime/actions/workflows/main-release.yaml/badge.svg)
