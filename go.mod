@@ -24,7 +24,7 @@ require (
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/depot/depot-go v0.0.0-20230819013533-12cec5cbd2f9
 	github.com/docker/cli v24.0.0+incompatible
-	github.com/docker/docker v24.0.0+incompatible
+	github.com/docker/docker v24.0.7+incompatible
 	github.com/docker/docker-credential-helpers v0.7.0
 	github.com/docker/go-connections v0.4.0
 	github.com/go-acme/lego/v4 v4.9.1
