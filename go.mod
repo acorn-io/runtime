@@ -54,7 +54,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
-	github.com/tonistiigi/fsutil v0.0.0-20230629203738-36ef4d8c0dbb
+	github.com/tonistiigi/fsutil v0.0.0-20240301111122-7525a1af2bb5
 	github.com/wI2L/jsondiff v0.3.0
 	golang.org/x/crypto v0.16.0
 	golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc
