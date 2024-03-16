@@ -4,7 +4,7 @@ go 1.21.5
 
 require (
 	cuelang.org/go v0.6.0
-	github.com/AlecAivazis/survey/v2 v2.3.6
+	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/acorn-io/aml v0.0.0-20240106192317-21afc7320c77
 	github.com/acorn-io/aml/cli v0.0.0-20240106192317-21afc7320c77
 	github.com/acorn-io/baaah v0.0.0-20240119160309-2a58ee757bbd
