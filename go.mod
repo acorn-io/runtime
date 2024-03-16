@@ -28,7 +28,7 @@ require (
 	github.com/docker/docker-credential-helpers v0.7.0
 	github.com/docker/go-connections v0.4.0
 	github.com/go-acme/lego/v4 v4.9.1
-	github.com/go-git/go-git/v5 v5.9.0
+	github.com/go-git/go-git/v5 v5.11.0
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.6.0
 	github.com/google/go-containerregistry v0.16.1
@@ -87,7 +87,6 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230828082145-3c4c8a2d2371 // indirect
 	github.com/ThalesIgnite/crypto11 v1.2.5 // indirect
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d // indirect
-	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/acorn-io/cmd v0.0.0-20230929053520-ebe1b9879b38 // indirect
 	github.com/alecthomas/chroma v0.10.0 // indirect
 	github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20230305170008-8188dc5388df // indirect
@@ -252,7 +251,7 @@ require (
 	github.com/shibumi/go-pathspec v1.3.0 // indirect
 	github.com/sigstore/rekor v1.2.2 // indirect
 	github.com/sigstore/timestamp-authority v1.1.2 // indirect
-	github.com/skeema/knownhosts v1.2.0 // indirect
+	github.com/skeema/knownhosts v1.2.1 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
