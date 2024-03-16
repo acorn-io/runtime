@@ -127,8 +127,8 @@ github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78 h1:5zs9L/CX
 github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78/go.mod h1:/5647+1/L7m7Aq7upTLtfLznTLYttURzH7Y23LKrW0M=
 github.com/acorn-io/schemer v0.0.0-20240105014212-9739d5485208 h1:GpTdbiOxq3tybaMlUkCwfBco34Zi9P5/7ikbAZ+2BdM=
 github.com/acorn-io/schemer v0.0.0-20240105014212-9739d5485208/go.mod h1:oQ4BjkYtNmfKPUMvi+/tBC7xaeHmBWM59lfBjsS4Gkg=
-github.com/acorn-io/z v0.0.0-20230714155009-a770ecbbdc45 h1:+od+ijNLAt+tc33uZa71qkE4eyvubts45thVXz8J7DU=
-github.com/acorn-io/z v0.0.0-20230714155009-a770ecbbdc45/go.mod h1:5UO0+eOne2Zhvn7Ox5IiK4u+4dlCSLmHfTQWORRdEyo=
+github.com/acorn-io/z v0.0.0-20231104012607-4cab1b3ec5e5 h1:oQnpRt5KoANqwwUNzWFu+5I12Unfu/WZ330QHefxNc8=
+github.com/acorn-io/z v0.0.0-20231104012607-4cab1b3ec5e5/go.mod h1:5UO0+eOne2Zhvn7Ox5IiK4u+4dlCSLmHfTQWORRdEyo=
 github.com/adrg/xdg v0.4.0 h1:RzRqFcjH4nE5C6oTAxhBtoE2IRyjBSa62SCbyPidvls=
 github.com/adrg/xdg v0.4.0/go.mod h1:N6ag73EX4wyxeaoeHctc1mas01KZgsj5tYiAIwqJE/E=
 github.com/alecthomas/chroma v0.10.0 h1:7XDcGkCQopCNKjZHfYrNLraA+M7e0fMiJ/Mfikbfjek=
